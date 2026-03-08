@@ -67,7 +67,7 @@ export function useAuth() {
           cleanupListeners();
           setupListeners();
         } else {
-          logger.error('Failed to initialize auth', error);
+          logger.error('Failed to initialize auth', error instanceof Error ? error.message : 'Unknown error');
         }
       } finally {
         setIsInitialized(true);

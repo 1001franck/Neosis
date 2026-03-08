@@ -28,7 +28,7 @@ export class AuthService {
       logger.info('Login successful', { userId: response.user.id });
       return response;
     } catch (error: unknown) {
-      logger.error('Login failed', error);
+      logger.error('Login failed', error instanceof Error ? error.message : 'Unknown error');
       const msg = this.extractErrorMessage(error);
       throw new InvalidCredentialsError(msg);
     }
@@ -43,7 +43,7 @@ export class AuthService {
       logger.info('Register successful', { userId: response.user.id });
       return response;
     } catch (error: unknown) {
-      logger.error('Register failed', error);
+      logger.error('Register failed', error instanceof Error ? error.message : 'Unknown error');
       const msg = this.extractErrorMessage(error);
       throw new UserAlreadyExistsError(msg);
     }
