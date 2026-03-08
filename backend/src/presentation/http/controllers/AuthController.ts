@@ -58,7 +58,7 @@ export class AuthController {
    * POST /auth/logout
    */
   logout = async (req: Request, res: Response, next: NextFunction) => {
-    res.clearCookie('token', { httpOnly: true, secure: isProduction, sameSite: 'lax' });
+    res.clearCookie('token', { httpOnly: true, secure: isProduction, sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax' });
     res.status(200).json({ success: true, message: "Déconnexion réussie" });
   };
 
