@@ -15,9 +15,7 @@ import { KickMemberUseCase } from '../../../application/members/usecases/KickMem
 import { BanMemberUseCase } from '../../../application/members/usecases/BanMemberUseCase.js';
 import { MemberRole } from '../../../domain/members/entities/Member.js';
 import { AppError, ErrorCode } from '../../../shared/errors/AppError.js';
-import fs from 'fs';
-import path from 'path';
-import { UPLOAD_DIR } from '../../../infrastructure/upload/multerConfig.js';
+import { uploadToSupabase, deleteFromSupabase } from '../../../infrastructure/storage/supabaseStorage.js';
 
 /**
  * Contrôleur pour les serveurs
@@ -171,26 +169,19 @@ export class ServerController {
 
       // Vérifier que le fichier est une image
       if (!file.mimetype.startsWith('image/')) {
-        // Supprimer le fichier uploadé
-        fs.unlinkSync(file.path);
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Le fichier doit être une image', 400);
       }
-
-      // Construire l'URL publique de l'image
-      const imageUrl = `/uploads/${file.filename}`;
 
       // Récupérer le serveur pour vérifier les permissions et l'ancienne image
       const server = await this.getServerByIdUseCase.execute({ serverId, userId });
 
-      // Supprimer l'ancienne image si elle existe
-      if (server.imageUrl && server.imageUrl.startsWith('/uploads/')) {
-        const oldPath = path.join(UPLOAD_DIR, path.basename(server.imageUrl));
-        fs.unlink(oldPath, (err) => {
-          if (err) {
-            console.error('Failed to delete old server image:', { path: oldPath, error: err.message });
-          }
-        });
+      // Supprimer l'ancienne image de Supabase si elle existe
+      if (server.imageUrl) {
+        await deleteFromSupabase(server.imageUrl).catch(() => {});
       }
+
+      // Uploader vers Supabase
+      const imageUrl = await uploadToSupabase(file.buffer, file.originalname, file.mimetype, 'servers');
 
       // Mettre à jour le serveur avec la nouvelle image
       const updatedServer = await this.updateServerUseCase.execute({
@@ -205,14 +196,6 @@ export class ServerController {
         imageUrl
       });
     } catch (error) {
-      // En cas d'erreur, supprimer le fichier uploadé
-      if (req.file) {
-        fs.unlink(req.file.path, (err) => {
-          if (err) {
-            console.error('Failed to delete uploaded file after error:', err);
-          }
-        });
-      }
       next(error);
     }
   };

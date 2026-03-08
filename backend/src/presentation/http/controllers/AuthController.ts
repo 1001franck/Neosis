@@ -1,13 +1,11 @@
 import jwt from "jsonwebtoken";
-import fs from "fs";
-import path from "path";
 import type { Request, Response, NextFunction } from "express";
 import type { RegisterUserUseCase } from "../../../application/auth/usecases/RegisterUserUseCase.js";
 import type { LoginUserUseCase } from "../../../application/auth/usecases/LoginUserUseCase.js";
 import type { IUserRepository } from "../../../domain/users/repositories/UserRepository.js";
 import { JWT_SECRET } from "../../../shared/config/env.js";
 import { AppError, ErrorCode } from "../../../shared/errors/AppError.js";
-import { UPLOAD_DIR } from "../../../infrastructure/upload/multerConfig.js";
+import { uploadToSupabase, deleteFromSupabase } from "../../../infrastructure/storage/supabaseStorage.js";
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -156,21 +154,12 @@ export class AuthController {
         throw new AppError(ErrorCode.USER_NOT_FOUND, "User not found", 404);
       }
 
-      // Supprimer l'ancien avatar du disque s'il existe
+      // Supprimer l'ancien avatar de Supabase s'il existe
       if (user.avatarUrl) {
-        const oldFilename = user.avatarUrl.split('/uploads/').pop();
-        if (oldFilename) {
-          const oldPath = path.join(UPLOAD_DIR, oldFilename);
-          fs.unlink(oldPath, (err) => {
-            if (err) {
-              console.error('Failed to delete old avatar:', { path: oldPath, error: err.message });
-            }
-          });
-        }
+        await deleteFromSupabase(user.avatarUrl).catch(() => {});
       }
 
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      user.avatarUrl = `${baseUrl}/uploads/${file.filename}`;
+      user.avatarUrl = await uploadToSupabase(file.buffer, file.originalname, file.mimetype, 'avatars');
 
       const updatedUser = await this.userRepository.update(user);
 
@@ -203,21 +192,12 @@ export class AuthController {
         throw new AppError(ErrorCode.USER_NOT_FOUND, "User not found", 404);
       }
 
-      // Supprimer l'ancienne bannière du disque si elle existe
+      // Supprimer l'ancienne bannière de Supabase si elle existe
       if (user.bannerUrl) {
-        const oldFilename = user.bannerUrl.split('/uploads/').pop();
-        if (oldFilename) {
-          const oldPath = path.join(UPLOAD_DIR, oldFilename);
-          fs.unlink(oldPath, (err) => {
-            if (err) {
-              console.error('Failed to delete old banner:', { path: oldPath, error: err.message });
-            }
-          });
-        }
+        await deleteFromSupabase(user.bannerUrl).catch(() => {});
       }
 
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      user.bannerUrl = `${baseUrl}/uploads/${file.filename}`;
+      user.bannerUrl = await uploadToSupabase(file.buffer, file.originalname, file.mimetype, 'banners');
 
       const updatedUser = await this.userRepository.update(user);
 

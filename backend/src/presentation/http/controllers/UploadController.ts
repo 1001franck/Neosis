@@ -10,6 +10,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { Logger } from '../../../shared/utils/logger.js';
+import { uploadToSupabase } from '../../../infrastructure/storage/supabaseStorage.js';
 
 const logger = new Logger('UploadController');
 
@@ -57,15 +58,14 @@ export class UploadController {
         return;
       }
 
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-
-      // Créer les attachments en base
+      // Uploader vers Supabase et créer les attachments en base
       const attachments = await Promise.all(
         files.map(async (file) => {
+          const url = await uploadToSupabase(file.buffer, file.originalname, file.mimetype, 'attachments');
           return this.prisma.attachment.create({
             data: {
               id: randomUUID(),
-              url: `${baseUrl}/uploads/${file.filename}`,
+              url,
               name: file.originalname,
               size: file.size,
               mimeType: file.mimetype,
