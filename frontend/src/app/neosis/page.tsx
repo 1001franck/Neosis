@@ -12,9 +12,9 @@ import { useServers } from '@application/servers/useServers';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { logger } from '@shared/utils/logger';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
