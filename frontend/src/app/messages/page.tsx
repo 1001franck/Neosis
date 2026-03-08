@@ -1,0 +1,42 @@
+/**
+ * MESSAGES HOME PAGE
+ * Point d'entree pour les conversations privees
+ */
+
+'use client';
+
+import React, { useEffect } from 'react';
+import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
+import { MainLayout } from '@presentation/components/layout/MainLayout';
+import { useServers } from '@application/servers/useServers';
+import { logger } from '@shared/utils/logger';
+
+export default function MessagesHomePage(): React.ReactNode {
+  const { servers, getServers } = useServers();
+
+  useEffect(() => {
+    getServers().catch((err) => {
+      logger.error('Failed to load servers', err);
+    });
+  }, [getServers]);
+
+  return (
+    <ProtectedRoute>
+      <MainLayout servers={servers} showDirectMessages>
+        <div className="flex-1 flex items-center justify-center bg-background">
+          <div className="max-w-lg w-full text-center space-y-4 px-6">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-card flex items-center justify-center">
+              <svg className="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 2H4C2.9 2 2.01 2.9 2.01 4L2 22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM6 9H18V11H6V9ZM14 14H6V12H14V14ZM18 8H6V6H18V8Z"/>
+              </svg>
+            </div>
+            <h1 className="text-xl font-semibold text-foreground">Messages prives</h1>
+            <p className="text-sm text-muted-foreground">
+              Selectionnez une conversation dans la colonne de gauche ou ajoutez un ami pour demarrer.
+            </p>
+          </div>
+        </div>
+      </MainLayout>
+    </ProtectedRoute>
+  );
+}

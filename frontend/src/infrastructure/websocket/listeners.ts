@@ -1,0 +1,313 @@
+/**
+ * INFRASTRUCTURE - WEBSOCKET LISTENERS
+ * Event listeners pour Socket.IO
+ *
+ * Les noms d'evenements doivent correspondre EXACTEMENT
+ * a ceux emis par le backend (socketHandler.ts).
+ *
+ * Architecture:
+ * - Les listeners sont enregistres par useAuth hook
+ * - Ils utilisent directement le store Zustand pour maj l'etat
+ * - Pas de props drilling, communication via store global
+ */
+
+import { socket } from './socket';
+import { useMessageStore } from '@application/messages/messageStore';
+import { usePresenceStore } from '@application/members/presenceStore';
+import { useReadReceiptStore } from '@application/messages/readReceiptStore';
+import { useVoiceStore } from '@application/voice/voiceStore';
+import { useMemberStore } from '@application/members/memberStore';
+import { normalizeMessage } from '@domain/messages/normalizeMessage';
+import { MessageStatus } from '@domain/messages/types';
+import type { VoiceUser } from '@domain/voice/types';
+import { logger } from '@shared/utils/logger';
+import { useAuthStore } from '@application/auth/authStore';
+import { toastBus } from '@shared/utils/toastBus';
+
+function messageMentionsUser(content: string, username: string): boolean {
+  const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const mentionRegex = new RegExp(`(^|\\s)@${escaped}(\\b|$)`, 'i');
+  const everyoneRegex = /(^|\\s)@(everyone|all)(\\b|$)/i;
+  return mentionRegex.test(content) || everyoneRegex.test(content);
+}
+
+/**
+ * Enregistrer tous les listeners WebSocket
+ * Les callbacks utilisent le store Zustand directement
+ */
+export function setupListeners() {
+  // === MESSAGE EVENTS ===
+
+  /**
+   * Nouveau message recu
+   * Backend emet: message:new
+   */
+  socket.on('message:new', (rawMessage: any) => {
+    const message = normalizeMessage(rawMessage);
+    logger.info('Message new event received', { messageId: message.id });
+    const store = useMessageStore.getState();
+
+    if (message.clientTempId) {
+      store.reconcileOptimisticMessage(message.clientTempId, {
+        ...message,
+        status: MessageStatus.SENT,
+      });
+    } else {
+      store.addMessage(message);
+    }
+
+    // If this is our own message, upgrade to DELIVERED when others are in the channel
+    const currentUserId = useAuthStore.getState().user?.id;
+    if (currentUserId && message.authorId === currentUserId) {
+      const onlineCount = store.getChannelUserCount(message.channelId);
+      if (onlineCount > 1) {
+        store.updateMessageStatus(message.id, MessageStatus.DELIVERED);
+      }
+    }
+
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser && message.authorId !== currentUser.id) {
+      const isMention = messageMentionsUser(message.content || '', currentUser.username);
+      if (isMention) {
+        store.addMention(message.channelId);
+        const authorName = message.author?.username || 'Quelqu’un';
+        toastBus.emit({
+          type: 'info',
+          message: `${authorName} vous a mentionné`,
+          duration: 4000,
+        });
+      }
+    }
+  });
+
+  /**
+   * Message modifie
+   * Backend emet: message:updated
+   */
+  socket.on('message:updated', (rawMessage: any) => {
+    const message = normalizeMessage(rawMessage);
+    logger.info('Message updated event received', { messageId: message.id });
+    useMessageStore.getState().updateMessage(message.id, message);
+  });
+
+  /**
+   * Message supprime
+   * Backend emet: message:deleted avec { messageId: string }
+   */
+  socket.on('message:deleted', (data: {
+    messageId: string;
+    deletedBy: string;
+    deletedByUserId: string;
+    deletedByRole?: 'OWNER' | 'ADMIN' | 'MEMBER';
+    scope?: 'me' | 'everyone';
+  }) => {
+    logger.info('Message deleted event received', { messageId: data.messageId, deletedBy: data.deletedBy });
+    useMessageStore.getState().markAsDeleted(data.messageId, data.deletedBy, data.deletedByUserId, data.deletedByRole);
+  });
+
+  // === TYPING EVENTS ===
+
+  /**
+   * Utilisateur en train de taper
+   * Backend emet: typing:user_started avec { userId, username, channelId }
+   */
+  socket.on('typing:user_started', ({
+    channelId,
+    userId,
+    username,
+  }: {
+    channelId: string;
+    userId: string;
+    username: string;
+  }) => {
+    logger.debug('User typing started', { channelId, userId, username });
+    useMessageStore.getState().addTypingUser(channelId, userId, username || userId);
+  });
+
+  /**
+   * Utilisateur a arrete de taper
+   * Backend emet: typing:user_stopped avec { userId, username, channelId }
+   */
+  socket.on('typing:user_stopped', ({
+    channelId,
+    userId,
+  }: {
+    channelId: string;
+    userId: string;
+  }) => {
+    logger.debug('User typing stopped', { channelId, userId });
+    useMessageStore.getState().removeTypingUser(channelId, userId);
+  });
+
+  // === SERVER PRESENCE ===
+
+  /**
+   * Liste des utilisateurs en ligne mise a jour
+   * Backend emet: server:online_users avec { serverId, userIds }
+   */
+  socket.on('server:online_users', ({
+    serverId,
+    userIds,
+  }: {
+    serverId: string;
+    userIds: string[];
+  }) => {
+    logger.info('Online users updated', { serverId, count: userIds.length });
+    usePresenceStore.getState().setOnlineUsers(serverId, userIds);
+  });
+
+  // === CHANNEL USER EVENTS ===
+
+  socket.on('channel:user_joined', ({
+    userId,
+    channelId,
+  }: {
+    userId: string;
+    channelId: string;
+  }) => {
+    logger.info('User joined channel', { userId, channelId });
+    const store = useMessageStore.getState();
+    store.addChannelUser(channelId, userId);
+
+    const currentUserId = useAuthStore.getState().user?.id;
+    if (currentUserId) {
+      const onlineCount = store.getChannelUserCount(channelId);
+      if (onlineCount > 1) {
+        store.updateAuthorMessagesDelivered(channelId, currentUserId);
+      }
+    }
+  });
+
+  socket.on('channel:user_left', ({
+    userId,
+    channelId,
+  }: {
+    userId: string;
+    channelId: string;
+  }) => {
+    logger.info('User left channel', { userId, channelId });
+    useMessageStore.getState().removeChannelUser(channelId, userId);
+  });
+
+  // === READ RECEIPT EVENTS ===
+
+  socket.on('message:read', ({
+    userId,
+    channelId,
+    messageId,
+    readAt
+  }: {
+    userId: string;
+    channelId: string;
+    messageId: string;
+    readAt: string | Date;
+  }) => {
+    // logger.debug('Message read receipt', { userId, channelId, messageId });
+    useReadReceiptStore.getState().updateReadStatus(channelId, userId, messageId, new Date(readAt));
+
+    // Mark our own messages as READ up to the read message
+    const currentUserId = useAuthStore.getState().user?.id;
+    if (currentUserId && userId !== currentUserId) {
+      useMessageStore.getState().updateAuthorMessagesReadUpTo(channelId, currentUserId, messageId);
+    }
+  });
+
+  // === ERROR EVENTS ===
+
+  socket.on('message:error', ({ message }: { message: string }) => {
+    logger.error('Socket message error', { message });
+    useMessageStore.getState().setError(message);
+  });
+
+  // === VOICE EVENTS ===
+
+  /**
+   * Un utilisateur a rejoint le voice channel
+   */
+  socket.on('voice:user_joined', ({ userId, username, channelId, isMuted, isDeafened }: {
+    userId: string;
+    username: string;
+    channelId: string;
+    isMuted: boolean;
+    isDeafened: boolean;
+  }) => {
+    logger.info('User joined voice channel', { userId, username, channelId });
+
+    const member = useMemberStore.getState().members.find((m) => m.userId === userId);
+    const voiceUser: VoiceUser = {
+      userId,
+      username,
+      avatar: member?.user.avatar ?? null,
+      isMuted,
+      isDeafened,
+      connectedAt: new Date().toISOString(),
+    };
+
+    useVoiceStore.getState().addUser(channelId, voiceUser);
+  });
+
+  /**
+   * Un utilisateur a quitté le voice channel
+   */
+  socket.on('voice:user_left', ({ userId, channelId }: { userId: string; channelId: string }) => {
+    logger.info('User left voice channel', { userId, channelId });
+    useVoiceStore.getState().removeUser(channelId, userId);
+  });
+
+  /**
+   * L'état vocal d'un utilisateur a changé (mute/deafen)
+   */
+  socket.on('voice:user_state_changed', ({ userId, isMuted, isDeafened }: {
+    userId: string;
+    isMuted: boolean;
+    isDeafened: boolean;
+  }) => {
+    const { connectedChannelId } = useVoiceStore.getState();
+    if (connectedChannelId) {
+      logger.info('User voice state changed', { userId, isMuted, isDeafened });
+      useVoiceStore.getState().updateUserState(connectedChannelId, userId, isMuted, isDeafened);
+    }
+  });
+
+  /**
+   * Réception de la liste des utilisateurs du voice channel
+   */
+  socket.on('voice:channel_users', ({ channelId, users }: { channelId: string; users: VoiceUser[] }) => {
+    logger.info('Received voice channel users', { channelId, count: users.length });
+    useVoiceStore.getState().setChannelUsers(channelId, users);
+  });
+
+  /**
+   * Erreur voice
+   */
+  socket.on('voice:error', ({ message }: { message: string }) => {
+    logger.error('Voice error', { message });
+    useVoiceStore.getState().setError(message);
+    useVoiceStore.getState().setConnecting(false);
+  });
+
+  logger.info('WebSocket listeners setup complete');
+}
+
+/**
+ * Nettoyer les listeners WebSocket
+ */
+export function cleanupListeners() {
+  socket.off('message:new');
+  socket.off('message:updated');
+  socket.off('message:deleted');
+  socket.off('typing:user_started');
+  socket.off('typing:user_stopped');
+  socket.off('server:online_users');
+  socket.off('channel:user_joined');
+  socket.off('channel:user_left');
+  socket.off('message:read');
+  socket.off('message:error');
+  socket.off('voice:user_joined');
+  socket.off('voice:user_left');
+  socket.off('voice:user_state_changed');
+  socket.off('voice:channel_users');
+  socket.off('voice:error');
+
+  logger.info('WebSocket listeners cleaned up');
+}

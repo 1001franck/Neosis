@@ -1,0 +1,46 @@
+### Configuration des variables
+@baseUrl = http://localhost:3001
+@hugo = hugo_id
+@Harel = Harel_id
+
+### 1. LOGIN - Se connecter en tant que Hugo (OWNER)
+# @name loginHugo
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "userId": "{{hugo}}"
+}
+
+### 2. ME - Vérifier l'identité de Hugo
+GET {{baseUrl}}/auth/me
+Content-Type: application/json
+
+### 3. DELETE - Action autorisée (Hugo est OWNER)
+DELETE {{baseUrl}}/servers/server_1
+Content-Type: application/json
+
+### ---------------------------------------------------------
+
+### 4. LOGIN - Se connecter en tant que Harel (MEMBER)
+# @name loginHarel
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "userId": "{{Harel}}"
+}
+
+### 5. DELETE - Action refusée (Harel est seulement MEMBER)
+# Doit renvoyer une erreur 403
+DELETE {{baseUrl}}/servers/server_1
+Content-Type: application/json
+
+### 6. LOGOUT - Se déconnecter
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+### 7. ME - Vérifier après déconnexion
+# Doit renvoyer une erreur (Non authentifié)
+GET {{baseUrl}}/auth/me
+Content-Type: application/json

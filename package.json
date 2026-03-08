@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.91.2",
+    "glob": "^13.0.0"
+  }
+}
