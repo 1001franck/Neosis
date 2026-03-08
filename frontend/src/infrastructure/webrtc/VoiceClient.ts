@@ -349,7 +349,7 @@ export class VoiceClient {
 
       const tick = () => {
         if (!peer.analyser || !peer.dataArray) return;
-        peer.analyser.getByteFrequencyData(peer.dataArray as Uint8Array);
+        peer.analyser.getByteFrequencyData(peer.dataArray as unknown as Uint8Array<ArrayBuffer>);
         const sum = peer.dataArray.reduce((acc, v) => acc + v, 0);
         const avg = sum / peer.dataArray.length;
         const speaking = avg > 18;
