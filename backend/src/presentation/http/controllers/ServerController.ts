@@ -394,7 +394,7 @@ export class ServerController {
         serverId,
         targetMemberId: memberId,
         durationHours: Number.isFinite(durationHours) ? durationHours : null,
-        reason
+        ...(reason !== undefined ? { reason } : {})
       });
 
       res.status(200).json({
