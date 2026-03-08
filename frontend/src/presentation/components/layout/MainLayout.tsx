@@ -32,6 +32,13 @@ interface DirectMessage {
   isOnline?: boolean;
 }
 
+interface MainLayoutUser {
+  username: string;
+  avatar?: string;
+  customStatus?: string;
+  statusEmoji?: string;
+}
+
 interface MainLayoutProps {
   children: React.ReactNode;
   /** ID du serveur actuellement actif */
@@ -42,6 +49,12 @@ interface MainLayoutProps {
   servers?: Server[];
   /** Liste des messages directs */
   directMessages?: DirectMessage[];
+  /** Callbacks pour la ServerSidebar */
+  onLogout?: () => void;
+  onSettings?: () => void;
+  onCreateServer?: () => void;
+  onJoinServer?: () => void;
+  user?: MainLayoutUser;
 }
 
 /**
@@ -52,18 +65,31 @@ interface MainLayoutProps {
  * 2. DirectMessagesPanel (240px) - Liste messages/amis (responsive)
  * 3. Main content area - Contenu principal (flex-1)
  */
-export function MainLayout({ 
-  children, 
+export function MainLayout({
+  children,
   activeServerId,
   showDirectMessages = true,
   servers,
-  directMessages
+  directMessages,
+  onLogout,
+  onSettings,
+  onCreateServer,
+  onJoinServer,
+  user,
 }: MainLayoutProps): React.ReactNode {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Server Sidebar - 72px, desktop only */}
       <ResponsiveSidebar id="server" position="left" width="w-[72px]" showOnDesktop={false} className="bg-secondary py-3 gap-2">
-        <ServerSidebar activeServerId={activeServerId} servers={servers} />
+        <ServerSidebar
+          activeServerId={activeServerId}
+          servers={servers}
+          onLogout={onLogout}
+          onSettings={onSettings}
+          onCreateServer={onCreateServer}
+          onJoinServer={onJoinServer}
+          user={user}
+        />
       </ResponsiveSidebar>
 
       {/* Direct Messages Panel - 240px, responsive */}

@@ -25,7 +25,7 @@ const fadeIn: Variants = {
 
 export default function NeosisPage(): React.ReactNode {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { servers, getServers, createServer, joinServer } = useServers();
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +37,8 @@ export default function NeosisPage(): React.ReactNode {
   const [joinInviteCode, setJoinInviteCode] = useState('');
   const [serverModalError, setServerModalError] = useState<string | null>(null);
   const [serverModalLoading, setServerModalLoading] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Charger les serveurs au montage
   useEffect(() => {
@@ -102,12 +104,32 @@ export default function NeosisPage(): React.ReactNode {
     }
   };
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.push('/');
+    } catch {
+      router.push('/');
+    } finally {
+      setLoggingOut(false);
+      setShowLogoutModal(false);
+    }
+  };
+
+  const sidebarUser = user ? { username: user.username, avatar: user.avatar ?? undefined } : undefined;
+
   return (
     <ProtectedRoute>
       <React.Fragment>
         <MainLayout
           servers={servers}
           showDirectMessages
+          user={sidebarUser}
+          onLogout={() => setShowLogoutModal(true)}
+          onSettings={() => router.push('/settings')}
+          onCreateServer={() => setShowCreateServer(true)}
+          onJoinServer={() => setShowJoinServer(true)}
         >
           {/* Empty State - Belle page d'accueil */}
           <div className="flex-1 flex items-center justify-center bg-background p-8">
@@ -329,6 +351,43 @@ export default function NeosisPage(): React.ReactNode {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* === MODAL : Déconnexion === */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowLogoutModal(false)}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div
+              className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mx-auto w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+                <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground text-center">Se déconnecter ?</h3>
+              <p className="text-sm text-muted-foreground text-center mt-2">
+                Êtes-vous sûr de vouloir vous déconnecter de votre compte ?
+              </p>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  disabled={loggingOut}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-foreground bg-secondary border border-border hover:bg-secondary/80 transition-colors disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {loggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+                </button>
+              </div>
             </div>
           </div>
         )}
