@@ -124,9 +124,17 @@ export default function RegisterPage() {
         router.push('/neosis');
       }
     } catch (err) {
-      const message = (err as Error).message;
       logger.error('Registration failed', err);
-      setError(message || "Erreur lors de l'inscription");
+      const raw = (err as Error).message || '';
+      if (raw.toLowerCase().includes('already') || raw.toLowerCase().includes('existe')) {
+        setError('Un compte avec cet email ou ce nom d\'utilisateur existe déjà.');
+      } else if (raw.includes('500') || raw.toLowerCase().includes('internal')) {
+        setError('Le serveur a rencontré une erreur. Réessayez dans quelques instants.');
+      } else if (raw.toLowerCase().includes('network') || raw.toLowerCase().includes('fetch')) {
+        setError('Impossible de contacter le serveur. Vérifiez votre connexion.');
+      } else {
+        setError(raw || "Erreur lors de l'inscription");
+      }
     } finally {
       setLoading(false);
     }

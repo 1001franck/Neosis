@@ -2,8 +2,11 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type LogContext = string | number | boolean | Record<string, unknown> | Error | unknown | null | undefined;
 
+const isProd = process.env.NODE_ENV === 'production';
+
 class Logger {
   log(level: LogLevel, message: string, context?: LogContext) {
+    if (isProd) return;
     const timestamp = new Date().toISOString();
     const contextStr = context ? ` ${JSON.stringify(context)}` : '';
     console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}${contextStr}`);
