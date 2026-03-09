@@ -21,7 +21,7 @@ export interface LeaveVoiceChannelDTO {
  * 1. Vérifier que l'utilisateur est bien connecté à un voice channel
  * 2. Supprimer la VoiceConnection
  */
-export class LeaveVoiceChannelUseCase extends BaseUseCase<LeaveVoiceChannelDTO, void> {
+export class LeaveVoiceChannelUseCase extends BaseUseCase<LeaveVoiceChannelDTO, { channelId: string }> {
   constructor(private voiceRepository: VoiceConnectionRepository) {
     super();
   }
@@ -30,7 +30,7 @@ export class LeaveVoiceChannelUseCase extends BaseUseCase<LeaveVoiceChannelDTO, 
     return 'LeaveVoiceChannelUseCase';
   }
 
-  async execute(data: LeaveVoiceChannelDTO): Promise<void> {
+  async execute(data: LeaveVoiceChannelDTO): Promise<{ channelId: string }> {
     // 1. Vérifier que l'utilisateur est connecté
     const connection = await this.voiceRepository.findByUserId(data.userId);
 
@@ -42,7 +42,11 @@ export class LeaveVoiceChannelUseCase extends BaseUseCase<LeaveVoiceChannelDTO, 
       );
     }
 
+    const channelId = connection.channelId;
+
     // 2. Supprimer la connexion (= quitter)
     await this.voiceRepository.delete(data.userId);
+
+    return { channelId };
   }
 }

@@ -326,6 +326,14 @@ export function setupListeners() {
     useVoiceStore.getState().setConnecting(false);
   });
 
+  /**
+   * Mise à jour du compteur de voix d'un channel (visible par tous les membres du serveur)
+   */
+  socket.on('server:voice_update', ({ channelId, count }: { channelId: string; count: number }) => {
+    logger.info('Voice count updated', { channelId, count });
+    useVoiceStore.getState().setVoiceCount(channelId, count);
+  });
+
   logger.info('WebSocket listeners setup complete');
 }
 
@@ -351,6 +359,7 @@ export function cleanupListeners() {
   socket.off('voice:user_state_changed');
   socket.off('voice:channel_users');
   socket.off('voice:error');
+  socket.off('server:voice_update');
 
   logger.info('WebSocket listeners cleaned up');
 }

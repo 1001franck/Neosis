@@ -30,7 +30,7 @@ export interface JoinVoiceChannelDTO {
  * 4. Créer la VoiceConnection
  * 5. Retourner les informations de connexion
  */
-export class JoinVoiceChannelUseCase extends BaseUseCase<JoinVoiceChannelDTO, VoiceConnection> {
+export class JoinVoiceChannelUseCase extends BaseUseCase<JoinVoiceChannelDTO, { connection: VoiceConnection; serverId: string }> {
   constructor(
     private voiceRepository: VoiceConnectionRepository,
     private channelRepository: ChannelRepository,
@@ -43,7 +43,7 @@ export class JoinVoiceChannelUseCase extends BaseUseCase<JoinVoiceChannelDTO, Vo
     return 'JoinVoiceChannelUseCase';
   }
 
-  async execute(data: JoinVoiceChannelDTO): Promise<VoiceConnection> {
+  async execute(data: JoinVoiceChannelDTO): Promise<{ connection: VoiceConnection; serverId: string }> {
     // 1. Trouver le channel
     const channel = await this.channelRepository.findById(data.channelId);
 
@@ -91,6 +91,7 @@ export class JoinVoiceChannelUseCase extends BaseUseCase<JoinVoiceChannelDTO, Vo
       new Date()
     );
 
-    return await this.voiceRepository.create(newConnection);
+    const connection = await this.voiceRepository.create(newConnection);
+    return { connection, serverId: channel.serverId };
   }
 }

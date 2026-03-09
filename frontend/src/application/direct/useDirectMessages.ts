@@ -4,14 +4,18 @@ import { directApi } from '@infrastructure/api/direct.api';
 import { logger } from '@shared/utils/logger';
 import { useDirectMessageStore } from './directMessageStore';
 
+// Tableau vide stable pour éviter les nouvelles références à chaque rendu
+const EMPTY_MESSAGES: DirectMessage[] = [];
+
 export function useDirectMessages(conversationId?: string) {
   const [initialMessages, setInitialMessages] = useState<DirectMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Messages reçus en temps réel via WebSocket
+  // On utilise EMPTY_MESSAGES comme fallback stable pour éviter les boucles infinies
   const incomingMessages = useDirectMessageStore(
-    (state) => (conversationId ? state.messagesByConversation.get(conversationId) ?? [] : [])
+    (state) => (conversationId ? state.messagesByConversation.get(conversationId) ?? EMPTY_MESSAGES : EMPTY_MESSAGES)
   );
 
   // Fusionner les messages REST + socket sans doublons

@@ -13,6 +13,9 @@ interface VoiceStore extends VoiceState {
   // Utilisateurs connectés par channel
   connectedUsers: Map<string, VoiceUser[]>;
 
+  // Compteur de voix par channel (visible par tous les membres du serveur)
+  voiceCountByChannel: Map<string, number>;
+
   // Actions
   setConnected: (channelId: string) => void;
   setDisconnected: () => void;
@@ -27,6 +30,7 @@ interface VoiceStore extends VoiceState {
   removeUser: (channelId: string, userId: string) => void;
   updateUserState: (channelId: string, userId: string, isMuted: boolean, isDeafened: boolean) => void;
   setUserSpeaking: (channelId: string, userId: string, isSpeaking: boolean) => void;
+  setVoiceCount: (channelId: string, count: number) => void;
 
   // Reset
   reset: () => void;
@@ -50,6 +54,7 @@ const initialState: VoiceState = {
 export const useVoiceStore = create<VoiceStore>((set) => ({
   ...initialState,
   connectedUsers: new Map(),
+  voiceCountByChannel: new Map(),
 
   /**
    * Marquer comme connecté à un voice channel
@@ -174,10 +179,20 @@ export const useVoiceStore = create<VoiceStore>((set) => ({
   }),
 
   /**
+   * Mettre à jour le compteur de voix d'un channel (reçu via server:voice_update)
+   */
+  setVoiceCount: (channelId: string, count: number) => set((state) => {
+    const newMap = new Map(state.voiceCountByChannel);
+    newMap.set(channelId, count);
+    return { voiceCountByChannel: newMap };
+  }),
+
+  /**
    * Reset complet du store
    */
   reset: () => set({
     ...initialState,
     connectedUsers: new Map(),
+    voiceCountByChannel: new Map(),
   }),
 }));

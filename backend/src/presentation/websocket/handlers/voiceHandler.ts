@@ -73,13 +73,14 @@ export class VoiceHandler {
       console.log(`[Voice] User ${username} (${userId}) joining channel ${channelId}`);
 
       // Use case : Rejoindre le voice channel
-      const connection = await this.joinVoiceChannelUseCase.execute({ userId, channelId });
+      const { connection, serverId } = await this.joinVoiceChannelUseCase.execute({ userId, channelId });
 
       // Rejoindre la room Socket.IO du channel
       await socket.join(`voice:${channelId}`);
 
-      // Stocker le channelId dans les données du socket
+      // Stocker le channelId et serverId dans les données du socket
       socket.data.voiceChannelId = channelId;
+      socket.data.voiceServerId = serverId;
 
       // Notifier tous les utilisateurs du channel
       this.io.to(`voice:${channelId}`).emit('voice:user_joined', {
@@ -93,6 +94,9 @@ export class VoiceHandler {
       // Envoyer la liste complète des utilisateurs au nouveau venu
       const users = await this.getChannelVoiceUsersUseCase.execute({ channelId });
       socket.emit('voice:channel_users', { channelId, users });
+
+      // Notifier tous les membres du serveur du nouveau compteur (pour la sidebar)
+      this.io.to(`server:${serverId}`).emit('server:voice_update', { channelId, count: users.length });
 
       console.log(`[Voice] User ${username} joined channel ${channelId} successfully`);
     } catch (error: unknown) {
@@ -118,6 +122,8 @@ export class VoiceHandler {
 
       console.log(`[Voice] User ${userId} leaving channel ${channelId}`);
 
+      const serverId = socket.data.voiceServerId;
+
       // Use case : Quitter le voice channel
       await this.leaveVoiceChannelUseCase.execute({ userId });
 
@@ -130,10 +136,17 @@ export class VoiceHandler {
           userId,
           channelId
         });
+
+        // Notifier tous les membres du serveur du nouveau compteur (pour la sidebar)
+        if (serverId) {
+          const users = await this.getChannelVoiceUsersUseCase.execute({ channelId });
+          this.io.to(`server:${serverId}`).emit('server:voice_update', { channelId, count: users.length });
+        }
       }
 
       // Nettoyer les données du socket
       delete socket.data.voiceChannelId;
+      delete socket.data.voiceServerId;
 
       console.log(`[Voice] User ${userId} left channel successfully`);
     } catch (error: unknown) {
@@ -244,6 +257,8 @@ export class VoiceHandler {
       if (userId && channelId) {
         console.log(`[Voice] User ${userId} disconnected, leaving voice channel ${channelId}`);
 
+        const serverId = socket.data.voiceServerId;
+
         // Quitter automatiquement le voice channel
         await this.leaveVoiceChannelUseCase.execute({ userId });
 
@@ -252,6 +267,12 @@ export class VoiceHandler {
           userId,
           channelId
         });
+
+        // Notifier tous les membres du serveur du nouveau compteur (pour la sidebar)
+        if (serverId) {
+          const users = await this.getChannelVoiceUsersUseCase.execute({ channelId });
+          this.io.to(`server:${serverId}`).emit('server:voice_update', { channelId, count: users.length });
+        }
       }
     } catch (error: unknown) {
       console.error('[Voice] Disconnect cleanup error:', error);

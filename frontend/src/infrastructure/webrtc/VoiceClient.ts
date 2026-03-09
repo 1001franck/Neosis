@@ -323,10 +323,14 @@ export class VoiceClient {
       this.setMuted(true);
     }
 
-    logger.info(`🔇 Audio ${deafened ? 'deafened' : 'undeafened'}`);
+    // Mute/unmute tous les éléments <audio> des peers
+    this.peers.forEach((peer) => {
+      if (peer.audioElement) {
+        peer.audioElement.muted = deafened;
+      }
+    });
 
-    // TODO: Mute tous les éléments <audio> des peers
-    // (Pour l'instant, géré au niveau UI)
+    logger.info(`🔇 Audio ${deafened ? 'deafened' : 'undeafened'}`);
   }
 
   /**
@@ -439,5 +443,25 @@ export class VoiceClient {
    */
   getConnectedPeerIds(): string[] {
     return Array.from(this.peers.keys());
+  }
+}
+
+/**
+ * Singleton global — partagé entre tous les appels à useVoice()
+ * Cela évite le problème où chaque composant a son propre voiceClientRef null
+ */
+let _voiceClientInstance: VoiceClient | null = null;
+
+export function getVoiceClient(): VoiceClient {
+  if (!_voiceClientInstance) {
+    _voiceClientInstance = new VoiceClient();
+  }
+  return _voiceClientInstance;
+}
+
+export function destroyVoiceClient(): void {
+  if (_voiceClientInstance) {
+    _voiceClientInstance.cleanup();
+    _voiceClientInstance = null;
   }
 }

@@ -85,6 +85,7 @@ function ServerChannelsSidebarInternal({
   const isOwner = currentUserRole === 'OWNER';
   const isAdminOrOwner = currentUserRole === 'OWNER' || currentUserRole === 'ADMIN';
   const voiceUsersByChannel = useVoiceStore((state) => state.connectedUsers);
+  const voiceCountByChannel = useVoiceStore((state) => state.voiceCountByChannel);
   const getMentionCount = useMessageStore((state) => state.getMentionCount);
   const { updateServer, uploadServerImage } = useServerSettings();
   const { updateChannel } = useChannelSettings();
@@ -327,7 +328,7 @@ function ServerChannelsSidebarInternal({
                         type={channel.type}
                         isActive={channel.id === activeChannelId}
                         mentionCount={getMentionCount(channel.id)}
-                        connectedUsers={voiceUsersByChannel.get(channel.id)?.length ?? 0}
+                        connectedUsers={voiceCountByChannel.get(channel.id) ?? voiceUsersByChannel.get(channel.id)?.length ?? 0}
                         onClick={onChannelClick}
                         onJoinVoice={onJoinVoice}
                         onSettings={isAdminOrOwner ? () => {

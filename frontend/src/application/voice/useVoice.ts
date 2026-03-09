@@ -2,40 +2,21 @@
  * APPLICATION - USE VOICE HOOK
  * Hook React personnalisé pour gérer les voice channels
  *
- * Responsabilités :
- * - Interface simple pour rejoindre/quitter un voice channel
- * - Gestion du WebRTC client
- * - Synchronisation avec le store Zustand
- * - Gestion des erreurs
+ * ⚠️ Le VoiceClient est un SINGLETON (getVoiceClient/destroyVoiceClient)
+ * partagé entre tous les composants qui appellent useVoice().
+ * Avant, chaque composant avait son propre voiceClientRef null, donc
+ * les appels à toggleMute/toggleDeafen/leaveVoiceChannel depuis VoiceMiniPanel
+ * ne faisaient rien sur le vrai stream audio.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useVoiceStore } from './voiceStore';
-import { VoiceClient } from '@infrastructure/webrtc/VoiceClient';
+import { getVoiceClient, destroyVoiceClient } from '@infrastructure/webrtc/VoiceClient';
 import { socketEmitters } from '@infrastructure/websocket/emitters';
 import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
 
-/**
- * Hook personnalisé pour le voice
- *
- * @example
- * const { joinVoiceChannel, leaveVoiceChannel, toggleMute, isConnected } = useVoice();
- *
- * // Rejoindre un voice channel
- * await joinVoiceChannel('channel-id-123');
- *
- * // Toggle mute
- * toggleMute();
- *
- * // Quitter
- * await leaveVoiceChannel();
- */
 export function useVoice() {
-  // Référence au client WebRTC (persistante entre les renders)
-  const voiceClientRef = useRef<VoiceClient | null>(null);
-
-  // État depuis le store Zustand
   const {
     isConnected,
     connectedChannelId,
@@ -62,21 +43,16 @@ export function useVoice() {
 
       logger.info('🎤 Joining voice channel', { channelId });
 
-      // 1. Créer le client WebRTC si nécessaire
-      if (!voiceClientRef.current) {
-        voiceClientRef.current = new VoiceClient();
-      }
+      // Initialiser l'audio via le singleton partagé
+      await getVoiceClient().initializeAudio();
 
-      // 2. Initialiser l'audio (demander accès au micro)
-      await voiceClientRef.current.initializeAudio();
-
-      // 3. Informer le backend via Socket.IO
+      // Informer le backend via Socket.IO
       socketEmitters.joinVoiceChannel(channelId);
 
-      // 4. Mettre à jour le store (le serveur confirmera via 'voice:user_joined')
+      // Mettre à jour le store
       setConnected(channelId);
 
-      logger.info(' Joined voice channel successfully', { channelId });
+      logger.info('✅ Joined voice channel successfully', { channelId });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to join voice channel';
       logger.error('❌ Failed to join voice channel', err);
@@ -96,24 +72,21 @@ export function useVoice() {
       const currentChannelId = useVoiceStore.getState().connectedChannelId;
       const currentUserId = useAuthStore.getState().user?.id;
 
-      // 1. Informer le backend via Socket.IO
+      // 1. Informer le backend
       socketEmitters.leaveVoiceChannel();
 
-      // 2. Nettoyer le client WebRTC
-      if (voiceClientRef.current) {
-        voiceClientRef.current.cleanup();
-        voiceClientRef.current = null;
-      }
+      // 2. Détruire le singleton WebRTC (libère le micro + coupe tous les streams)
+      destroyVoiceClient();
 
-      // 2.5 Nettoyer le compteur local immédiatement
+      // 3. Retirer l'utilisateur local du store immédiatement
       if (currentChannelId && currentUserId) {
         useVoiceStore.getState().removeUser(currentChannelId, currentUserId);
       }
 
-      // 3. Mettre à jour le store
+      // 4. Mettre à jour le store
       setDisconnected();
 
-      logger.info(' Left voice channel successfully');
+      logger.info('✅ Left voice channel successfully');
     } catch (err) {
       logger.error('❌ Failed to leave voice channel', err);
       throw err;
@@ -121,54 +94,41 @@ export function useVoice() {
   }, [setDisconnected]);
 
   /**
-   * Toggle mute (activer/désactiver le micro)
+   * Toggle mute
    */
   const toggleMute = useCallback(() => {
     const newMuted = !isMuted;
 
-    // 1. Appliquer localement (WebRTC)
-    if (voiceClientRef.current) {
-      voiceClientRef.current.setMuted(newMuted);
-    }
-
-    // 2. Mettre à jour le store
+    // Agit sur le singleton partagé — fonctionne quel que soit le composant appelant
+    getVoiceClient().setMuted(newMuted);
     setMuted(newMuted);
-
-    // 3. Informer le backend (pour que les autres voient l'icône mute)
     socketEmitters.updateVoiceState(newMuted, isDeafened);
 
     logger.info(`🎤 Microphone ${newMuted ? 'muted' : 'unmuted'}`);
   }, [isMuted, isDeafened, setMuted]);
 
   /**
-   * Toggle deafen (activer/désactiver le son)
+   * Toggle deafen
    */
   const toggleDeafen = useCallback(() => {
     const newDeafened = !isDeafened;
 
-    // 1. Appliquer localement (WebRTC)
-    if (voiceClientRef.current) {
-      voiceClientRef.current.setDeafened(newDeafened);
-    }
-
-    // 2. Mettre à jour le store (deafen implique mute)
+    // setDeafened coupe aussi le micro ET mute tous les audio elements des peers
+    getVoiceClient().setDeafened(newDeafened);
     setDeafened(newDeafened);
-
-    // 3. Informer le backend
     socketEmitters.updateVoiceState(newDeafened ? true : isMuted, newDeafened);
 
     logger.info(`🔇 Audio ${newDeafened ? 'deafened' : 'undeafened'}`);
   }, [isDeafened, isMuted, setDeafened]);
 
   /**
-   * Créer une connexion WebRTC avec un autre utilisateur
-   * (Appelé quand un autre utilisateur rejoint le channel)
+   * Créer une connexion WebRTC avec un pair
    */
   const connectToPeer = useCallback(async (userId: string) => {
-    if (voiceClientRef.current && isConnected) {
+    if (isConnected) {
       try {
         logger.info('🔗 Connecting to peer', { userId });
-        await voiceClientRef.current.createPeerConnection(userId, true);
+        await getVoiceClient().createPeerConnection(userId, true);
       } catch (err) {
         logger.error('Failed to connect to peer', err);
       }
@@ -176,36 +136,18 @@ export function useVoice() {
   }, [isConnected]);
 
   /**
-   * Cleanup automatique quand le composant est démonté
-   */
-  useEffect(() => {
-    return () => {
-      if (voiceClientRef.current) {
-        voiceClientRef.current.cleanup();
-        voiceClientRef.current = null;
-      }
-    };
-  }, []);
-
-  /**
-   * Quand on reçoit la liste des utilisateurs du channel,
-   * créer des connexions WebRTC avec chacun
+   * Connexion automatique aux pairs déjà présents dans le channel
    */
   useEffect(() => {
     if (isConnected && connectedChannelId) {
       const users = connectedUsers.get(connectedChannelId) || [];
-
-      // Créer des connexions avec tous les utilisateurs déjà présents
       users.forEach(user => {
-        // Ne pas créer de connexion avec soi-même
-        // (userId sera filtré côté VoiceClient si besoin)
         connectToPeer(user.userId);
       });
     }
   }, [isConnected, connectedChannelId, connectedUsers, connectToPeer]);
 
   return {
-    // État
     isConnected,
     connectedChannelId,
     isMuted,
@@ -213,8 +155,6 @@ export function useVoice() {
     isConnecting,
     error,
     connectedUsers: connectedChannelId ? connectedUsers.get(connectedChannelId) || [] : [],
-
-    // Actions
     joinVoiceChannel,
     leaveVoiceChannel,
     toggleMute,
