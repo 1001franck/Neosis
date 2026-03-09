@@ -34,6 +34,7 @@ interface PeerConnection {
   userId: string;           // ID de l'utilisateur distant
   connection: RTCPeerConnection;  // Connexion WebRTC
   stream?: MediaStream;     // Stream audio reçu
+  audioElement?: HTMLAudioElement; // Élément audio (stocké pour pouvoir le stopper)
   audioContext?: AudioContext; // Analyse audio pour "speaker"
   analyser?: AnalyserNode;
   dataArray?: Uint8Array;
@@ -194,10 +195,11 @@ export class VoiceClient {
       audioElement.autoplay = true;  // Jouer automatiquement
       audioElement.muted = this.isDeafened;  // Respecter l'état deafen
 
-      // Stocker le stream
+      // Stocker le stream ET l'élément audio pour pouvoir les stopper au cleanup
       const peer = this.peers.get(userId);
       if (peer) {
         peer.stream = remoteStream;
+        peer.audioElement = audioElement;
         this.startSpeakingMonitor(userId, remoteStream);
       }
 
@@ -386,6 +388,11 @@ export class VoiceClient {
       if (peer.audioContext) {
         peer.audioContext.close();
       }
+      // Stopper et libérer l'élément audio
+      if (peer.audioElement) {
+        peer.audioElement.pause();
+        peer.audioElement.srcObject = null;
+      }
       peer.connection.close();
       this.peers.delete(userId);
       logger.info('Peer connection closed', { userId });
@@ -398,6 +405,9 @@ export class VoiceClient {
   cleanup(): void {
     logger.info('🧹 Cleaning up voice client...');
 
+    // Retirer le listener WebRTC pour éviter les connexions fantômes
+    socket.off('voice:webrtc_signal');
+
     // Fermer toutes les connexions peer
     this.peers.forEach((peer) => {
       if (peer.rafId) {
@@ -405,6 +415,11 @@ export class VoiceClient {
       }
       if (peer.audioContext) {
         peer.audioContext.close();
+      }
+      // Stopper l'élément audio
+      if (peer.audioElement) {
+        peer.audioElement.pause();
+        peer.audioElement.srcObject = null;
       }
       peer.connection.close();
     });

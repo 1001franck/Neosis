@@ -131,6 +131,26 @@ export default function NeosisPage(): React.ReactNode {
           onCreateServer={() => setShowCreateServer(true)}
           onJoinServer={() => setShowJoinServer(true)}
         >
+          {/* Barre mobile : avatar + déconnexion (visible uniquement sur mobile) */}
+          <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+            <div className="flex items-center gap-2">
+              {sidebarUser?.avatar ? (
+                <img src={sidebarUser.avatar} alt={sidebarUser.username} className="w-7 h-7 rounded-full object-cover" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs text-white font-bold">
+                  {sidebarUser?.username?.[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+              <span className="text-sm font-medium text-foreground">{sidebarUser?.username}</span>
+            </div>
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="text-sm text-muted-foreground hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10"
+            >
+              Déconnexion
+            </button>
+          </div>
+
           {/* Empty State - Belle page d'accueil */}
           <div className="flex-1 flex items-center justify-center bg-background p-8">
             <motion.div

@@ -149,12 +149,6 @@ const directConversationController = new DirectConversationController(
   getDirectConversationUseCase,
   userRepository
 );
-const directMessageController = new DirectMessageController(
-  sendDirectMessageUseCase,
-  getDirectMessagesUseCase,
-  userRepository
-);
-
 // WebSocket Handler
 const socketHandler = new SocketHandler(
   httpServer,
@@ -172,6 +166,15 @@ const voiceHandler = new VoiceHandler(
   leaveVoiceChannelUseCase,
   updateVoiceStateUseCase,
   getChannelVoiceUsersUseCase
+);
+
+// DirectMessage Controller (après socketHandler pour avoir accès à getIO())
+const directMessageController = new DirectMessageController(
+  sendDirectMessageUseCase,
+  getDirectMessagesUseCase,
+  userRepository,
+  getDirectConversationUseCase,
+  socketHandler.getIO()
 );
 
 // Enregistrer les handlers voice pour chaque connexion

@@ -102,6 +102,9 @@ export class SocketHandler {
 
       this.logger.info(`User ${username} (${userId}) connected`);
 
+      // Chaque utilisateur rejoint sa salle personnelle pour recevoir les DMs
+      socket.join(`user:${userId}`);
+
       // Gestion des evenements
       this.handleJoinServer(socket);
       this.handleLeaveServer(socket);

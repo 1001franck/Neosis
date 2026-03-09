@@ -1,12 +1,27 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DirectMessage } from '@domain/direct/types';
 import { directApi } from '@infrastructure/api/direct.api';
 import { logger } from '@shared/utils/logger';
+import { useDirectMessageStore } from './directMessageStore';
 
 export function useDirectMessages(conversationId?: string) {
-  const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const [initialMessages, setInitialMessages] = useState<DirectMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Messages reçus en temps réel via WebSocket
+  const incomingMessages = useDirectMessageStore(
+    (state) => (conversationId ? state.messagesByConversation.get(conversationId) ?? [] : [])
+  );
+
+  // Fusionner les messages REST + socket sans doublons
+  const messages = useMemo(() => {
+    const ids = new Set(initialMessages.map((m) => m.id));
+    const newOnes = incomingMessages.filter((m) => !ids.has(m.id));
+    return [...initialMessages, ...newOnes].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [initialMessages, incomingMessages]);
 
   const loadMessages = useCallback(async () => {
     if (!conversationId) return;
@@ -14,7 +29,7 @@ export function useDirectMessages(conversationId?: string) {
     setError(null);
     try {
       const data = await directApi.listMessages(conversationId);
-      setMessages(data);
+      setInitialMessages(data);
     } catch (err) {
       logger.error('Failed to load direct messages', err);
       setError('Impossible de charger les messages');
@@ -27,7 +42,7 @@ export function useDirectMessages(conversationId?: string) {
     async (content: string) => {
       if (!conversationId) return;
       const sent = await directApi.sendMessage(conversationId, content);
-      setMessages((prev) => [...prev, sent]);
+      setInitialMessages((prev) => [...prev, sent]);
     },
     [conversationId]
   );

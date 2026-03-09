@@ -17,8 +17,10 @@ import { usePresenceStore } from '@application/members/presenceStore';
 import { useReadReceiptStore } from '@application/messages/readReceiptStore';
 import { useVoiceStore } from '@application/voice/voiceStore';
 import { useMemberStore } from '@application/members/memberStore';
+import { useDirectMessageStore } from '@application/direct/directMessageStore';
 import { normalizeMessage } from '@domain/messages/normalizeMessage';
 import { MessageStatus } from '@domain/messages/types';
+import type { DirectMessage } from '@domain/direct/types';
 import type { VoiceUser } from '@domain/voice/types';
 import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
@@ -221,6 +223,17 @@ export function setupListeners() {
     useMessageStore.getState().setError(message);
   });
 
+  // === DIRECT MESSAGE EVENTS ===
+
+  /**
+   * Nouveau message privé reçu en temps réel
+   * Backend émet: direct:message:new
+   */
+  socket.on('direct:message:new', (message: DirectMessage) => {
+    logger.info('DM received via socket', { messageId: message.id, conversationId: message.conversationId });
+    useDirectMessageStore.getState().addIncomingMessage(message);
+  });
+
   // === VOICE EVENTS ===
 
   /**
@@ -305,6 +318,7 @@ export function cleanupListeners() {
   socket.off('channel:user_left');
   socket.off('message:read');
   socket.off('message:error');
+  socket.off('direct:message:new');
   socket.off('voice:user_joined');
   socket.off('voice:user_left');
   socket.off('voice:user_state_changed');
