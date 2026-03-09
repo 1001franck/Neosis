@@ -46,13 +46,16 @@ export function setupListeners() {
     const message = normalizeMessage(rawMessage);
     logger.info('Message new event received', { messageId: message.id });
     const store = useMessageStore.getState();
+    const currentUserId = useAuthStore.getState().user?.id;
 
-    if (message.clientTempId) {
+    if (message.clientTempId && message.authorId === currentUserId) {
+      // Réconcilier uniquement si c'est NOTRE propre message optimiste
       store.reconcileOptimisticMessage(message.clientTempId, {
         ...message,
         status: MessageStatus.SENT,
       });
     } else {
+      // Message d'un autre utilisateur (ou le nôtre sans clientTempId)
       store.addMessage(message);
     }
 
