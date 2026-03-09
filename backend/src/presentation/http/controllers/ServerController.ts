@@ -293,6 +293,12 @@ export class ServerController {
         newRole: role
       });
 
+      // Notifier le membre en temps réel de son nouveau rôle
+      this.io?.to(`user:${updatedMember.userId}`).emit('user:role_updated', {
+        serverId,
+        role: updatedMember.role
+      });
+
       res.status(200).json({
         success: true,
         data: updatedMember

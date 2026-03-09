@@ -248,6 +248,22 @@ export function setupListeners() {
     window.dispatchEvent(new CustomEvent('neosis:server_banned', { detail: data }));
   });
 
+  /**
+   * Le rôle de l'utilisateur courant a été modifié dans un serveur
+   * Backend émet: user:role_updated avec { serverId, role }
+   */
+  socket.on('user:role_updated', ({ role }: { serverId: string; role: string }) => {
+    logger.info('Role updated', { role });
+    const messages: Record<string, string> = {
+      ADMIN: 'Vous êtes désormais administrateur de ce serveur !',
+      OWNER: 'Vous êtes désormais propriétaire de ce serveur !',
+      MEMBER: 'Vous n\'êtes plus administrateur de ce serveur.',
+    };
+    const message = messages[role] ?? `Votre rôle a été mis à jour : ${role}`;
+    const type = role === 'MEMBER' ? 'info' : 'success';
+    toastBus.emit({ type, message, duration: 5000 });
+  });
+
   // === DIRECT MESSAGE EVENTS ===
 
   /**
@@ -353,6 +369,7 @@ export function cleanupListeners() {
   socket.off('message:error');
   socket.off('user:server_kicked');
   socket.off('user:server_banned');
+  socket.off('user:role_updated');
   socket.off('direct:message:new');
   socket.off('voice:user_joined');
   socket.off('voice:user_left');
