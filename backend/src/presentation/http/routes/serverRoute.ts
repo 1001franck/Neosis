@@ -55,5 +55,8 @@ export function createServerRoutes(serverController: ServerController): Router {
   // Ban a member from the server
   router.delete('/:id/members/:memberId/ban', serverController.banMember.bind(serverController));
 
+  // Statut de ban de l'utilisateur courant
+  router.get('/:id/ban-status', serverController.getMyBanStatus.bind(serverController));
+
   return router;
 }

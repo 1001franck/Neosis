@@ -86,4 +86,18 @@ export const serversApi = {
   leaveServer: async (serverId: string): Promise<void> => {
     await apiClient.delete(`${ENDPOINT}/${serverId}/leave`);
   },
+
+  /**
+   * Statut de ban de l'utilisateur courant dans un serveur
+   * GET /servers/:id/ban-status
+   */
+  getMyBanStatus: async (serverId: string): Promise<{
+    isBanned: boolean;
+    isPermanent?: boolean;
+    expiresAt?: string | null;
+    reason?: string | null;
+  }> => {
+    const response = await apiClient.get(`${ENDPOINT}/${serverId}/ban-status`);
+    return response.data;
+  },
 };

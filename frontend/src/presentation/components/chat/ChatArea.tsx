@@ -47,6 +47,11 @@ interface ChatUIState {
   onToggleFriends?: () => void;
 }
 
+interface BanInfo {
+  expiresAt?: string | null;
+  reason?: string | null;
+}
+
 interface ChatAreaProps {
   channelId?: string;
   recipient?: ChatRecipient;
@@ -64,6 +69,7 @@ interface ChatAreaProps {
   searchOpen?: boolean;
   onSearchOpen?: () => void;
   onSearchClose?: () => void;
+  banInfo?: BanInfo;
 }
 
 /**
@@ -87,6 +93,7 @@ export function ChatArea({
   searchOpen,
   onSearchOpen,
   onSearchClose,
+  banInfo,
 }: ChatAreaProps): React.ReactNode {
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [internalSearchOpen, setInternalSearchOpen] = useState(false);
@@ -175,6 +182,7 @@ export function ChatArea({
         }}
         onTypingStart={callbacks?.onTypingStart}
         onTypingStop={callbacks?.onTypingStop}
+        banInfo={banInfo}
       />
     </div>
   );

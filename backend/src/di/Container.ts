@@ -368,7 +368,8 @@ export class Container {
     const messageRepository = this.createMessageRepository();
     const memberRepository = this.createMemberRepository();
     const channelRepository = this.createChannelRepository();
-    return new CreateMessageUseCase(messageRepository, memberRepository, channelRepository);
+    const banRepository = this.createBanRepository();
+    return new CreateMessageUseCase(messageRepository, memberRepository, channelRepository, banRepository);
   }
 
   /**

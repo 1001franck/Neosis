@@ -137,7 +137,7 @@ export function MembersSidebar({
       {/* Close Button (Mobile only) */}
       {isMobile && (
         <div className="h-12 px-4 flex items-center justify-between border-b border-border">
-          <h2 className="text-base font-semibold text-white">Members</h2>
+          <h2 className="text-base font-semibold text-white">Membres</h2>
           <button
             onClick={closeAllSidebars}
             className="p-2 text-muted-foreground hover:text-white transition-colors"
@@ -247,7 +247,7 @@ export function MembersSidebar({
                               <>
                                 <div className="fixed inset-0 z-40" onClick={() => setRoleDropdownId(null)} />
                                 <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-lg shadow-lg z-50 py-1">
-                                  <p className="px-3 py-1 text-xs text-muted-foreground font-semibold uppercase">Change role</p>
+                                  <p className="px-3 py-1 text-xs text-muted-foreground font-semibold uppercase">Changer le rôle</p>
                                   {[MemberRole.ADMIN, MemberRole.MEMBER].map((role) => (
                                     <button
                                       key={role}
@@ -278,7 +278,7 @@ export function MembersSidebar({
                                         }}
                                         className="w-full text-left px-3 py-1.5 text-sm text-amber-500 hover:bg-amber-900/20 transition-colors"
                                       >
-                                        Transfer ownership
+                                        Transférer la propriété
                                       </button>
                                     </>
                                   )}
@@ -295,7 +295,7 @@ export function MembersSidebar({
                                         }}
                                         className="w-full text-left px-3 py-1.5 text-sm text-orange-500 hover:bg-orange-900/20 transition-colors"
                                       >
-                                        Kick member
+                                        Expulser
                                       </button>
                                     </>
                                   )}
@@ -312,7 +312,7 @@ export function MembersSidebar({
                                         }}
                                         className="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-red-900/20 transition-colors"
                                       >
-                                        Ban member
+                                        Bannir
                                       </button>
                                     </>
                                   )}
@@ -334,16 +334,16 @@ export function MembersSidebar({
       {transferTarget && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setTransferTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-2">Transfer ownership</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">Transférer la propriété</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Are you sure you want to transfer server ownership to <strong className="text-foreground">{transferTarget.user.username}</strong>? You will become a regular member. This action is irreversible.
+              Êtes-vous sûr de vouloir transférer la propriété du serveur à <strong className="text-foreground">{transferTarget.user.username}</strong> ? Vous deviendrez un membre ordinaire. Cette action est irréversible.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setTransferTarget(null)}
                 className="px-4 py-2 text-sm rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={() => {
@@ -352,7 +352,7 @@ export function MembersSidebar({
                 }}
                 className="px-4 py-2 text-sm rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
               >
-                Transfer
+                Transférer
               </button>
             </div>
           </div>
@@ -363,16 +363,16 @@ export function MembersSidebar({
       {kickTarget && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setKickTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-2">Kick member</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">Expulser le membre</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Are you sure you want to kick <strong className="text-foreground">{kickTarget.user.username}</strong> from this server? They can rejoin with an invite code.
+              Êtes-vous sûr de vouloir expulser <strong className="text-foreground">{kickTarget.user.username}</strong> du serveur ? Il pourra rejoindre à nouveau avec un code d'invitation.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setKickTarget(null)}
                 className="px-4 py-2 text-sm rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={() => {
@@ -381,7 +381,7 @@ export function MembersSidebar({
                 }}
                 className="px-4 py-2 text-sm rounded bg-orange-600 text-white hover:bg-orange-700 transition-colors"
               >
-                Kick
+                Expulser
               </button>
             </div>
           </div>
@@ -392,9 +392,9 @@ export function MembersSidebar({
       {banTarget && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setBanTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-2">Ban member</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">Bannir le membre</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Are you sure you want to ban <strong className="text-foreground">{banTarget.user.username}</strong>? They will not be able to rejoin this server.
+              Êtes-vous sûr de vouloir bannir <strong className="text-foreground">{banTarget.user.username}</strong> ? Un ban définitif l'empêchera de rejoindre le serveur.
             </p>
             <div className="space-y-3 mb-4">
               <div>
@@ -425,7 +425,7 @@ export function MembersSidebar({
                 onClick={() => setBanTarget(null)}
                 className="px-4 py-2 text-sm rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={() => {
@@ -441,7 +441,7 @@ export function MembersSidebar({
                 }}
                 className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
-                Ban
+                Bannir
               </button>
             </div>
           </div>

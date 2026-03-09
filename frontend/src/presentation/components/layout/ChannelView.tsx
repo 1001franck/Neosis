@@ -87,6 +87,11 @@ interface ChannelViewUser {
   statusEmoji?: string;
 }
 
+interface BanInfo {
+  expiresAt?: string | null;
+  reason?: string | null;
+}
+
 interface ChannelViewProps {
   server: ChannelViewServer;
   channels: ChannelViewChannels;
@@ -96,6 +101,7 @@ interface ChannelViewProps {
   currentUserId?: string;
   callbacks?: ChannelViewCallbacks;
   user?: ChannelViewUser;
+  banInfo?: BanInfo;
 }
 
 /**
@@ -117,6 +123,7 @@ export function ChannelView({
   currentUserId,
   callbacks,
   user,
+  banInfo,
 }: ChannelViewProps): React.ReactElement {
   
   // Use responsive layout context
@@ -244,6 +251,7 @@ export function ChannelView({
           searchOpen={isSearchOpen}
           onSearchOpen={handleSearchOpen}
           onSearchClose={handleSearchClose}
+          banInfo={banInfo}
           callbacks={{
             onSendMessage: callbacks?.onSendMessage || (() => {}),
             onEditMessage: callbacks?.onEditMessage,

@@ -1,6 +1,7 @@
 import type { MessageRepository } from '../../../domain/messages/repositories/MessageRepository.js';
 import type { IMemberRepository } from '../../../domain/members/repositories/IMemberRepository.js';
 import type { ChannelRepository } from '../../../domain/channels/repositories/ChannelRepository.js';
+import type { IBanRepository } from '../../../domain/bans/repositories/IBanRepository.js';
 import { Message } from '../../../domain/messages/entities/message.js';
 import { MemberRole } from '../../../domain/members/entities/Member.js';
 import { BaseUseCase } from '../../shared/BaseUseCase.js';
@@ -21,7 +22,8 @@ export class CreateMessageUseCase extends BaseUseCase<CreateMessageDTO, Message>
   constructor(
     private messageRepository: MessageRepository,
     private memberRepository: IMemberRepository,
-    private channelRepository: ChannelRepository
+    private channelRepository: ChannelRepository,
+    private banRepository: IBanRepository
   ) { super(); }
 
   getName(): string {
@@ -44,6 +46,15 @@ export class CreateMessageUseCase extends BaseUseCase<CreateMessageDTO, Message>
 
     if (!member) {
       throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Vous n\'êtes pas membre de ce serveur', 403);
+    }
+
+    // Vérifie que l'utilisateur n'est pas banni temporairement
+    const activeBan = await this.banRepository.findActiveByUserAndServer(data.userId, channel.serverId);
+    if (activeBan) {
+      const msg = activeBan.isPermanent()
+        ? 'Vous avez été banni définitivement de ce serveur'
+        : `Vous êtes banni temporairement jusqu'au ${activeBan.expiresAt!.toLocaleString('fr-FR')}`;
+      throw new AppError(ErrorCode.INVALID_PERMISSIONS, msg, 403);
     }
 
     const id = crypto.randomUUID();

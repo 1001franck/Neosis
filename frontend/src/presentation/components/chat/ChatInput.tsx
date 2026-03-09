@@ -20,12 +20,18 @@ import { uploadApi } from '@infrastructure/api/upload.api';
 import type { Attachment } from '@domain/messages/types';
 import { logger } from '@shared/utils/logger';
 
+interface BanInfo {
+  expiresAt?: string | null;
+  reason?: string | null;
+}
+
 interface ChatInputProps {
   recipientName?: string;
   channelId?: string;
   onSendMessage?: (content: string, attachments?: Attachment[]) => void;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
+  banInfo?: BanInfo;
 }
 
 const MAX_FILES = 5;
@@ -37,6 +43,7 @@ const ChatInputComponent = ({
   onSendMessage,
   onTypingStart,
   onTypingStop,
+  banInfo,
 }: ChatInputProps): React.ReactElement => {
   const [messageInput, setMessageInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -138,6 +145,32 @@ const ChatInputComponent = ({
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  // Afficher la notice de ban si l'utilisateur est banni temporairement
+  if (banInfo) {
+    const expiryText = banInfo.expiresAt
+      ? new Date(banInfo.expiresAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
+      : null;
+    return (
+      <div className="px-3 sm:px-4 pb-4 sm:pb-6">
+        <div className="flex items-center gap-3 px-4 py-3 bg-red-950/40 border border-red-800/50 rounded-lg text-sm">
+          <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <div>
+            <p className="text-red-300 font-medium">
+              {expiryText
+                ? `Vous êtes banni temporairement jusqu'au ${expiryText}`
+                : 'Vous avez été banni temporairement de ce serveur'}
+            </p>
+            {banInfo.reason && (
+              <p className="text-red-400/70 text-xs mt-0.5">Raison : {banInfo.reason}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-3 sm:px-4 pb-4 sm:pb-6">

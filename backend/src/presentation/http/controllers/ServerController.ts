@@ -16,6 +16,7 @@ import { BanMemberUseCase } from '../../../application/members/usecases/BanMembe
 import { MemberRole } from '../../../domain/members/entities/Member.js';
 import { AppError, ErrorCode } from '../../../shared/errors/AppError.js';
 import { uploadToSupabase, deleteFromSupabase } from '../../../infrastructure/storage/supabaseStorage.js';
+import type { IBanRepository } from '../../../domain/bans/repositories/IBanRepository.js';
 
 /**
  * Contrôleur pour les serveurs
@@ -34,7 +35,8 @@ export class ServerController {
     private updateMemberRoleUseCase: UpdateMemberRoleUseCase,
     private transferOwnershipUseCase: TransferOwnershipUseCase,
     private kickMemberUseCase: KickMemberUseCase,
-    private banMemberUseCase: BanMemberUseCase
+    private banMemberUseCase: BanMemberUseCase,
+    private banRepository: IBanRepository
   ) {}
 
   /**
@@ -383,6 +385,35 @@ export class ServerController {
       res.status(200).json({
         success: true,
         message: 'Member banned successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Statut de ban de l'utilisateur courant dans un serveur
+   * GET /servers/:id/ban-status
+   */
+  getMyBanStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const serverId = req.params.id as string;
+      const userId = req.userId;
+
+      const ban = await this.banRepository.findActiveByUserAndServer(userId, serverId);
+
+      if (!ban) {
+        return res.status(200).json({ success: true, data: { isBanned: false } });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          isBanned: true,
+          isPermanent: ban.isPermanent(),
+          expiresAt: ban.expiresAt ? ban.expiresAt.toISOString() : null,
+          reason: ban.reason,
+        },
       });
     } catch (error) {
       next(error);

@@ -98,7 +98,11 @@ export class BanMemberUseCase extends BaseUseCase<BanMemberDTO, void> {
 
     await this.banRepository.create(ban);
 
-    // 9. Supprimer le membre du serveur
-    await this.memberRepository.delete(target.id);
+    // 9. Ban définitif : supprimer le membre du serveur (ne peut plus voir le serveur)
+    // Ban temporaire : garder le membre, il peut lire mais pas envoyer de messages
+    const isPermanent = expiresAt === null;
+    if (isPermanent) {
+      await this.memberRepository.delete(target.id);
+    }
   }
 }

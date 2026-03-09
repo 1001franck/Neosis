@@ -28,6 +28,7 @@ import { MemberRole } from '@domain/members/types';
 import { ChannelType } from '@domain/channels/types';
 import { socketEmitters } from '@infrastructure/websocket/emitters';
 import { uploadApi } from '@infrastructure/api/upload.api';
+import { serversApi } from '@infrastructure/api/servers.api';
 import type { ChannelMedia, ChannelLink } from '@presentation/components/channels/types';
 
 interface ServerPageProps {
@@ -104,6 +105,9 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     };
   }, [activeChannelId, user?.id, addChannelUser, removeChannelUser]);
 
+  // === BAN STATUS ===
+  const [banInfo, setBanInfo] = useState<{ expiresAt?: string | null; reason?: string | null } | undefined>(undefined);
+
   // === CHANNEL MODAL STATE ===
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [newChannelName, setNewChannelName] = useState('');
@@ -137,6 +141,16 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       getServers().catch(() => {});
       listChannels(serverId).catch(() => {});
       loadMembers(serverId).catch(() => {});
+      // Vérifier si l'utilisateur est banni temporairement
+      serversApi.getMyBanStatus(serverId)
+        .then((status) => {
+          if (status.isBanned && !status.isPermanent) {
+            setBanInfo({ expiresAt: status.expiresAt, reason: status.reason });
+          } else {
+            setBanInfo(undefined);
+          }
+        })
+        .catch(() => setBanInfo(undefined));
     }
   }, [serverId, resetChannels, resetMessages]);
 
@@ -569,6 +583,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
         typingUsernames={typingUsernames}
         currentUserId={user?.id}
         user={user ? { username: user.username, avatar: user.avatar, customStatus: user.customStatus ?? undefined, statusEmoji: user.statusEmoji ?? undefined } : undefined}
+        banInfo={banInfo}
         callbacks={{
           onChannelClick: handleChannelClick,
           onServerClick: (id) => router.push(`/servers/${id}`),

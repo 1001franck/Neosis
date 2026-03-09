@@ -45,6 +45,7 @@ const userRepository = container.createUserRepository();
 const serverRepository = container.createServerRepository();
 const channelRepository = container.createChannelRepository();
 const messageRepository = container.createMessageRepository();
+const banRepository = container.createBanRepository();
 
 // Auth Use Cases
 const registerUseCase = container.createRegisterUserUseCase();
@@ -113,7 +114,8 @@ const serverController = new ServerController(
   updateMemberRoleUseCase,
   transferOwnershipUseCase,
   kickMemberUseCase,
-  banMemberUseCase
+  banMemberUseCase,
+  banRepository
 );
 const channelController = new ChannelController(
   createChannelUseCase,
