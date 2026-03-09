@@ -63,9 +63,10 @@ export class PrismaMemberRepository implements IMemberRepository {
       where: { id: member.id },
       data: {
         role: this.toPrismaRole(member.role)
-      }
+      },
+      include: { user: true }
     });
-    return this.toDomain(updated);
+    return this.toDomainWithUser(updated);
   }
 
   async delete(id: string): Promise<void> {
