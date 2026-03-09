@@ -17,6 +17,7 @@ import { MemberRole } from '../../../domain/members/entities/Member.js';
 import { AppError, ErrorCode } from '../../../shared/errors/AppError.js';
 import { uploadToSupabase, deleteFromSupabase } from '../../../infrastructure/storage/supabaseStorage.js';
 import type { IBanRepository } from '../../../domain/bans/repositories/IBanRepository.js';
+import type { Server as SocketIOServer } from 'socket.io';
 
 /**
  * Contrôleur pour les serveurs
@@ -36,7 +37,8 @@ export class ServerController {
     private transferOwnershipUseCase: TransferOwnershipUseCase,
     private kickMemberUseCase: KickMemberUseCase,
     private banMemberUseCase: BanMemberUseCase,
-    private banRepository: IBanRepository
+    private banRepository: IBanRepository,
+    private io?: SocketIOServer
   ) {}
 
   /**
@@ -343,11 +345,14 @@ export class ServerController {
       const memberId = req.params.memberId as string;
       const requesterId = req.userId;
 
-      await this.kickMemberUseCase.execute({
+      const { userId: targetUserId } = await this.kickMemberUseCase.execute({
         requesterId,
         serverId,
         targetMemberId: memberId
       });
+
+      // Notifier la cible en temps réel
+      this.io?.to(`user:${targetUserId}`).emit('user:server_kicked', { serverId });
 
       res.status(200).json({
         success: true,
@@ -374,12 +379,20 @@ export class ServerController {
         ? Number(durationRaw)
         : null;
 
-      await this.banMemberUseCase.execute({
+      const { userId: targetUserId, isPermanent, expiresAt } = await this.banMemberUseCase.execute({
         requesterId,
         serverId,
         targetMemberId: memberId,
         durationHours: Number.isFinite(durationHours) ? durationHours : null,
         ...(reason !== undefined ? { reason } : {})
+      });
+
+      // Notifier la cible en temps réel
+      this.io?.to(`user:${targetUserId}`).emit('user:server_banned', {
+        serverId,
+        isPermanent,
+        expiresAt: expiresAt ? expiresAt.toISOString() : null,
+        reason: reason ?? null,
       });
 
       res.status(200).json({

@@ -223,6 +223,31 @@ export function setupListeners() {
     useMessageStore.getState().setError(message);
   });
 
+  // === BAN / KICK EVENTS ===
+
+  /**
+   * L'utilisateur courant a été expulsé d'un serveur
+   * Backend émet: user:server_kicked avec { serverId }
+   */
+  socket.on('user:server_kicked', ({ serverId }: { serverId: string }) => {
+    logger.info('Kicked from server', { serverId });
+    window.dispatchEvent(new CustomEvent('neosis:server_kicked', { detail: { serverId } }));
+  });
+
+  /**
+   * L'utilisateur courant a été banni d'un serveur
+   * Backend émet: user:server_banned avec { serverId, isPermanent, expiresAt, reason }
+   */
+  socket.on('user:server_banned', (data: {
+    serverId: string;
+    isPermanent: boolean;
+    expiresAt: string | null;
+    reason: string | null;
+  }) => {
+    logger.info('Banned from server', { serverId: data.serverId, isPermanent: data.isPermanent });
+    window.dispatchEvent(new CustomEvent('neosis:server_banned', { detail: data }));
+  });
+
   // === DIRECT MESSAGE EVENTS ===
 
   /**
@@ -318,6 +343,8 @@ export function cleanupListeners() {
   socket.off('channel:user_left');
   socket.off('message:read');
   socket.off('message:error');
+  socket.off('user:server_kicked');
+  socket.off('user:server_banned');
   socket.off('direct:message:new');
   socket.off('voice:user_joined');
   socket.off('voice:user_left');

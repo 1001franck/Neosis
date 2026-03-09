@@ -12,14 +12,14 @@ export interface KickMemberDTO {
  * Use Case : Kick un membre du serveur
  * Le membre est supprime mais peut rejoin avec un code d'invitation
  */
-export class KickMemberUseCase extends BaseUseCase<KickMemberDTO, void> {
+export class KickMemberUseCase extends BaseUseCase<KickMemberDTO, { userId: string }> {
   constructor(private memberRepository: IMemberRepository) { super(); }
 
   getName(): string {
     return 'KickMemberUseCase';
   }
 
-  async execute(data: KickMemberDTO): Promise<void> {
+  async execute(data: KickMemberDTO): Promise<{ userId: string }> {
     // Verify requester is a member
     const requester = await this.memberRepository.findByUserAndServer(
       data.requesterId,
@@ -59,5 +59,6 @@ export class KickMemberUseCase extends BaseUseCase<KickMemberDTO, void> {
 
     // Remove the member
     await this.memberRepository.delete(target.id);
+    return { userId: target.userId };
   }
 }

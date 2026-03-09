@@ -102,21 +102,6 @@ const getDirectMessagesUseCase = container.createGetDirectMessagesUseCase();
 
 // Controllers
 const authController = new AuthController(registerUseCase, loginUseCase, userRepository);
-const serverController = new ServerController(
-  createServerUseCase,
-  getServerByIdUseCase,
-  getUserServersUseCase,
-  updateServerUseCase,
-  deleteServerUseCase,
-  joinServerUseCase,
-  leaveServerUseCase,
-  getServerMembersUseCase,
-  updateMemberRoleUseCase,
-  transferOwnershipUseCase,
-  kickMemberUseCase,
-  banMemberUseCase,
-  banRepository
-);
 const channelController = new ChannelController(
   createChannelUseCase,
   getChannelByIdUseCase,
@@ -168,6 +153,24 @@ const voiceHandler = new VoiceHandler(
   leaveVoiceChannelUseCase,
   updateVoiceStateUseCase,
   getChannelVoiceUsersUseCase
+);
+
+// ServerController (après socketHandler pour passer io)
+const serverController = new ServerController(
+  createServerUseCase,
+  getServerByIdUseCase,
+  getUserServersUseCase,
+  updateServerUseCase,
+  deleteServerUseCase,
+  joinServerUseCase,
+  leaveServerUseCase,
+  getServerMembersUseCase,
+  updateMemberRoleUseCase,
+  transferOwnershipUseCase,
+  kickMemberUseCase,
+  banMemberUseCase,
+  banRepository,
+  socketHandler.getIO()
 );
 
 // DirectMessage Controller (après socketHandler pour avoir accès à getIO())

@@ -108,6 +108,39 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   // === BAN STATUS ===
   const [banInfo, setBanInfo] = useState<{ expiresAt?: string | null; reason?: string | null } | undefined>(undefined);
 
+  // Écouter les événements de ban/kick en temps réel
+  useEffect(() => {
+    const handleKicked = (e: Event) => {
+      const { serverId: kickedServerId } = (e as CustomEvent).detail;
+      if (kickedServerId === serverId) {
+        router.push('/neosis');
+      }
+    };
+
+    const handleBanned = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        serverId: string;
+        isPermanent: boolean;
+        expiresAt: string | null;
+        reason: string | null;
+      };
+      if (detail.serverId !== serverId) return;
+
+      if (detail.isPermanent) {
+        router.push('/neosis');
+      } else {
+        setBanInfo({ expiresAt: detail.expiresAt, reason: detail.reason });
+      }
+    };
+
+    window.addEventListener('neosis:server_kicked', handleKicked);
+    window.addEventListener('neosis:server_banned', handleBanned);
+    return () => {
+      window.removeEventListener('neosis:server_kicked', handleKicked);
+      window.removeEventListener('neosis:server_banned', handleBanned);
+    };
+  }, [serverId, router]);
+
   // === CHANNEL MODAL STATE ===
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [newChannelName, setNewChannelName] = useState('');

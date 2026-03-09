@@ -29,7 +29,7 @@ export interface BanMemberDTO {
  * Le JoinServerUseCase verifie ensuite si l'utilisateur est banni
  * avant de le laisser rejoindre.
  */
-export class BanMemberUseCase extends BaseUseCase<BanMemberDTO, void> {
+export class BanMemberUseCase extends BaseUseCase<BanMemberDTO, { userId: string; isPermanent: boolean; expiresAt: Date | null }> {
   constructor(
     private memberRepository: IMemberRepository,
     private banRepository: IBanRepository
@@ -39,7 +39,7 @@ export class BanMemberUseCase extends BaseUseCase<BanMemberDTO, void> {
     return 'BanMemberUseCase';
   }
 
-  async execute(data: BanMemberDTO): Promise<void> {
+  async execute(data: BanMemberDTO): Promise<{ userId: string; isPermanent: boolean; expiresAt: Date | null }> {
     // 1. Verifier que le demandeur est membre du serveur
     const requester = await this.memberRepository.findByUserAndServer(
       data.requesterId,
@@ -104,5 +104,7 @@ export class BanMemberUseCase extends BaseUseCase<BanMemberDTO, void> {
     if (isPermanent) {
       await this.memberRepository.delete(target.id);
     }
+
+    return { userId: target.userId, isPermanent, expiresAt };
   }
 }
