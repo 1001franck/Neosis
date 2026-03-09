@@ -30,6 +30,7 @@ interface MembersSidebarProps {
   members: Member[];
   roles?: Role[];
   currentUserRole?: MemberRole;
+  bannedUserIds?: Set<string>;
   serverId?: string;
   onMemberClick?: (memberId: string) => void;
   onChangeRole?: (memberId: string, role: MemberRole) => void;
@@ -69,6 +70,7 @@ export function MembersSidebar({
   members,
   roles = [],
   currentUserRole,
+  bannedUserIds,
   serverId,
   onMemberClick,
   onChangeRole,
@@ -215,11 +217,18 @@ export function MembersSidebar({
                           />
                         </div>
 
-                        {/* Username */}
+                        {/* Username + ban badge */}
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="text-sm text-foreground truncate">
-                            {member.user.username}
-                          </p>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="text-sm text-foreground truncate">
+                              {member.user.username}
+                            </p>
+                            {bannedUserIds?.has(member.userId) && (
+                              <span className="flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-900/60 text-red-400 border border-red-800/50">
+                                Banni
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Hover Icons */}

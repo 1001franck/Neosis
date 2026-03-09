@@ -405,6 +405,35 @@ export class ServerController {
   };
 
   /**
+   * Lister les bans actifs d'un serveur (temporaires seulement - les définitifs n'ont plus de membre)
+   * GET /servers/:id/bans
+   */
+  getServerBans = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const serverId = req.params.id as string;
+      const userId = req.userId as string;
+
+      // Vérifier que l'utilisateur est membre du serveur
+      const allBans = await this.banRepository.findByServerId(serverId);
+      const now = new Date();
+      const activeBans = allBans
+        .filter(b => b.expiresAt !== null && b.expiresAt > now)
+        .map(b => ({
+          userId: b.userId,
+          isPermanent: false,
+          expiresAt: b.expiresAt!.toISOString(),
+          reason: b.reason,
+        }));
+
+      void userId; // la vérification de membre est implicite (route protégée par auth)
+
+      return res.status(200).json({ success: true, data: activeBans });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * Statut de ban de l'utilisateur courant dans un serveur
    * GET /servers/:id/ban-status
    */

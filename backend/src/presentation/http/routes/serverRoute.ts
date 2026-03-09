@@ -58,5 +58,8 @@ export function createServerRoutes(serverController: ServerController): Router {
   // Statut de ban de l'utilisateur courant
   router.get('/:id/ban-status', serverController.getMyBanStatus.bind(serverController));
 
+  // Lister les bans actifs du serveur (pour affichage visuel)
+  router.get('/:id/bans', serverController.getServerBans.bind(serverController));
+
   return router;
 }

@@ -100,4 +100,18 @@ export const serversApi = {
     const response = await apiClient.get(`${ENDPOINT}/${serverId}/ban-status`);
     return response.data;
   },
+
+  /**
+   * Lister les bans temporaires actifs d'un serveur (pour affichage visuel)
+   * GET /servers/:id/bans
+   */
+  getServerBans: async (serverId: string): Promise<Array<{
+    userId: string;
+    isPermanent: boolean;
+    expiresAt: string;
+    reason: string | null;
+  }>> => {
+    const response = await apiClient.get(`${ENDPOINT}/${serverId}/bans`);
+    return response.data;
+  },
 };

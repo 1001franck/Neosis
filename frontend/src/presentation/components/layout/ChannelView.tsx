@@ -51,6 +51,7 @@ interface ChannelViewMembers {
   list?: Member[];
   roles?: Role[];
   currentUserRole?: MemberRole;
+  bannedUserIds?: Set<string>;
 }
 
 interface ChannelViewCallbacks {
@@ -276,6 +277,7 @@ export function ChannelView({
           members={members.list || []}
           roles={members.roles}
           currentUserRole={members.currentUserRole}
+          bannedUserIds={members.bannedUserIds}
           serverId={server.current.id}
           onMemberClick={callbacks?.onMemberClick}
           onChangeRole={callbacks?.onChangeRole}

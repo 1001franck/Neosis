@@ -107,6 +107,8 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
 
   // === BAN STATUS ===
   const [banInfo, setBanInfo] = useState<{ expiresAt?: string | null; reason?: string | null } | undefined>(undefined);
+  // Set des userId actuellement bannis temporairement (pour badge visuel dans la sidebar)
+  const [bannedUserIds, setBannedUserIds] = useState<Set<string>>(new Set());
 
   // Écouter les événements de ban/kick en temps réel
   useEffect(() => {
@@ -184,6 +186,10 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
           }
         })
         .catch(() => setBanInfo(undefined));
+      // Récupérer les bans actifs pour les badges visuels
+      serversApi.getServerBans(serverId)
+        .then((bans) => setBannedUserIds(new Set(bans.map(b => b.userId))))
+        .catch(() => setBannedUserIds(new Set()));
     }
   }, [serverId, resetChannels, resetMessages]);
 
@@ -412,6 +418,12 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     try {
       await banMember(serverId, memberId, durationHours, reason);
       await loadMembers(serverId);
+      // Rafraîchir les badges de ban après un bannissement temporaire
+      if (durationHours !== null && durationHours !== undefined) {
+        serversApi.getServerBans(serverId)
+          .then((bans) => setBannedUserIds(new Set(bans.map(b => b.userId))))
+          .catch(() => {});
+      }
     } catch (err) {
       logger.error('Failed to ban member', err);
     }
@@ -611,6 +623,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
         members={{
           list: members,
           currentUserRole,
+          bannedUserIds,
         }}
         messages={presentationMessages}
         typingUsernames={typingUsernames}
