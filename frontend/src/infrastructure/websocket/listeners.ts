@@ -60,7 +60,6 @@ export function setupListeners() {
     }
 
     // If this is our own message, upgrade to DELIVERED when others are in the channel
-    const currentUserId = useAuthStore.getState().user?.id;
     if (currentUserId && message.authorId === currentUserId) {
       const onlineCount = store.getChannelUserCount(message.channelId);
       if (onlineCount > 1) {
