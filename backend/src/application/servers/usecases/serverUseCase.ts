@@ -127,7 +127,7 @@ export class JoinServerUseCase extends BaseUseCase<JoinServerDTO, Server> {
 
 /**
  * Use Case : Mettre à jour un serveur
- * ⚠️ PERMISSIONS : Seul le OWNER peut modifier le serveur
+ * PERMISSIONS : Seul le OWNER peut modifier le serveur
  */
 export interface UpdateServerDTO {
   serverId: string;
@@ -160,7 +160,7 @@ export class UpdateServerUseCase extends BaseUseCase<UpdateServerDTO, Server> {
       throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Vous devez être membre du serveur', 403);
     }
 
-    // ⚠️ CRITIQUE : Seul le OWNER peut modifier le serveur
+    // CRITIQUE : Seul le OWNER peut modifier le serveur
     if (!member.canManageServer()) {
       throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Seul le propriétaire peut modifier les paramètres du serveur', 403);
     }

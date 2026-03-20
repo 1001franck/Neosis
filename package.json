@@ -2,5 +2,9 @@
   "devDependencies": {
     "@tanstack/react-query-devtools": "^5.91.2",
     "glob": "^13.0.0"
+  },
+  "dependencies": {
+    "express-intlayer": "^8.4.5",
+    "intlayer": "^8.4.5"
   }
 }
