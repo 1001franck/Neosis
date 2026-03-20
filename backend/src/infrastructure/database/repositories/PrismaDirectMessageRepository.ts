@@ -16,6 +16,9 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
         updatedAt: message.updatedAt,
         deletedAt: message.deletedAt,
       },
+      include: {
+        sender: { select: { id: true, username: true, avatarUrl: true } },
+      },
     });
     return this.toDomain(created);
   }
@@ -29,8 +32,11 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
       orderBy: { createdAt: 'asc' },
       take: limit,
       skip: offset,
+      include: {
+        sender: { select: { id: true, username: true, avatarUrl: true } },
+      },
     });
-    return rows.map(this.toDomain);
+    return rows.map(r => this.toDomain(r));
   }
 
   private toDomain(raw: {
@@ -41,8 +47,9 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
     createdAt: Date;
     updatedAt: Date;
     deletedAt: Date | null;
+    sender?: { id: string; username: string; avatarUrl: string | null } | null;
   }): DirectMessage {
-    return new DirectMessage(
+    const msg = new DirectMessage(
       raw.id,
       raw.conversationId,
       raw.senderId,
@@ -51,5 +58,9 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
       raw.updatedAt,
       raw.deletedAt
     );
+    if (raw.sender) {
+      msg.sender = { id: raw.sender.id, username: raw.sender.username, avatarUrl: raw.sender.avatarUrl };
+    }
+    return msg;
   }
 }

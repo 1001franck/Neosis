@@ -1,8 +1,16 @@
+export interface DirectMessageSender {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
 /**
  * Entité métier DirectMessage
  * Message privé entre deux utilisateurs.
  */
 export class DirectMessage {
+  public sender?: DirectMessageSender;
+
   constructor(
     public readonly id: string,
     public readonly conversationId: string,

@@ -22,6 +22,7 @@ import { normalizeMessage } from '@domain/messages/normalizeMessage';
 import { MessageStatus } from '@domain/messages/types';
 import type { DirectMessage } from '@domain/direct/types';
 import type { VoiceUser } from '@domain/voice/types';
+import type { Member } from '@domain/members/types';
 import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
 import { toastBus } from '@shared/utils/toastBus';
@@ -29,7 +30,7 @@ import { toastBus } from '@shared/utils/toastBus';
 function messageMentionsUser(content: string, username: string): boolean {
   const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const mentionRegex = new RegExp(`(^|\\s)@${escaped}(\\b|$)`, 'i');
-  const everyoneRegex = /(^|\\s)@(everyone|all)(\\b|$)/i;
+  const everyoneRegex = /(^|\s)@(everyone|all)(\b|$)/i;
   return mentionRegex.test(content) || everyoneRegex.test(content);
 }
 
@@ -289,7 +290,7 @@ export function setupListeners() {
   }) => {
     logger.info('User joined voice channel', { userId, username, channelId });
 
-    const member = useMemberStore.getState().members.find((m) => m.userId === userId);
+    const member = useMemberStore.getState().members.find((m: Member) => m.userId === userId);
     const voiceUser: VoiceUser = {
       userId,
       username,

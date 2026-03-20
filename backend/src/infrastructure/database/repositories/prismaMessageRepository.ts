@@ -75,6 +75,7 @@ export class PrismaMessageRepository implements MessageRepository {
     const messages = await this.prisma.message.findMany({
       where: {
         channelId,
+        deletedAt: null,
         ...(before && { createdAt: { lt: before } }),
       },
       orderBy: { createdAt: 'desc' },

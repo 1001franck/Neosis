@@ -14,6 +14,7 @@ export interface CreateServerDTO {
   name: string;
   ownerId: string;
   imageUrl?: string;
+  description?: string;
 }
 
 /**
@@ -66,7 +67,8 @@ export class CreateServerUseCase extends BaseUseCase<CreateServerDTO, Server> {
       data.ownerId,
       inviteCode,
       data.imageUrl || null,
-      new Date()
+      new Date(),
+      data.description || null
     );
 
     // Persiste le serveur

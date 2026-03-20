@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
-import type { IUserRepository } from '../../../domain/users/repositories/UserRepository.js';
 import { SendDirectMessageUseCase, GetDirectMessagesUseCase } from '../../../application/direct/usecases/directMessageUseCases.js';
 import { GetDirectConversationUseCase } from '../../../application/direct/usecases/directConversationUseCases.js';
 
@@ -8,7 +7,6 @@ export class DirectMessageController {
   constructor(
     private sendDirectMessageUseCase: SendDirectMessageUseCase,
     private getDirectMessagesUseCase: GetDirectMessagesUseCase,
-    private userRepository: IUserRepository,
     private getDirectConversationUseCase: GetDirectConversationUseCase,
     private io?: SocketIOServer
   ) {}
@@ -19,7 +17,6 @@ export class DirectMessageController {
       const { content } = req.body;
       const userId = req.userId;
       const message = await this.sendDirectMessageUseCase.execute(userId, conversationId, content);
-      const sender = await this.userRepository.findById(userId);
 
       const payload = {
         id: message.id,
@@ -28,9 +25,7 @@ export class DirectMessageController {
         content: message.content,
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
-        sender: sender
-          ? { id: sender.id, username: sender.username, avatarUrl: sender.avatarUrl }
-          : null,
+        sender: message.sender ?? null,
       };
 
       // Notifier le destinataire en temps réel via WebSocket
@@ -55,22 +50,15 @@ export class DirectMessageController {
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
       const offset = req.query.offset ? Number(req.query.offset) : undefined;
       const messages = await this.getDirectMessagesUseCase.execute(userId, conversationId, limit, offset);
-      const data = await Promise.all(
-        messages.map(async (message) => {
-          const sender = await this.userRepository.findById(message.senderId);
-          return {
-            id: message.id,
-            conversationId: message.conversationId,
-            senderId: message.senderId,
-            content: message.content,
-            createdAt: message.createdAt,
-            updatedAt: message.updatedAt,
-            sender: sender
-              ? { id: sender.id, username: sender.username, avatarUrl: sender.avatarUrl }
-              : null,
-          };
-        })
-      );
+      const data = messages.map((message) => ({
+        id: message.id,
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        content: message.content,
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+        sender: message.sender ?? null,
+      }));
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);

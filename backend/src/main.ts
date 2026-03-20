@@ -33,6 +33,11 @@ import { SocketHandler } from './presentation/websocket/socketHandler.js';
 import { VoiceHandler } from './presentation/websocket/handlers/voiceHandler.js';
 
 const app = express();
+
+// Nécessaire pour que les middlewares (rate limiter, logs) lisent la vraie IP
+// derrière un reverse proxy (Nginx, Railway, Render, etc.)
+app.set('trust proxy', 1);
+
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -42,9 +47,6 @@ const container = Container.getInstance();
 
 // Repositories
 const userRepository = container.createUserRepository();
-const serverRepository = container.createServerRepository();
-const channelRepository = container.createChannelRepository();
-const messageRepository = container.createMessageRepository();
 const banRepository = container.createBanRepository();
 
 // Auth Use Cases
@@ -78,7 +80,6 @@ const deleteChannelUseCase = container.deleteChannelUseCase();
 const createMessageUseCase = container.createMessageUseCase();
 const getMessageByIdUseCase = container.getMessageByIdUseCase();
 const getChannelMessagesUseCase = container.getChannelMessagesUseCase();
-const getRecentMessagesUseCase = container.getRecentMessagesUseCase();
 const updateMessageUseCase = container.updateMessageUseCase();
 const deleteMessageUseCase = container.deleteMessageUseCase();
 const markChannelAsReadUseCase = container.markChannelAsReadUseCase();
@@ -113,7 +114,6 @@ const messageController = new MessageController(
   createMessageUseCase,
   getMessageByIdUseCase,
   getChannelMessagesUseCase,
-  getRecentMessagesUseCase,
   updateMessageUseCase,
   deleteMessageUseCase
 );
@@ -177,7 +177,6 @@ const serverController = new ServerController(
 const directMessageController = new DirectMessageController(
   sendDirectMessageUseCase,
   getDirectMessagesUseCase,
-  userRepository,
   getDirectConversationUseCase,
   socketHandler.getIO()
 );

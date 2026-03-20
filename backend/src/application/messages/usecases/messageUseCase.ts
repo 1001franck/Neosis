@@ -196,7 +196,7 @@ export class GetRecentMessagesUseCase extends BaseUseCase<GetRecentMessagesDTO, 
 export interface UpdateMessageDTO {
   messageId: string;
   userId: string;
-  channelId: string;
+  channelId?: string;
   content: string;
 }
 
@@ -223,7 +223,8 @@ export class UpdateMessageUseCase extends BaseUseCase<UpdateMessageDTO, Message>
     }
 
     // Résoudre le member depuis userId + channel.serverId
-    const channel = await this.channelRepository.findById(data.channelId);
+    // channelId optionnel : on utilise celui du message si absent (évite une double requête)
+    const channel = await this.channelRepository.findById(data.channelId ?? message.channelId);
 
     if (!channel) {
       throw new AppError(ErrorCode.CHANNEL_NOT_FOUND, 'Channel non trouvé', 404);

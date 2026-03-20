@@ -47,13 +47,14 @@ export class ServerController {
    */
   createServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, imageUrl } = req.body;
+      const { name, imageUrl, description } = req.body;
       const userId = req.userId;
 
       const server = await this.createServerUseCase.execute({
         name,
         ownerId: userId,
-        imageUrl
+        imageUrl,
+        description
       });
 
       res.status(201).json({
@@ -419,19 +420,25 @@ export class ServerController {
       const serverId = req.params.id as string;
       const userId = req.userId as string;
 
-      // Vérifier que l'utilisateur est membre du serveur
+      // Vérifier que le requester est ADMIN ou OWNER du serveur
+      const members = await this.getServerMembersUseCase.execute({ serverId, userId });
+      const requester = members.find(m => m.userId === userId);
+      if (!requester || !requester.isAdminOrOwner()) {
+        return res.status(403).json({ success: false, error: 'Seuls les admins et le propriétaire peuvent voir les bans' });
+      }
+
       const allBans = await this.banRepository.findByServerId(serverId);
       const now = new Date();
+
+      // Inclure les bans permanents (expiresAt === null) ET les bans temporaires non expirés
       const activeBans = allBans
-        .filter(b => b.expiresAt !== null && b.expiresAt > now)
+        .filter(b => b.expiresAt === null || b.expiresAt > now)
         .map(b => ({
           userId: b.userId,
-          isPermanent: false,
-          expiresAt: b.expiresAt!.toISOString(),
+          isPermanent: b.expiresAt === null,
+          expiresAt: b.expiresAt ? b.expiresAt.toISOString() : null,
           reason: b.reason,
         }));
-
-      void userId; // la vérification de membre est implicite (route protégée par auth)
 
       return res.status(200).json({ success: true, data: activeBans });
     } catch (error) {

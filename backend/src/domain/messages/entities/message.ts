@@ -47,10 +47,16 @@ export class Message {
   }
 
   /**
-   * Supprime les balises HTML du contenu pour prévenir les attaques XSS
+   * Échappe les caractères HTML pour prévenir les attaques XSS
+   * On échappe au lieu de supprimer pour préserver le contenu (ex: "1 < 2", "List<String>")
    */
   static sanitize(content: string): string {
-    return content.replace(/<[^>]*>/g, '');
+    return content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
   }
 
   /**

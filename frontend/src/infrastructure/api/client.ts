@@ -16,6 +16,13 @@ export const apiClient = axios.create({
   },
 });
 
+// Client dédié aux uploads — timeout étendu à 60s pour les fichiers volumineux
+export const uploadClient = axios.create({
+  baseURL: env.API_URL,
+  timeout: 60000,
+  withCredentials: true,
+});
+
 // === RESPONSE INTERCEPTOR : Unwrap + gérer 401 (token expiré) ===
 apiClient.interceptors.response.use(
   (response) => {
