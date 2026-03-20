@@ -8,10 +8,12 @@
 import React, { useEffect } from 'react';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { MainLayout } from '@presentation/components/layout/MainLayout';
+import { useAuth } from '@application/auth/useAuth';
 import { useServers } from '@application/servers/useServers';
 import { logger } from '@shared/utils/logger';
 
 export default function MessagesHomePage(): React.ReactNode {
+  const { user } = useAuth();
   const { servers, getServers } = useServers();
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function MessagesHomePage(): React.ReactNode {
 
   return (
     <ProtectedRoute>
-      <MainLayout servers={servers} showDirectMessages>
+      <MainLayout servers={servers} showDirectMessages user={user ? { username: user.username, avatar: user.avatar ?? undefined } : undefined}>
         <div className="flex-1 flex items-center justify-center bg-background">
           <div className="max-w-lg w-full text-center space-y-4 px-6">
             <div className="mx-auto w-16 h-16 rounded-2xl bg-card flex items-center justify-center">

@@ -19,20 +19,27 @@ import { logger } from '@shared/utils/logger';
 import { Modal } from '@presentation/components/common/Modal';
 import type { Friend, FriendRequests } from '@domain/direct/types';
 
-interface DirectMessage {
-  id: string;
-  userId: string;
-  username: string;
-  avatar?: string;
-  lastMessage?: string;
-  timestamp?: string;
-  unread?: number;
-  isOnline?: boolean;
+interface DirectMessagesPanelProps {
+  activeView?: 'messages' | 'friends';
 }
 
-interface DirectMessagesPanelProps {
-  messages?: DirectMessage[];
-  activeView?: 'messages' | 'friends';
+/**
+ * Formate une date en temps relatif (ex: "il y a 2h", "hier", "lun.")
+ */
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "à l'instant";
+  if (diffMins < 60) return `il y a ${diffMins}min`;
+  if (diffHours < 24) return `il y a ${diffHours}h`;
+  if (diffDays === 1) return 'hier';
+  if (diffDays < 7) return date.toLocaleDateString('fr-FR', { weekday: 'short' });
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
 }
 
 /**
@@ -40,8 +47,7 @@ interface DirectMessagesPanelProps {
  * Réplique exacte du design Discord - Panel Messages
  * Contenu uniquement, le wrapper responsive est géré par ResponsiveSidebar
  */
-export function DirectMessagesPanel({ 
-  messages = [],
+export function DirectMessagesPanel({
   activeView = 'messages'
 }: DirectMessagesPanelProps): React.ReactNode {
   const router = useRouter();
@@ -185,6 +191,19 @@ export function DirectMessagesPanel({
         </button>
       </div>
 
+      {/* Barre de recherche — visible uniquement dans l'onglet messages */}
+      {view === 'messages' && (
+        <div className="px-2 py-2 border-b border-border">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher une conversation..."
+            className="w-full px-3 py-1.5 text-sm rounded-md bg-muted text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+      )}
+
       {/* Messages List */}
       <div className="flex-1 overflow-y-auto">
         {view === 'messages' ? (
@@ -210,10 +229,6 @@ export function DirectMessagesPanel({
                       </span>
                     </div>
                   )}
-                  {/* Online Status */}
-                  {false && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-card rounded-full" />
-                  )}
                 </div>
 
                 {/* Message Info */}
@@ -224,30 +239,14 @@ export function DirectMessagesPanel({
                     </span>
                     {conversation.updatedAt && (
                       <span className="text-xs text-muted-foreground flex-shrink-0 ml-1">
-                        {new Date(conversation.updatedAt).toLocaleDateString('fr-FR')}
+                        {formatRelativeTime(conversation.updatedAt)}
                       </span>
                     )}
                   </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      Conversation privee
-                    </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    Message privé
+                  </p>
                 </div>
-
-                {/* Pin Icon (Blue) */}
-                <div className="flex-shrink-0">
-                  <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22 12L12.101 2.10101L10.686 3.51401L12.101 4.92901L7.15096 9.87801L5.73596 8.46401L4.32196 9.87801L8.56496 14.121L2.14296 20.543L3.55696 21.957L9.97896 15.535L14.222 19.778L15.636 18.364L14.222 16.95L19.171 12L20.586 13.414L22 12Z" />
-                  </svg>
-                </div>
-
-                {/* Unread Badge */}
-                {false && (
-                  <div className="flex-shrink-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-bold text-white">
-                      1
-                    </span>
-                  </div>
-                )}
               </button>
             ))
           ) : (

@@ -21,17 +21,6 @@ import { ServerSidebar } from './ServerSidebar';
 import { DirectMessagesPanel } from './DirectMessagesPanel';
 import type { Server } from '@domain/servers/types';
 
-interface DirectMessage {
-  id: string;
-  userId: string;
-  username: string;
-  avatar?: string;
-  lastMessage?: string;
-  timestamp?: string;
-  unread?: number;
-  isOnline?: boolean;
-}
-
 interface MainLayoutUser {
   username: string;
   avatar?: string;
@@ -47,8 +36,6 @@ interface MainLayoutProps {
   showDirectMessages?: boolean;
   /** Liste des serveurs */
   servers?: Server[];
-  /** Liste des messages directs */
-  directMessages?: DirectMessage[];
   /** Callbacks pour la ServerSidebar */
   onLogout?: () => void;
   onSettings?: () => void;
@@ -70,7 +57,6 @@ export function MainLayout({
   activeServerId,
   showDirectMessages = true,
   servers,
-  directMessages,
   onLogout,
   onSettings,
   onCreateServer,
@@ -79,8 +65,8 @@ export function MainLayout({
 }: MainLayoutProps): React.ReactNode {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Server Sidebar - 72px, desktop only */}
-      <ResponsiveSidebar id="server" position="left" width="w-[72px]" showOnDesktop={false} className="bg-secondary py-3 gap-2">
+      {/* Server Sidebar - 72px, toujours visible sur desktop */}
+      <ResponsiveSidebar id="server" position="left" width="w-[72px]" className="bg-secondary py-3 gap-2">
         <ServerSidebar
           activeServerId={activeServerId}
           servers={servers}
@@ -95,7 +81,7 @@ export function MainLayout({
       {/* Direct Messages Panel - 240px, responsive */}
       {showDirectMessages && (
         <ResponsiveSidebar id="dm-panel" position="left" width="w-60">
-          <DirectMessagesPanel messages={directMessages} />
+          <DirectMessagesPanel />
         </ResponsiveSidebar>
       )}
 
