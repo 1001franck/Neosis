@@ -4,6 +4,8 @@ dist
 
 # Keep environment variables out of version control
 .env
+#pour éviter de push tout les fichiers générés par intlayer
+.intlayer
 
 /generated/prisma
 

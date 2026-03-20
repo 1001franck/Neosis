@@ -164,5 +164,5 @@ npm run dev # http://localhost:3001
 - **Schéma DB** : [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma)
 
 ---
-> **Dernière mise à jour** : Février 2026 Par Hugo,Bastian et Harel 
+> **Dernière mise à jour** : Février 2026 Par Hugo, Bastian et Harel 
 > **Statut** : Développement Actif 

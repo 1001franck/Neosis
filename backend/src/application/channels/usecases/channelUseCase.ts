@@ -124,7 +124,7 @@ export class GetServerChannelsUseCase extends BaseUseCase<GetServerChannelsDTO, 
 
 /**
  * Use Case : Mettre à jour un channel
- * ⚠️ PERMISSIONS : ADMIN et OWNER peuvent modifier les channels
+ * PERMISSIONS : ADMIN et OWNER peuvent modifier les channels
  */
 export interface UpdateChannelDTO {
   channelId: string;

@@ -12,7 +12,7 @@ export class CreateOrGetDirectConversationUseCase {
   constructor(
     private conversationRepository: DirectConversationRepository,
     private friendshipRepository: FriendshipRepository
-  ) {}
+  ) { }
 
   async execute(userId: string, otherUserId: string): Promise<DirectConversation> {
     if (userId === otherUserId) {
@@ -41,7 +41,7 @@ export class CreateOrGetDirectConversationUseCase {
 }
 
 export class ListDirectConversationsUseCase {
-  constructor(private conversationRepository: DirectConversationRepository) {}
+  constructor(private conversationRepository: DirectConversationRepository) { }
 
   async execute(userId: string): Promise<DirectConversation[]> {
     return this.conversationRepository.listByUser(userId);
@@ -49,7 +49,7 @@ export class ListDirectConversationsUseCase {
 }
 
 export class GetDirectConversationUseCase {
-  constructor(private conversationRepository: DirectConversationRepository) {}
+  constructor(private conversationRepository: DirectConversationRepository) { }
 
   async execute(userId: string, conversationId: string): Promise<DirectConversation> {
     const conversation = await this.conversationRepository.findById(conversationId);
