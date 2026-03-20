@@ -113,6 +113,36 @@ export function DirectMessagesPanel({
     }
   };
 
+  const handleDeclineFriend = async (friendshipId: string) => {
+    try {
+      await friendsApi.declineFriend(friendshipId);
+      await loadFriends();
+    } catch (err) {
+      logger.error('Failed to decline friend request', err);
+      setFriendsError('Impossible de refuser la demande');
+    }
+  };
+
+  const handleCancelRequest = async (friendshipId: string) => {
+    try {
+      await friendsApi.cancelFriendRequest(friendshipId);
+      await loadFriends();
+    } catch (err) {
+      logger.error('Failed to cancel friend request', err);
+      setFriendsError('Impossible d\'annuler la demande');
+    }
+  };
+
+  const handleRemoveFriend = async (friendshipId: string) => {
+    try {
+      await friendsApi.removeFriend(friendshipId);
+      await loadFriends();
+    } catch (err) {
+      logger.error('Failed to remove friend', err);
+      setFriendsError('Impossible de supprimer l\'ami');
+    }
+  };
+
   const handleStartConversation = async (userId?: string) => {
     if (!userId) return;
     try {
@@ -309,12 +339,20 @@ export function DirectMessagesPanel({
                             {request.user?.username || 'Utilisateur'}
                           </span>
                         </div>
-                        <button
-                          onClick={() => handleAcceptFriend(request.id)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-emerald-500/90 text-white rounded-lg"
-                        >
-                          Accepter
-                        </button>
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => handleAcceptFriend(request.id)}
+                            className="px-3 py-1.5 text-xs font-semibold bg-emerald-500/90 text-white rounded-lg"
+                          >
+                            Accepter
+                          </button>
+                          <button
+                            onClick={() => handleDeclineFriend(request.id)}
+                            className="px-3 py-1.5 text-xs font-semibold bg-red-500/80 text-white rounded-lg"
+                          >
+                            Refuser
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -350,7 +388,12 @@ export function DirectMessagesPanel({
                             {request.user?.username || 'Utilisateur'}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">En attente</span>
+                        <button
+                          onClick={() => handleCancelRequest(request.id)}
+                          className="px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          Annuler
+                        </button>
                       </div>
                     ))
                   )}
@@ -388,12 +431,21 @@ export function DirectMessagesPanel({
                             {friend.user?.username || 'Utilisateur'}
                           </span>
                         </div>
-                        <button
-                          onClick={() => handleStartConversation(friend.user?.id)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-lg"
-                        >
-                          Message
-                        </button>
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => handleStartConversation(friend.user?.id)}
+                            className="px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-lg"
+                          >
+                            Message
+                          </button>
+                          <button
+                            onClick={() => handleRemoveFriend(friend.id)}
+                            className="px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Supprimer l'ami"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}

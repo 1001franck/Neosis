@@ -16,4 +16,13 @@ export const friendsApi = {
   acceptFriend: async (friendshipId: string): Promise<void> => {
     await apiClient.post('/friends/accept', { friendshipId });
   },
+  declineFriend: async (friendshipId: string): Promise<void> => {
+    await apiClient.post('/friends/decline', { friendshipId });
+  },
+  cancelFriendRequest: async (friendshipId: string): Promise<void> => {
+    await apiClient.post('/friends/cancel', { friendshipId });
+  },
+  removeFriend: async (friendshipId: string): Promise<void> => {
+    await apiClient.delete(`/friends/${friendshipId}`);
+  },
 };

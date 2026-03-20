@@ -93,6 +93,9 @@ const getChannelVoiceUsersUseCase = container.createGetChannelVoiceUsersUseCase(
 // Friend / Direct Use Cases
 const requestFriendUseCase = container.createRequestFriendUseCase();
 const acceptFriendUseCase = container.createAcceptFriendUseCase();
+const declineFriendUseCase = container.createDeclineFriendUseCase();
+const cancelFriendRequestUseCase = container.createCancelFriendRequestUseCase();
+const removeFriendUseCase = container.createRemoveFriendUseCase();
 const listFriendsUseCase = container.createListFriendsUseCase();
 const listFriendRequestsUseCase = container.createListFriendRequestsUseCase();
 const createDirectConversationUseCase = container.createDirectConversationUseCase();
@@ -126,6 +129,9 @@ const voiceController = new VoiceController(getChannelVoiceUsersUseCase);
 const friendController = new FriendController(
   requestFriendUseCase,
   acceptFriendUseCase,
+  declineFriendUseCase,
+  cancelFriendRequestUseCase,
+  removeFriendUseCase,
   listFriendsUseCase,
   listFriendRequestsUseCase,
   userRepository

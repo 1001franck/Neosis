@@ -56,6 +56,9 @@ import { GetChannelVoiceUsersUseCase } from '../application/voice/usecases/GetCh
 import {
   RequestFriendUseCase,
   AcceptFriendUseCase,
+  DeclineFriendUseCase,
+  CancelFriendRequestUseCase,
+  RemoveFriendUseCase,
   ListFriendsUseCase,
   ListFriendRequestsUseCase,
 } from '../application/direct/usecases/friendUseCases.js';
@@ -477,6 +480,21 @@ export class Container {
   createAcceptFriendUseCase() {
     const friendshipRepository = this.createFriendshipRepository();
     return new AcceptFriendUseCase(friendshipRepository);
+  }
+
+  createDeclineFriendUseCase() {
+    const friendshipRepository = this.createFriendshipRepository();
+    return new DeclineFriendUseCase(friendshipRepository);
+  }
+
+  createCancelFriendRequestUseCase() {
+    const friendshipRepository = this.createFriendshipRepository();
+    return new CancelFriendRequestUseCase(friendshipRepository);
+  }
+
+  createRemoveFriendUseCase() {
+    const friendshipRepository = this.createFriendshipRepository();
+    return new RemoveFriendUseCase(friendshipRepository);
   }
 
   createListFriendsUseCase() {

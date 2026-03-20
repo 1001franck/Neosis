@@ -8,6 +8,9 @@ export function createFriendRoutes(controller: FriendController): Router {
 
   router.post('/request', validate(RequestFriendDTO), controller.requestFriend);
   router.post('/accept', validate(AcceptFriendDTO), controller.acceptFriend);
+  router.post('/decline', controller.declineFriend);
+  router.post('/cancel', controller.cancelFriendRequest);
+  router.delete('/:id', controller.removeFriend);
   router.get('/', controller.listFriends);
   router.get('/requests', controller.listRequests);
 

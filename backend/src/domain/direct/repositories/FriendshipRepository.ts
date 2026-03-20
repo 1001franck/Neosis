@@ -5,6 +5,7 @@ export interface FriendshipRepository {
   findById(friendshipId: string): Promise<Friendship | null>;
   create(friendship: Friendship): Promise<Friendship>;
   updateStatus(id: string, status: FriendshipStatus): Promise<Friendship>;
+  delete(id: string): Promise<void>;
   listForUser(userId: string): Promise<Friendship[]>;
   listPendingForUser(userId: string): Promise<Friendship[]>;
 }
