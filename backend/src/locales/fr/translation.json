@@ -1,0 +1,15 @@
+{
+  "errors": {
+    "USER_NOT_FOUND": "Utilisateur introuvable",
+    "ALREADY_EXISTS": "Cet utilisateur existe déjà",
+    "INVALID_CREDENTIALS": "Email ou mot de passe incorrect",
+    "FRIENDSHIP_EXISTS": "Une relation existe déjà entre ces utilisateurs",
+    "FRIEND_REQUEST_NOT_FOUND": "Demande d'ami introuvable",
+    "FORBIDDEN": "Accès interdit",
+    "SERVER_NOT_FOUND": "Serveur introuvable",
+    "CHANNEL_NOT_FOUND": "Canal introuvable",
+    "MESSAGE_NOT_FOUND": "Message introuvable",
+    "VALIDATION_ERROR": "Données invalides",
+    "INTERNAL_ERROR": "Erreur interne du serveur"
+  }
+}

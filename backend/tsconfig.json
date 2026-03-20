@@ -22,6 +22,6 @@
     "declarationMap": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts", "testAuth.ts", "src/types/express.d.ts"],
+  "include": ["src/**/*.ts", "testAuth.ts", "src/types/express.d.ts", ".intlayer/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

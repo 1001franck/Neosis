@@ -1,0 +1,15 @@
+{
+  "errors": {
+    "USER_NOT_FOUND": "User not found",
+    "ALREADY_EXISTS": "This user already exists",
+    "INVALID_CREDENTIALS": "Invalid email or password",
+    "FRIENDSHIP_EXISTS": "A relationship already exists between these users",
+    "FRIEND_REQUEST_NOT_FOUND": "Friend request not found",
+    "FORBIDDEN": "Access forbidden",
+    "SERVER_NOT_FOUND": "Server not found",
+    "CHANNEL_NOT_FOUND": "Channel not found",
+    "MESSAGE_NOT_FOUND": "Message not found",
+    "VALIDATION_ERROR": "Invalid data",
+    "INTERNAL_ERROR": "Internal server error"
+  }
+}

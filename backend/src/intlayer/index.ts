@@ -11,7 +11,7 @@ app.use(intlayer());
 app.get("/t_example", (_req, res) => {
   res.send(
     t({
-      en: "Example of returned",
+      en: "Example of content",
       fr: "Exemple de contenu",
     })
   );

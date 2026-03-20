@@ -31,6 +31,8 @@ import { errorHandler } from './presentation/http/middlewares/errorHandler.js';
 import { globalRateLimit, messageRateLimit } from './presentation/http/middlewares/rateLimit.middleware.js';
 import { SocketHandler } from './presentation/websocket/socketHandler.js';
 import { VoiceHandler } from './presentation/websocket/handlers/voiceHandler.js';
+import i18next from './shared/i18n/i18n.js';
+import middleware from 'i18next-http-middleware';
 
 const app = express();
 const httpServer = createServer(app);
@@ -193,6 +195,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(middleware.handle(i18next));
 app.use(cookieParser());
 
 // Servir les fichiers uploadés
