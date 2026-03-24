@@ -184,7 +184,7 @@ export class ServerController {
 
       // Supprimer l'ancienne image de Supabase si elle existe
       if (server.imageUrl) {
-        await deleteFromSupabase(server.imageUrl).catch(() => {});
+        await deleteFromSupabase(server.imageUrl).catch((e) => console.warn('Échec suppression ancienne image serveur:', e));
       }
 
       // Uploader vers Supabase

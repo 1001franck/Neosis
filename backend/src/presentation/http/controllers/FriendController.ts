@@ -109,31 +109,32 @@ export class FriendController {
     try {
       const userId = req.userId!;
       const requests = await this.listFriendRequestsUseCase.execute(userId);
-      const mapSide = async (items: typeof requests.incoming) => {
-        return Promise.all(
-          items.map(async (friendship) => {
-            const otherUserId = friendship.userOneId === userId ? friendship.userTwoId : friendship.userOneId;
-            const otherUser = await this.userRepository.findById(otherUserId);
-            return {
-              id: friendship.id,
-              status: friendship.status,
-              requesterId: friendship.requesterId,
-              user: otherUser
-                ? {
-                    id: otherUser.id,
-                    username: otherUser.username,
-                    avatarUrl: otherUser.avatarUrl,
-                  }
-                : null,
-            };
-          })
-        );
-      };
+
+      // Récupérer tous les utilisateurs en une seule requête pour éviter le N+1
+      const allItems = [...requests.incoming, ...requests.outgoing];
+      const otherUserIds = allItems.map(f => f.userOneId === userId ? f.userTwoId : f.userOneId);
+      const users = await this.userRepository.findByIds(otherUserIds);
+      const usersMap = new Map(users.map(u => [u.id, u]));
+
+      const mapSide = (items: typeof requests.incoming) =>
+        items.map((friendship) => {
+          const otherUserId = friendship.userOneId === userId ? friendship.userTwoId : friendship.userOneId;
+          const otherUser = usersMap.get(otherUserId) ?? null;
+          return {
+            id: friendship.id,
+            status: friendship.status,
+            requesterId: friendship.requesterId,
+            user: otherUser
+              ? { id: otherUser.id, username: otherUser.username, avatarUrl: otherUser.avatarUrl }
+              : null,
+          };
+        });
+
       res.status(200).json({
         success: true,
         data: {
-          incoming: await mapSide(requests.incoming),
-          outgoing: await mapSide(requests.outgoing),
+          incoming: mapSide(requests.incoming),
+          outgoing: mapSide(requests.outgoing),
         },
       });
     } catch (error) {
