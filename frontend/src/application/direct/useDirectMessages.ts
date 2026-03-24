@@ -45,8 +45,13 @@ export function useDirectMessages(conversationId?: string) {
   const sendMessage = useCallback(
     async (content: string) => {
       if (!conversationId) return;
-      const sent = await directApi.sendMessage(conversationId, content);
-      setInitialMessages((prev) => [...prev, sent]);
+      try {
+        const sent = await directApi.sendMessage(conversationId, content);
+        setInitialMessages((prev) => [...prev, sent]);
+      } catch (err) {
+        logger.error('Échec de l\'envoi du message', err);
+        setError('Impossible d\'envoyer le message');
+      }
     },
     [conversationId]
   );
