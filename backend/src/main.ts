@@ -176,6 +176,7 @@ const serverController = new ServerController(
   kickMemberUseCase,
   banMemberUseCase,
   banRepository,
+  userRepository,
   socketHandler.getIO()
 );
 
