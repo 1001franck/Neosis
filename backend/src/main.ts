@@ -68,6 +68,7 @@ const getServerMembersUseCase = container.getServerMembersUseCase();
 const updateMemberRoleUseCase = container.updateMemberRoleUseCase();
 const kickMemberUseCase = container.kickMemberUseCase();
 const banMemberUseCase = container.banMemberUseCase();
+const getServerBansUseCase = container.getServerBansUseCase();
 
 // Channel Use Cases
 const createChannelUseCase = container.createChannelUseCase();
@@ -176,7 +177,7 @@ const serverController = new ServerController(
   kickMemberUseCase,
   banMemberUseCase,
   banRepository,
-  userRepository,
+  getServerBansUseCase,
   socketHandler.getIO()
 );
 

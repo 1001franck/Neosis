@@ -17,7 +17,7 @@ import { MemberRole } from '../../../domain/members/entities/Member.js';
 import { AppError, ErrorCode } from '../../../shared/errors/AppError.js';
 import { uploadToSupabase, deleteFromSupabase } from '../../../infrastructure/storage/supabaseStorage.js';
 import type { IBanRepository } from '../../../domain/bans/repositories/IBanRepository.js';
-import type { IUserRepository } from '../../../domain/users/repositories/UserRepository.js';
+import { GetServerBansUseCase } from '../../../application/members/usecases/GetServerBansUseCase.js';
 import type { Server as SocketIOServer } from 'socket.io';
 
 /**
@@ -39,7 +39,7 @@ export class ServerController {
     private kickMemberUseCase: KickMemberUseCase,
     private banMemberUseCase: BanMemberUseCase,
     private banRepository: IBanRepository,
-    private userRepository: IUserRepository,
+    private getServerBansUseCase: GetServerBansUseCase,
     private io?: SocketIOServer
   ) {}
 
@@ -429,28 +429,7 @@ export class ServerController {
         return res.status(403).json({ success: false, error: 'Seuls les admins et le propriétaire peuvent voir les bans' });
       }
 
-      const allBans = await this.banRepository.findByServerId(serverId);
-      const now = new Date();
-
-      // Inclure les bans permanents (expiresAt === null) ET les bans temporaires non expirés
-      const filtered = allBans.filter(b => b.expiresAt === null || b.expiresAt > now);
-
-      // Récupérer les infos utilisateurs en une seule requête
-      const bannedUserIds = filtered.map(b => b.userId);
-      const users = await this.userRepository.findByIds(bannedUserIds);
-      const usersMap = new Map(users.map(u => [u.id, u]));
-
-      const activeBans = filtered.map(b => {
-        const user = usersMap.get(b.userId);
-        return {
-          userId: b.userId,
-          username: user?.username ?? null,
-          avatarUrl: user?.avatarUrl ?? null,
-          isPermanent: b.expiresAt === null,
-          expiresAt: b.expiresAt ? b.expiresAt.toISOString() : null,
-          reason: b.reason,
-        };
-      });
+      const activeBans = await this.getServerBansUseCase.execute(serverId);
 
       return res.status(200).json({ success: true, data: activeBans });
     } catch (error) {

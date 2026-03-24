@@ -33,6 +33,7 @@ import { GetServerMembersUseCase } from '../application/members/usecases/GetServ
 import { UpdateMemberRoleUseCase } from '../application/members/usecases/UpdateMemberRoleUseCase.js';
 import { KickMemberUseCase } from '../application/members/usecases/KickMemberUseCase.js';
 import { BanMemberUseCase } from '../application/members/usecases/BanMemberUseCase.js';
+import { GetServerBansUseCase } from '../application/members/usecases/GetServerBansUseCase.js';
 import {
   CreateChannelUseCase,
   GetChannelByIdUseCase,
@@ -313,6 +314,12 @@ export class Container {
     const memberRepository = this.createMemberRepository();
     const banRepository = this.createBanRepository();
     return new BanMemberUseCase(memberRepository, banRepository);
+  }
+
+  getServerBansUseCase() {
+    const banRepository = this.createBanRepository();
+    const userRepository = this.createUserRepository();
+    return new GetServerBansUseCase(banRepository, userRepository);
   }
 
   // ============ CHANNEL USE CASES ============
