@@ -116,8 +116,8 @@ export class MessageController {
       const message = await this.updateMessageUseCase.execute({
         messageId: id,
         userId,
-        channelId,
-        content
+        content,
+        ...(channelId !== undefined && { channelId }),
       });
 
       res.status(200).json({
