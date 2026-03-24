@@ -126,9 +126,13 @@ export class SocketHandler {
    */
   private handleJoinServer(socket: Socket): void {
     socket.on('server:join', (serverId: string) => {
-      socket.join(`server:${serverId}`);
-      this.logger.info(`User ${socket.data.userId} joined server room ${serverId}`);
-      this.emitOnlineUsers(serverId);
+      try {
+        socket.join(`server:${serverId}`);
+        this.logger.info(`User ${socket.data.userId} joined server room ${serverId}`);
+        this.emitOnlineUsers(serverId);
+      } catch (error) {
+        this.logger.error('Erreur lors du join serveur:', error);
+      }
     });
   }
 
@@ -137,9 +141,13 @@ export class SocketHandler {
    */
   private handleLeaveServer(socket: Socket): void {
     socket.on('server:leave', (serverId: string) => {
-      socket.leave(`server:${serverId}`);
-      this.logger.info(`User ${socket.data.userId} left server room ${serverId}`);
-      this.emitOnlineUsers(serverId);
+      try {
+        socket.leave(`server:${serverId}`);
+        this.logger.info(`User ${socket.data.userId} left server room ${serverId}`);
+        this.emitOnlineUsers(serverId);
+      } catch (error) {
+        this.logger.error('Erreur lors du leave serveur:', error);
+      }
     });
   }
 

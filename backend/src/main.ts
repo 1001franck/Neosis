@@ -189,7 +189,11 @@ const directMessageController = new DirectMessageController(
 
 // Enregistrer les handlers voice pour chaque connexion
 socketHandler.getIO().on('connection', (socket) => {
-  voiceHandler.register(socket);
+  try {
+    voiceHandler.register(socket);
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement du handler voice:', error);
+  }
 });
 
 // ============ MIDDLEWARES ============
@@ -236,8 +240,8 @@ app.use('/channels/:channelId/messages', authMiddleware, messageRateLimit, creat
 app.use('/upload', authMiddleware, createUploadRoutes(uploadController));
 app.use('/channels/:channelId/media', authMiddleware, createChannelMediaRoutes(uploadController));
 
-// Voice routes
-app.use('/voice', createVoiceRouter(voiceController));
+// Voice routes (protégées par authMiddleware)
+app.use('/voice', authMiddleware, createVoiceRouter(voiceController));
 
 // Friend / Direct routes
 app.use('/friends', authMiddleware, createFriendRoutes(friendController));
