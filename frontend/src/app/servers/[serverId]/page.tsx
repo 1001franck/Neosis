@@ -29,6 +29,7 @@ import { ChannelType } from '@domain/channels/types';
 import { socketEmitters } from '@infrastructure/websocket/emitters';
 import { uploadApi } from '@infrastructure/api/upload.api';
 import { serversApi } from '@infrastructure/api/servers.api';
+import { toastBus } from '@shared/utils/toastBus';
 import type { ChannelMedia, ChannelLink } from '@presentation/components/channels/types';
 
 interface ServerPageProps {
@@ -41,16 +42,14 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   // === HOOKS ===
   const { user, logout } = useAuth();
   const { servers, currentServer, getServers, getServer, leaveServer, deleteServer, createServer, joinServer, isLoading: serversLoading } = useServers();
-  const { channels, listChannels, createChannel, updateChannel, deleteChannel, isLoading: channelsLoading } = useChannels();
+  const { channels, listChannels, createChannel, updateChannel, deleteChannel } = useChannels();
   const resetChannels = useChannelStore((state) => state.reset);
   const { members, loadMembers, changeRole, transferOwnership, kickMember, banMember } = useMembers();
   const { messages, loadMessages } = useMessages();
   const resetMessages = useMessageStore((state) => state.reset);
   const addOptimisticMessage = useMessageStore((state) => state.addOptimisticMessage);
-  const updateMessageStatus = useMessageStore((state) => state.updateMessageStatus);
   const addChannelUser = useMessageStore((state) => state.addChannelUser);
   const removeChannelUser = useMessageStore((state) => state.removeChannelUser);
-  const getChannelUserCount = useMessageStore((state) => state.getChannelUserCount);
   const clearMentions = useMessageStore((state) => state.clearMentions);
   const router = useRouter();
   const { joinVoiceChannel } = useVoice();
@@ -152,7 +151,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   const [channelMedia, setChannelMedia] = useState<ChannelMedia[]>([]);
   const [channelLinks, setChannelLinks] = useState<ChannelLink[]>([]);
   const [channelFiles, setChannelFiles] = useState<ChannelMedia[]>([]);
-  const [mediaLoading, setMediaLoading] = useState(false);
+  const [, setMediaLoading] = useState(false);
 
   // === SERVER MODAL STATE ===
   const [showCreateServer, setShowCreateServer] = useState(false);
@@ -172,10 +171,18 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       resetChannels();
       resetMessages();
       setActiveChannelId('');
-      getServer(serverId).catch(() => {});
-      getServers().catch(() => {});
-      listChannels(serverId).catch(() => {});
-      loadMembers(serverId).catch(() => {});
+      getServer(serverId).catch(() => {
+        toastBus.emit({ type: 'error', message: 'Impossible de charger le serveur' });
+      });
+      getServers().catch(() => {
+        logger.error('Échec du chargement des serveurs');
+      });
+      listChannels(serverId).catch(() => {
+        toastBus.emit({ type: 'error', message: 'Impossible de charger les canaux' });
+      });
+      loadMembers(serverId).catch(() => {
+        logger.error('Échec du chargement des membres');
+      });
       // Vérifier si l'utilisateur est banni temporairement
       serversApi.getMyBanStatus(serverId)
         .then((status) => {
