@@ -15,7 +15,7 @@ export class DirectMessageController {
     try {
       const conversationId = req.params.id as string;
       const { content } = req.body;
-      const userId = req.userId;
+      const userId = req.userId!;
       const message = await this.sendDirectMessageUseCase.execute(userId, conversationId, content);
 
       const payload = {
@@ -46,7 +46,7 @@ export class DirectMessageController {
   listMessages = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const conversationId = req.params.id as string;
-      const userId = req.userId;
+      const userId = req.userId!;
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
       const offset = req.query.offset ? Number(req.query.offset) : undefined;
       const messages = await this.getDirectMessagesUseCase.execute(userId, conversationId, limit, offset);

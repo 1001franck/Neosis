@@ -17,7 +17,7 @@ export class DirectConversationController {
   createConversation = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { otherUserId } = req.body;
-      const userId = req.userId;
+      const userId = req.userId!;
       const conversation = await this.createOrGetConversationUseCase.execute(userId, otherUserId);
       res.status(201).json({ success: true, data: conversation });
     } catch (error) {
@@ -27,7 +27,7 @@ export class DirectConversationController {
 
   listConversations = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = req.userId;
+      const userId = req.userId!;
       const conversations = await this.listConversationsUseCase.execute(userId);
       const data = await Promise.all(
         conversations.map(async (conv) => {
@@ -54,7 +54,7 @@ export class DirectConversationController {
 
   getConversation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = req.userId;
+      const userId = req.userId!;
       const conversationId = req.params.id as string;
       const conv = await this.getConversationUseCase.execute(userId, conversationId);
       const otherUserId = conv.userOneId === userId ? conv.userTwoId : conv.userOneId;

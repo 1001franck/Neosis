@@ -48,7 +48,7 @@ export class ServerController {
   createServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { name, imageUrl, description } = req.body;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const server = await this.createServerUseCase.execute({
         name,
@@ -92,7 +92,7 @@ export class ServerController {
    */
   getUserServers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const servers = await this.getUserServersUseCase.execute(userId);
 
@@ -112,7 +112,7 @@ export class ServerController {
   joinServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { inviteCode } = req.body;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const server = await this.joinServerUseCase.execute({
         userId,
@@ -137,7 +137,7 @@ export class ServerController {
     try {
       const id = req.params.id as string;
       const { name, description, imageUrl } = req.body;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const server = await this.updateServerUseCase.execute({
         serverId: id,
@@ -212,7 +212,7 @@ export class ServerController {
   deleteServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id as string;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       await this.deleteServerUseCase.execute({
         serverId: id,
@@ -232,7 +232,7 @@ export class ServerController {
   leaveServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id as string;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       await this.leaveServerUseCase.execute({
         userId,
@@ -277,7 +277,7 @@ export class ServerController {
       const serverId = req.params.id as string;
       const memberId = req.params.memberId as string;
       const { role } = req.body;
-      const requesterId = req.userId;
+      const requesterId = req.userId!;
 
       // Validation du rôle
       if (!Object.values(MemberRole).includes(role)) {
@@ -317,7 +317,7 @@ export class ServerController {
     try {
       const serverId = req.params.id as string;
       const { newOwnerId } = req.body;
-      const currentOwnerId = req.userId;
+      const currentOwnerId = req.userId!;
 
       if (!newOwnerId) {
         return res.status(400).json({
@@ -350,7 +350,7 @@ export class ServerController {
     try {
       const serverId = req.params.id as string;
       const memberId = req.params.memberId as string;
-      const requesterId = req.userId;
+      const requesterId = req.userId!;
 
       const { userId: targetUserId } = await this.kickMemberUseCase.execute({
         requesterId,
@@ -378,7 +378,7 @@ export class ServerController {
     try {
       const serverId = req.params.id as string;
       const memberId = req.params.memberId as string;
-      const requesterId = req.userId;
+      const requesterId = req.userId!;
       const durationRaw = req.body?.durationHours ?? req.query?.durationHours;
       const reason = req.body?.reason as string | undefined;
 
@@ -453,7 +453,7 @@ export class ServerController {
   getMyBanStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const serverId = req.params.id as string;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const ban = await this.banRepository.findActiveByUserAndServer(userId, serverId);
 
