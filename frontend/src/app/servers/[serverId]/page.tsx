@@ -436,6 +436,16 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     }
   }, [serverId, banMember, loadMembers]);
 
+  const handleAddReaction = useCallback((messageId: string, emoji: string): void => {
+    if (!activeChannelId) return;
+    socketEmitters.addReaction({ messageId, channelId: activeChannelId, emoji });
+  }, [activeChannelId]);
+
+  const handleRemoveReaction = useCallback((messageId: string, emoji: string): void => {
+    if (!activeChannelId) return;
+    socketEmitters.removeReaction({ messageId, channelId: activeChannelId, emoji });
+  }, [activeChannelId]);
+
   const handleTypingStart = useCallback((): void => {
     if (activeChannelId) {
       socketEmitters.typingStarted(activeChannelId);
@@ -647,6 +657,8 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
           onAddChannel: handleAddChannel,
           onEditMessage: handleEditMessage,
           onDeleteMessage: handleDeleteMessage,
+          onAddReaction: handleAddReaction,
+          onRemoveReaction: handleRemoveReaction,
           onChangeRole: handleChangeRole,
           onTransferOwnership: handleTransferOwnership,
           onTypingStart: handleTypingStart,

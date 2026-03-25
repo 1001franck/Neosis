@@ -353,10 +353,10 @@ export function MessageList({
                     {message.attachments && message.attachments.length > 0 && (
                       <MessageAttachments attachments={message.attachments} />
                     )}
-                    {message.reactions && message.reactions.length > 0 && currentUserId && (
+                    {currentUserId && ((message.reactions?.length ?? 0) > 0 || hoveredMessageId === message.id) && (
                       <div className="mt-1">
                         <MessageReactions
-                          reactions={message.reactions}
+                          reactions={message.reactions ?? []}
                           currentUserId={currentUserId}
                           onAddReaction={(emoji) => onAddReaction?.(message.id, emoji)}
                           onRemoveReaction={(emoji) => onRemoveReaction?.(message.id, emoji)}
@@ -463,10 +463,10 @@ export function MessageList({
                     </div>
 
                     {/* Reactions */}
-                    {message.reactions && message.reactions.length > 0 && currentUserId && (
+                    {currentUserId && ((message.reactions?.length ?? 0) > 0 || hoveredMessageId === message.id) && (
                       <div className="mt-1">
                         <MessageReactions
-                          reactions={message.reactions}
+                          reactions={message.reactions ?? []}
                           currentUserId={currentUserId}
                           onAddReaction={(emoji) => onAddReaction?.(message.id, emoji)}
                           onRemoveReaction={(emoji) => onRemoveReaction?.(message.id, emoji)}

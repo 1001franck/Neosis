@@ -64,6 +64,8 @@ interface ChannelViewCallbacks {
   onAddChannel?: (categoryId: string) => void;
   onEditMessage?: (messageId: string, content: string) => void;
   onDeleteMessage?: (messageId: string, scope?: 'me' | 'everyone') => void;
+  onAddReaction?: (messageId: string, emoji: string) => void;
+  onRemoveReaction?: (messageId: string, emoji: string) => void;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
   onChangeRole?: (memberId: string, role: MemberRole) => void;
@@ -257,6 +259,8 @@ export function ChannelView({
             onSendMessage: callbacks?.onSendMessage || (() => {}),
             onEditMessage: callbacks?.onEditMessage,
             onDeleteMessage: callbacks?.onDeleteMessage,
+            onAddReaction: callbacks?.onAddReaction,
+            onRemoveReaction: callbacks?.onRemoveReaction,
             onTypingStart: callbacks?.onTypingStart,
             onTypingStop: callbacks?.onTypingStop,
           }}

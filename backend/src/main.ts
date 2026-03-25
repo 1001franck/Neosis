@@ -150,7 +150,9 @@ const socketHandler = new SocketHandler(
   updateMessageUseCase,
   deleteMessageUseCase,
   markChannelAsReadUseCase,
-  userRepository
+  userRepository,
+  container.addReactionUseCase(),
+  container.removeReactionUseCase()
 );
 
 // Voice Handler (WebRTC signaling)

@@ -8,6 +8,15 @@ export interface MessageAuthor {
 }
 
 /**
+ * Réaction agrégée sur un message
+ */
+export interface MessageReactionData {
+  emoji: string;
+  count: number;
+  userIds: string[];
+}
+
+/**
  * Pièce jointe d'un message
  */
 export interface MessageAttachment {
@@ -28,6 +37,9 @@ export class Message {
 
   /** Pièces jointes (peuplées par le repository) */
   public attachments: MessageAttachment[] = [];
+
+  /** Réactions agrégées (peuplées par le repository) */
+  public reactions: MessageReactionData[] = [];
 
   /** Message supprimé uniquement pour un user (Delete for me) */
   public deletedForUserId?: string | null;
@@ -133,6 +145,7 @@ export class Message {
       isDeletedForUser: !!this.deletedForUserId,
       deletedForUserId: this.deletedForUserId ?? null,
       attachments: this.attachments,
+      reactions: this.reactions,
       ...(this.author && {
         author: {
           id: this.author.id,

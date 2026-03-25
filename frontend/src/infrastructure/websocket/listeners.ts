@@ -217,6 +217,20 @@ export function setupListeners() {
     }
   });
 
+  // === REACTION EVENTS ===
+
+  /**
+   * Réactions mises à jour sur un message
+   * Backend émet : reaction:updated { messageId, reactions }
+   */
+  socket.on('reaction:updated', ({ messageId, reactions }: { messageId: string; reactions: { emoji: string; count: number; userIds: string[] }[] }) => {
+    const store = useMessageStore.getState();
+    const message = store.messages.find((m) => m.id === messageId);
+    if (message) {
+      store.updateMessage(messageId, { ...message, reactions });
+    }
+  });
+
   // === ERROR EVENTS ===
 
   socket.on('message:error', ({ message, clientTempId }: { message: string; clientTempId?: string | null }) => {
@@ -364,6 +378,7 @@ export function setupListeners() {
 export function cleanupListeners() {
   socket.off('message:new');
   socket.off('message:updated');
+  socket.off('reaction:updated');
   socket.off('message:deleted');
   socket.off('typing:user_started');
   socket.off('typing:user_stopped');

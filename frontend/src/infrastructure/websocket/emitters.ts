@@ -23,6 +23,16 @@ export const socketEmitters = {
     socket.emit('message:delete', data);
   },
 
+  // === REACTION EVENTS ===
+
+  addReaction: (data: { messageId: string; channelId: string; emoji: string }) => {
+    socket.emit('reaction:add', data);
+  },
+
+  removeReaction: (data: { messageId: string; channelId: string; emoji: string }) => {
+    socket.emit('reaction:remove', data);
+  },
+
   // === TYPING EVENTS ===
 
   typingStarted: (channelId: string) => {
