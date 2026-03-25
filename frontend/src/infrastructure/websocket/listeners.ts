@@ -219,9 +219,13 @@ export function setupListeners() {
 
   // === ERROR EVENTS ===
 
-  socket.on('message:error', ({ message }: { message: string }) => {
-    logger.error('Socket message error', { message });
-    useMessageStore.getState().setError(message);
+  socket.on('message:error', ({ message, clientTempId }: { message: string; clientTempId?: string | null }) => {
+    logger.error('Socket message error', { message, clientTempId });
+    // Supprimer le message optimiste orphelin si le clientTempId est fourni
+    if (clientTempId) {
+      useMessageStore.getState().removeMessage(clientTempId);
+    }
+    toastBus.emit({ type: 'error', message });
   });
 
   // === BAN / KICK EVENTS ===

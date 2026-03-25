@@ -3,6 +3,7 @@ import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
 import { Logger } from '../../shared/utils/logger.js';
 import { JWT_SECRET } from '../../shared/config/env.js';
+import { AppError } from '../../shared/errors/AppError.js';
 import {
   CreateMessageUseCase,
   UpdateMessageUseCase,
@@ -220,7 +221,8 @@ export class SocketHandler {
         this.logger.info(`Message sent in channel ${data.channelId}`);
       } catch (error) {
         this.logger.error('Error sending message:', error);
-        socket.emit('message:error', { message: 'Failed to send message' });
+        const msg = error instanceof AppError ? error.message : 'Échec de l\'envoi du message';
+        socket.emit('message:error', { message: msg, clientTempId: data.clientTempId ?? null });
       }
     });
   }
@@ -247,7 +249,8 @@ export class SocketHandler {
         this.logger.info(`Message ${data.messageId} updated`);
       } catch (error) {
         this.logger.error('Error updating message:', error);
-        socket.emit('message:error', { message: 'Failed to update message' });
+        const msg = error instanceof AppError ? error.message : 'Échec de la modification du message';
+        socket.emit('message:error', { message: msg });
       }
     });
   }
@@ -287,7 +290,8 @@ export class SocketHandler {
         this.logger.info(`Message ${data.messageId} deleted`);
       } catch (error) {
         this.logger.error('Error deleting message:', error);
-        socket.emit('message:error', { message: 'Failed to delete message' });
+        const msg = error instanceof AppError ? error.message : 'Échec de la suppression du message';
+        socket.emit('message:error', { message: msg });
       }
     });
   }
