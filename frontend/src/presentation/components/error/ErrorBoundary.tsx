@@ -67,7 +67,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                 Oups ! 😞
               </h1>
               <p className="text-muted-foreground mb-2">
-                Une erreur inattendue s'est produite
+                Une erreur inattendue s&apos;est produite
               </p>
               <p className="text-sm text-muted-foreground mb-6 font-mono bg-secondary p-3 rounded overflow-auto">
                 {this.state.error?.message || 'Erreur inconnue'}
@@ -83,7 +83,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                   onClick={() => window.location.href = '/'}
                   className="w-full px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition"
                 >
-                  Retour à l'accueil
+                  Retour à l&apos;accueil
                 </button>
               </div>
             </div>

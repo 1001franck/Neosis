@@ -44,12 +44,6 @@ export function Providers({ children }: ProvidersProps): React.ReactNode {
     },
   }));
 
-  // Track client-side mounting for devtools
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Appliquer le thème sauvegardé au montage (avant le premier paint client)
   useEffect(() => {

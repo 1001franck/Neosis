@@ -4,14 +4,13 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/auth/useAuth';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
-import { logger } from '@shared/utils/logger';
 
 /**
  * PAGE SERVERS - Affiche la liste des serveurs de l'utilisateur
  */
 export default function ServersPage(): React.ReactNode {
   const router = useRouter();
-  const { user } = useAuth();
+  useAuth();
 
   // Rediriger vers /neosis (page d'entrée des serveurs)
   useEffect(() => {

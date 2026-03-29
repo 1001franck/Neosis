@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { EmojiPicker } from './EmojiPicker';
 import { useTypingIndicator } from '@presentation/hooks/useTypingIndicator';
 import { uploadApi } from '@infrastructure/api/upload.api';

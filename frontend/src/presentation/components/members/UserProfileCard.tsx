@@ -30,7 +30,7 @@ export function UserProfileCard({
   role,
   isOnline = false,
   onClose,
-  anchorRect,
+  anchorRect: _anchorRect,
 }: UserProfileCardProps): React.ReactElement {
   const cardRef = useRef<HTMLDivElement>(null);
 

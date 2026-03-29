@@ -13,7 +13,6 @@ import { useCallback } from 'react';
 import { useMessageStore } from './messageStore';
 import { useAuthStore } from '@application/auth/authStore';
 import { messageService } from './messageService';
-import type { Message } from '@domain/messages/types';
 import type { CreateMessageRequest, UpdateMessageRequest } from '@domain/messages/types';
 import { logger } from '@shared/utils/logger';
 

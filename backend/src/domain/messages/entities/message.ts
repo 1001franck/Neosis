@@ -59,16 +59,11 @@ export class Message {
   }
 
   /**
-   * Échappe les caractères HTML pour prévenir les attaques XSS
-   * On échappe au lieu de supprimer pour préserver le contenu (ex: "1 < 2", "List<String>")
+   * Supprime les balises HTML pour prévenir les attaques XSS
+   * On supprime les balises entières (ex: <b>texte</b> → texte, <img src="x" onerror="..."> → "")
    */
   static sanitize(content: string): string {
-    return content
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;');
+    return content.replace(/<[^>]*>/g, '');
   }
 
   /**
@@ -133,8 +128,8 @@ export class Message {
       id: this.id,
       content: this.content,
       memberId: this.memberId,
-      // authorId = user.id (pas memberId) pour que le frontend puisse identifier l'auteur
-      authorId: this.author?.id ?? null,
+      // authorId = user.id, avec fallback sur memberId si l'auteur n'est pas peuplé
+      authorId: this.author?.id ?? this.memberId,
       channelId: this.channelId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

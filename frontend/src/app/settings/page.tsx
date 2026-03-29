@@ -72,7 +72,7 @@ export default function SettingsPage(): React.ReactNode {
       emitProfileUpdate({ avatar: updated.avatar ?? null });
       setSuccess('Avatar mis à jour !');
       setError(null);
-    } catch (err) {
+    } catch (_err) {
       setError('Erreur lors de la mise à jour de l\'avatar');
     } finally {
       setUploadingAvatar(false);
@@ -94,7 +94,7 @@ export default function SettingsPage(): React.ReactNode {
         statusEmoji,
       });
       setSuccess('Profil mis à jour !');
-    } catch (err) {
+    } catch (_err) {
       setError("Erreur lors de la mise à jour du profil");
     } finally {
       setSaving(false);
@@ -119,7 +119,7 @@ export default function SettingsPage(): React.ReactNode {
       emitProfileUpdate({ banner: updated.banner ?? null });
       setSuccess('Bannière mise à jour !');
       setError(null);
-    } catch (err) {
+    } catch (_err) {
       setError("Erreur lors de la mise à jour de la bannière");
     } finally {
       setUploadingBanner(false);
@@ -252,7 +252,7 @@ export default function SettingsPage(): React.ReactNode {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold mb-3 text-foreground">
-                    Nom d'utilisateur
+                    Nom d&apos;utilisateur
                   </label>
                   <input
                     type="text"

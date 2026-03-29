@@ -21,7 +21,6 @@ import { ServerChannelsSidebarCollapsed } from './ServerChannelsSidebarCollapsed
 import { useServerChannelsSidebarState } from './hooks/useServerChannelsSidebarState';
 import { useResponsiveLayout } from '@presentation/contexts/ResponsiveLayoutContext';
 import { MobileOverlay } from '@presentation/components/common/MobileOverlay';
-import { SIDEBAR_WIDTHS } from '@shared/constants/breakpoints';
 import { useVoiceStore } from '@application/voice/voiceStore';
 import { useMessageStore } from '@application/messages/messageStore';
 import { ServerSettingsModal } from '@presentation/components/modals/ServerSettingsModal';
@@ -58,39 +57,27 @@ function ServerChannelsSidebarInternal({
   activeChannelId,
   currentUserRole,
   onChannelClick,
-  onServerMenuClick,
+  onServerMenuClick: _onServerMenuClick,
   onSearchClick,
   onAddChannel,
   onLeaveServer,
   onDeleteServer,
   onCopyInviteCode,
-  onDeleteChannel,
-  onEditChannel,
+  onDeleteChannel: _onDeleteChannel,
+  onEditChannel: _onEditChannel,
   onJoinVoice,
 }: ServerChannelsSidebarProps): React.ReactElement | null {
-  // Validation
-  if (!server || !channels || !categories) {
-    return (
-      <div className="w-60 h-full bg-card flex items-center justify-center border-r border-border">
-        <p className="text-sm text-muted-foreground">Aucune donnÃ©e serveur</p>
-      </div>
-    );
-  }
-  
-  // Server menu dropdown state
+  // Tous les hooks déclarés en premier (règle des hooks React)
   const [showServerMenu, setShowServerMenu] = useState(false);
   const [showServerSettings, setShowServerSettings] = useState(false);
   const [selectedChannelForSettings, setSelectedChannelForSettings] = useState<Channel | null>(null);
 
-  const isOwner = currentUserRole === 'OWNER';
-  const isAdminOrOwner = currentUserRole === 'OWNER' || currentUserRole === 'ADMIN';
   const voiceUsersByChannel = useVoiceStore((state) => state.connectedUsers);
   const voiceCountByChannel = useVoiceStore((state) => state.voiceCountByChannel);
   const getMentionCount = useMessageStore((state) => state.getMentionCount);
   const { updateServer, uploadServerImage } = useServerSettings();
   const { updateChannel } = useChannelSettings();
 
-  // Responsive layout
   const {
     isChannelSidebarOpen,
     closeAllSidebars,
@@ -98,9 +85,20 @@ function ServerChannelsSidebarInternal({
     isSidebarCollapsed,
     toggleSidebarCollapsed,
   } = useResponsiveLayout();
-  
-  // Hook pour gérer l'état
-  const sidebarState = useServerChannelsSidebarState({ channels });
+
+  const sidebarState = useServerChannelsSidebarState({ channels: channels ?? [] });
+
+  // Guard : données non disponibles
+  if (!server || !channels || !categories) {
+    return (
+      <div className="w-60 h-full bg-card flex items-center justify-center border-r border-border">
+        <p className="text-sm text-muted-foreground">Aucune donnée serveur</p>
+      </div>
+    );
+  }
+
+  const isOwner = currentUserRole === 'OWNER';
+  const isAdminOrOwner = currentUserRole === 'OWNER' || currentUserRole === 'ADMIN';
   const {
     collapsedCategories,
     toggleCategory,
@@ -372,7 +370,7 @@ function ServerChannelsSidebarInternal({
             }
 
             // Mettre à jour le serveur avec les autres données (sans imageUrl)
-            const { imageFile, ...updateData } = data;
+            const { imageFile: _imageFile, ...updateData } = data;
             await updateServer(server.id, {
               ...updateData,
             });

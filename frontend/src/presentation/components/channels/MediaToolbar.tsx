@@ -5,7 +5,6 @@
 
 'use client';
 
-import { memo } from 'react';
 
 interface MediaToolbarProps {
   isSelectionMode: boolean;

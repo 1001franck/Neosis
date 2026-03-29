@@ -480,13 +480,13 @@ export function DirectMessagesPanel({
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
-            Entrez le nom d'utilisateur exact pour envoyer une demande.
+            Entrez le nom d&apos;utilisateur exact pour envoyer une demande.
           </p>
           <input
             type="text"
             value={friendUsername}
             onChange={(e) => setFriendUsername(e.target.value)}
-            placeholder="Nom d'utilisateur"
+            placeholder="Nom d&apos;utilisateur"
             className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
           {friendError && (
