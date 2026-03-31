@@ -111,19 +111,17 @@ export function useChatLogic({ channelId }: UseChatLogicParams): UseChatLogicRet
 
   /**
    * Ajouter une réaction
-   * TODO: Le backend ne supporte pas encore les réactions via socket
    */
   const handleAddReaction = useCallback((messageId: string, emoji: string) => {
-    logger.debug('Adding reaction (not yet supported by backend)', { messageId, emoji });
-  }, []);
+    socketEmitters.addReaction({ messageId, channelId, emoji });
+  }, [channelId]);
 
   /**
    * Retirer une réaction
-   * TODO: Le backend ne supporte pas encore les réactions via socket
    */
   const handleRemoveReaction = useCallback((messageId: string, emoji: string) => {
-    logger.debug('Removing reaction (not yet supported by backend)', { messageId, emoji });
-  }, []);
+    socketEmitters.removeReaction({ messageId, channelId, emoji });
+  }, [channelId]);
 
   /**
    * Éditer un message
