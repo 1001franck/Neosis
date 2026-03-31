@@ -8,7 +8,7 @@ on:
 jobs:
   build-backend:
     name: Build Backend (tag)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout du code
@@ -45,7 +45,7 @@ jobs:
 
   build-frontend:
     name: Build Frontend (tag)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout du code
@@ -79,7 +79,7 @@ jobs:
 
   create-release:
     name: Création de la Release GitHub
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [build-backend, build-frontend]
 
     steps:
