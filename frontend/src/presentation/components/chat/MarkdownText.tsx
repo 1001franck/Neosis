@@ -83,11 +83,37 @@ function parseMarkdown(text: string): string {
   return parsed;
 }
 
-export function MarkdownText({ content }: MarkdownTextProps): React.ReactNode {
-  const htmlContent = parseMarkdown(content);
-  
+/**
+ * Détecte si le contenu est une URL GIF (Giphy)
+ * Dans ce cas, on affiche directement une image au lieu du texte
+ */
+function isGifUrl(text: string): boolean {
+  const trimmed = text.trim();
   return (
-    <div 
+    /^https?:\/\/media\d*\.giphy\.com\/.+\.gif(\?.*)?$/i.test(trimmed) ||
+    /^https?:\/\/i\.giphy\.com\/.+\.gif(\?.*)?$/i.test(trimmed) ||
+    /^https?:\/\/media\d*\.tenor\.com\/.+\.(gif|mp4)(\?.*)?$/i.test(trimmed)
+  );
+}
+
+export function MarkdownText({ content }: MarkdownTextProps): React.ReactNode {
+  // Si c'est une URL GIF → afficher comme image
+  if (isGifUrl(content.trim())) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- GIF externe Giphy/Tenor, next/image ne supporte pas les URLs dynamiques non configurées
+      <img
+        src={content.trim()}
+        alt="GIF"
+        className="max-w-xs max-h-48 rounded-lg mt-1 object-contain"
+        loading="lazy"
+      />
+    );
+  }
+
+  const htmlContent = parseMarkdown(content);
+
+  return (
+    <div
       className="text-base text-foreground break-words leading-[22px]"
       dangerouslySetInnerHTML={{ __html: htmlContent }}
     />
