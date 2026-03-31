@@ -65,7 +65,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps): React.ReactNo
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <p className="text-muted-foreground">Redirection vers l'authentification...</p>
+          <p className="text-muted-foreground">Redirection vers l&apos;authentification...</p>
         </div>
       </div>
     );

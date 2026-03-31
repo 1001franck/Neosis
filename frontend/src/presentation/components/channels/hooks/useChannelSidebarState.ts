@@ -157,7 +157,7 @@ export function useChannelSidebarState(): UseChannelSidebarStateReturn {
     dispatch({ type: 'NEXT_MEDIA' });
   }, []);
 
-  const previousMedia = useCallback((maxIndex: number) => {
+  const previousMedia = useCallback((_maxIndex: number) => {
     dispatch({ type: 'PREVIOUS_MEDIA' });
   }, []);
 

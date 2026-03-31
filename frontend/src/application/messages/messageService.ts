@@ -8,7 +8,7 @@
 
 import { messagesApi } from '@infrastructure/api/messages.api';
 import type { Message, CreateMessageRequest, UpdateMessageRequest } from '@domain/messages/types';
-import { normalizeMessages, normalizeMessage } from '@domain/messages/normalizeMessage';
+import { normalizeMessages } from '@domain/messages/normalizeMessage';
 import { EmptyMessageError, MessageTooLongError } from '@domain/messages/errors';
 import { logger } from '@shared/utils/logger';
 import { CONTENT_LIMITS } from '@shared/constants/app';

@@ -18,7 +18,7 @@ interface VoiceUsersListProps {
   channelName: string;
 }
 
-export function VoiceUsersList({ users, channelName }: VoiceUsersListProps): React.ReactElement {
+export function VoiceUsersList({ users, channelName: _channelName }: VoiceUsersListProps): React.ReactElement {
   if (users.length === 0) {
     return (
       <div className="p-4 text-center">

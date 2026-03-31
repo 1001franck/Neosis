@@ -45,6 +45,7 @@ export function setupListeners() {
    * Nouveau message recu
    * Backend emet: message:new
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- données brutes socket, normalisées immédiatement
   socket.on('message:new', (rawMessage: any) => {
     const message = normalizeMessage(rawMessage);
     logger.info('Message new event received', { messageId: message.id });
@@ -89,6 +90,7 @@ export function setupListeners() {
    * Message modifie
    * Backend emet: message:updated
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- données brutes socket, normalisées immédiatement
   socket.on('message:updated', (rawMessage: any) => {
     const message = normalizeMessage(rawMessage);
     logger.info('Message updated event received', { messageId: message.id });

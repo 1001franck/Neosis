@@ -19,6 +19,7 @@
 import type { Message } from './types';
 import { MessageStatus } from './types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- boundary: données brutes socket/REST non typées
 export function normalizeMessage(raw: any): Message {
   const isDeletedForUser = !!raw.isDeletedForUser;
   return {
@@ -50,6 +51,7 @@ export function normalizeMessage(raw: any): Message {
 /**
  * Normalise un tableau de messages (pour les reponses REST)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- boundary: tableau brut REST
 export function normalizeMessages(raw: any[]): Message[] {
   return raw.map(normalizeMessage);
 }

@@ -27,9 +27,6 @@ import { useMediaContextMenu } from './hooks/useMediaContextMenu';
 import { useFilteredMedia } from '@presentation/hooks/useFilteredMedia';
 import { filterBySearch } from './utils';
 import type { ChannelMedia, ChannelLink, TabType } from './types';
-import { useResponsiveLayout } from '@presentation/contexts/ResponsiveLayoutContext';
-import { MobileOverlay } from '@presentation/components/common/MobileOverlay';
-import { SIDEBAR_WIDTHS } from '@shared/constants/breakpoints';
 
 interface ChannelInfoSidebarProps {
   channel: Channel;
@@ -55,7 +52,6 @@ const ChannelInfoSidebarComponent = ({
   hasMore = false,
 }: ChannelInfoSidebarProps): React.ReactElement | null => {
   // ==================== RESPONSIVE LAYOUT ====================
-  const { isChannelInfoOpen, closeAllSidebars, isMobile } = useResponsiveLayout();
 
   // ==================== CUSTOM HOOKS ====================
   const sidebarState = useChannelSidebarState();

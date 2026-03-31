@@ -10,6 +10,7 @@ import { Channel, ChannelType } from '../../../src/domain/channels/entities/chan
 import type { MessageRepository } from '../../../src/domain/messages/repositories/MessageRepository.js';
 import type { IMemberRepository } from '../../../src/domain/members/repositories/IMemberRepository.js';
 import type { ChannelRepository } from '../../../src/domain/channels/repositories/ChannelRepository.js';
+import type { IBanRepository } from '../../../src/domain/bans/repositories/IBanRepository.js';
 import { AppError, ErrorCode } from '../../../src/shared/errors/AppError.js';
 
 // ============ MOCK FACTORIES ============
@@ -21,10 +22,21 @@ function createMockMessageRepository(): MessageRepository {
     findByChannelId: vi.fn(),
     update: vi.fn(),
     softDelete: vi.fn(),
+    deleteForUser: vi.fn(),
     hardDelete: vi.fn(),
     countByChannelId: vi.fn(),
     findRecentByChannelId: vi.fn(),
     exists: vi.fn(),
+    linkAttachments: vi.fn(),
+  };
+}
+
+function createMockBanRepository(): IBanRepository {
+  return {
+    create: vi.fn(),
+    findActiveByUserAndServer: vi.fn().mockResolvedValue(null),
+    delete: vi.fn(),
+    findByServerId: vi.fn(),
   };
 }
 
@@ -68,12 +80,14 @@ describe('CreateMessageUseCase', () => {
   let messageRepo: MessageRepository;
   let memberRepo: IMemberRepository;
   let channelRepo: ChannelRepository;
+  let banRepo: IBanRepository;
 
   beforeEach(() => {
     messageRepo = createMockMessageRepository();
     memberRepo = createMockMemberRepository();
     channelRepo = createMockChannelRepository();
-    useCase = new CreateMessageUseCase(messageRepo, memberRepo, channelRepo);
+    banRepo = createMockBanRepository();
+    useCase = new CreateMessageUseCase(messageRepo, memberRepo, channelRepo, banRepo);
   });
 
   it('should create a message when user is a member', async () => {

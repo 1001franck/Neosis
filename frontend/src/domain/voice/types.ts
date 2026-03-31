@@ -34,7 +34,7 @@ export interface VoiceState {
 export interface VoiceEvents {
   // Client → Serveur
   'voice:join': { channelId: string };
-  'voice:leave': {};
+  'voice:leave': Record<string, never>;
   'voice:state': { isMuted?: boolean; isDeafened?: boolean };
   'voice:webrtc_signal': { targetUserId: string; signal: unknown };
 

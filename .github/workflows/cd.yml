@@ -8,7 +8,7 @@ on:
 jobs:
   build-backend:
     name: Build Backend (tag)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout du code
@@ -45,7 +45,7 @@ jobs:
 
   build-frontend:
     name: Build Frontend (tag)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout du code
@@ -68,6 +68,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
+          NEXT_PUBLIC_GIPHY_API_KEY: ${{ secrets.NEXT_PUBLIC_GIPHY_API_KEY }}
 
       - name: Upload artefact frontend
         uses: actions/upload-artifact@v4
@@ -78,7 +79,7 @@ jobs:
 
   create-release:
     name: Création de la Release GitHub
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [build-backend, build-frontend]
 
     steps:

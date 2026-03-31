@@ -13,8 +13,9 @@
 
 'use client';
 
-import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { EmojiPicker } from './EmojiPicker';
+import { GifPicker } from './GifPicker';
 import { useTypingIndicator } from '@presentation/hooks/useTypingIndicator';
 import { uploadApi } from '@infrastructure/api/upload.api';
 import type { Attachment } from '@domain/messages/types';
@@ -47,6 +48,7 @@ const ChatInputComponent = ({
 }: ChatInputProps): React.ReactElement => {
   const [messageInput, setMessageInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -140,6 +142,15 @@ const ChatInputComponent = ({
     inputRef.current?.focus();
   };
 
+  // Envoyer le GIF directement comme message
+  const handleGifSelect = useCallback((gifUrl: string) => {
+    if (onSendMessage) {
+      onSendMessage(gifUrl);
+    }
+    setShowGifPicker(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, [onSendMessage]);
+
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -200,6 +211,7 @@ const ChatInputComponent = ({
                 {isImage ? (
                   /* Image thumbnail */
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border border-border bg-background">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- blob URL local pour preview attachment, next/image ne supporte pas blob: */}
                     <img
                       src={URL.createObjectURL(file)}
                       alt={file.name}
@@ -275,6 +287,14 @@ const ChatInputComponent = ({
           />
         )}
 
+        {/* GIF Picker */}
+        {showGifPicker && (
+          <GifPicker
+            onSelect={handleGifSelect}
+            onClose={() => setShowGifPicker(false)}
+          />
+        )}
+
         {/* Input file caché */}
         <input
           ref={fileInputRef}
@@ -293,7 +313,7 @@ const ChatInputComponent = ({
           onKeyPress={handleKeyPress}
           placeholder={isUploading ? 'Upload en cours...' : `Message @${recipientName || 'ici'}`}
           disabled={isUploading}
-          className="w-full pl-10 sm:pl-11 pr-20 sm:pr-24 py-2.5 sm:py-3 bg-muted text-foreground placeholder-muted-foreground rounded-lg focus:outline-none disabled:opacity-50 text-sm sm:text-base"
+          className="w-full pl-10 sm:pl-11 pr-28 sm:pr-32 py-2.5 sm:py-3 bg-muted text-foreground placeholder-muted-foreground rounded-lg focus:outline-none disabled:opacity-50 text-sm sm:text-base"
         />
         
         {/* Bouton Upload à gauche */}
@@ -317,9 +337,23 @@ const ChatInputComponent = ({
           {isUploading && (
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
           )}
+          {/* Bouton GIF */}
           <button
             type="button"
-            onClick={() => setShowEmojiPicker(prev => !prev)}
+            onClick={() => { setShowGifPicker(prev => !prev); setShowEmojiPicker(false); }}
+            className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${
+              showGifPicker
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground border border-muted-foreground/40 hover:border-foreground/60'
+            }`}
+            aria-label="GIF"
+            tabIndex={-1}
+          >
+            GIF
+          </button>
+          <button
+            type="button"
+            onClick={() => { setShowEmojiPicker(prev => !prev); setShowGifPicker(false); }}
             className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Emoji"
             tabIndex={-1}

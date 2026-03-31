@@ -32,10 +32,6 @@ export function VoiceMiniPanel(): React.ReactElement | null {
   const { isSidebarOpen, isMobile } = useResponsiveLayout();
   const [showUsers, setShowUsers] = useState(true);
 
-  if (!isConnected || !connectedChannelId) {
-    return null;
-  }
-
   const connectedChannel = channels.find(c => c.id === connectedChannelId);
   const channelName = connectedChannel?.name || 'Salon vocal';
   const userCount = connectedUsers.length;
@@ -44,6 +40,10 @@ export function VoiceMiniPanel(): React.ReactElement | null {
     if (userCount === 0) return 'Aucun participant';
     return `${userCount} ${userCount === 1 ? 'participant' : 'participants'}`;
   }, [userCount]);
+
+  if (!isConnected || !connectedChannelId) {
+    return null;
+  }
 
   const dockRight = !isMobile && (isSidebarOpen('members') || isSidebarOpen('channel-info'));
 

@@ -15,7 +15,7 @@
 import { memo, useState } from 'react';
 import type { Member, Role } from '@domain/members/types';
 import { MemberRole } from '@domain/members/types';
-import { logger } from '@shared/utils/logger';
+
 import { TEXT_COLORS } from '@shared/constants/colors';
 import { useResponsiveLayout } from '@presentation/contexts/ResponsiveLayoutContext';
 import { usePresenceStore } from '@application/members/presenceStore';
@@ -68,7 +68,7 @@ const ROLE_ORDER: MemberRole[] = [MemberRole.OWNER, MemberRole.ADMIN, MemberRole
 
 export function MembersSidebar({
   members,
-  roles = [],
+  roles: _roles = [],
   currentUserRole,
   bannedUserIds,
   serverId,
@@ -79,7 +79,7 @@ export function MembersSidebar({
   onBanMember,
 }: MembersSidebarProps): React.ReactElement | null {
   // Responsive layout
-  const { isMembersSidebarOpen, toggleMembersSidebar, closeAllSidebars, isMobile } = useResponsiveLayout();
+  const { isMembersSidebarOpen: _isMembersSidebarOpen, toggleMembersSidebar: _toggleMembersSidebar, closeAllSidebars, isMobile } = useResponsiveLayout();
 
   // Presence store - get online users for this server
   const isUserOnline = usePresenceStore((state) => state.isUserOnline);
@@ -374,7 +374,7 @@ export function MembersSidebar({
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground mb-2">Expulser le membre</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Êtes-vous sûr de vouloir expulser <strong className="text-foreground">{kickTarget.user.username}</strong> du serveur ? Il pourra rejoindre à nouveau avec un code d'invitation.
+              Êtes-vous sûr de vouloir expulser <strong className="text-foreground">{kickTarget.user.username}</strong> du serveur ? Il pourra rejoindre à nouveau avec un code d&apos;invitation.
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -403,7 +403,7 @@ export function MembersSidebar({
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground mb-2">Bannir le membre</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Êtes-vous sûr de vouloir bannir <strong className="text-foreground">{banTarget.user.username}</strong> ? Un ban définitif l'empêchera de rejoindre le serveur.
+              Êtes-vous sûr de vouloir bannir <strong className="text-foreground">{banTarget.user.username}</strong> ? Un ban définitif l&apos;empêchera de rejoindre le serveur.
             </p>
             <div className="space-y-3 mb-4">
               <div>

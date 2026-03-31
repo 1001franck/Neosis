@@ -193,7 +193,7 @@ export function ServerSettingsModal({
                       onClick={handleRemoveImage}
                       className="w-full px-4 py-2 bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors text-sm font-medium"
                     >
-                      Supprimer l'image
+                      Supprimer l&apos;image
                     </button>
                   )}
                   <p className="text-xs text-muted-foreground">
