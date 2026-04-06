@@ -54,7 +54,7 @@ export function DirectMessagesPanel({
   const [friendError, setFriendError] = useState<string | null>(null);
   const [friendLoading, setFriendLoading] = useState(false);
   const { conversations, reload } = useDirectConversations();
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequests>({ incoming: [], outgoing: [] });
   const [friendsLoading, setFriendsLoading] = useState(false);
@@ -75,7 +75,7 @@ export function DirectMessagesPanel({
       await loadFriends();
     } catch (err) {
       logger.error('Failed to request friend', err);
-      setFriendError('Impossible d\'envoyer la demande');
+      setFriendError(t('dm.errors.sendRequest'));
     } finally {
       setFriendLoading(false);
     }
@@ -93,7 +93,7 @@ export function DirectMessagesPanel({
       setRequests(requestsData);
     } catch (err) {
       logger.error('Failed to load friends', err);
-      setFriendsError('Impossible de charger les amis');
+      setFriendsError(t('dm.errors.loadFriends'));
     } finally {
       setFriendsLoading(false);
     }
@@ -105,7 +105,7 @@ export function DirectMessagesPanel({
       await loadFriends();
     } catch (err) {
       logger.error('Failed to accept friend', err);
-      setFriendsError('Impossible d\'accepter la demande');
+      setFriendsError(t('dm.errors.acceptFriend'));
     }
   };
 
@@ -117,7 +117,7 @@ export function DirectMessagesPanel({
       router.push(`/messages/${convo.id}`);
     } catch (err) {
       logger.error('Failed to start conversation', err);
-      setFriendsError('Impossible de demarrer la conversation');
+      setFriendsError(t('dm.errors.startConversation'));
     }
   };
 
@@ -157,7 +157,7 @@ export function DirectMessagesPanel({
             }
           `}
         >
-          Messages
+          {t('dm.messages')}
         </button>
         <button
           onClick={() => setView('friends')}
@@ -170,7 +170,7 @@ export function DirectMessagesPanel({
             }
           `}
         >
-          Amis
+          {t('dm.friends')}
         </button>
         <button
           onClick={() => {
@@ -178,8 +178,8 @@ export function DirectMessagesPanel({
             setShowAddFriend(true);
           }}
           className="ml-1 flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          aria-label="Ajouter un ami"
-          title="Ajouter un ami"
+          aria-label={t('nav.addFriend')}
+          title={t('nav.addFriend')}
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M15 12C17.21 12 19 10.21 19 8C19 5.79 17.21 4 15 4C12.79 4 11 5.79 11 8C11 10.21 12.79 12 15 12ZM7 10C8.66 10 10 8.66 10 7C10 5.34 8.66 4 7 4C5.34 4 4 5.34 4 7C4 8.66 5.34 10 7 10ZM7 12C4.33 12 0 13.34 0 16V18H10V16C10 13.34 5.67 12 7 12ZM15 14C12.33 14 8 15.34 8 18V20H22V18C22 15.34 17.67 14 15 14ZM20 8V6H18V8H16V10H18V12H20V10H22V8H20Z"/>
@@ -231,7 +231,7 @@ export function DirectMessagesPanel({
                     )}
                   </div>
                     <p className="text-xs text-muted-foreground truncate">
-                      Conversation privee
+                      {t('dm.privateConversation')}
                     </p>
                 </div>
 
@@ -255,7 +255,7 @@ export function DirectMessagesPanel({
           ) : (
             <div className="flex flex-col items-center justify-center h-full px-4 text-center">
               <p className="text-sm text-muted-foreground">
-                Aucun message pour le moment
+                {t('dm.noMessages')}
               </p>
             </div>
           )
@@ -263,14 +263,14 @@ export function DirectMessagesPanel({
           <div className="flex flex-col h-full px-4 py-4 gap-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Amis</h3>
-                <p className="text-xs text-muted-foreground">Gerez vos demandes et discussions privees</p>
+                <h3 className="text-sm font-semibold text-foreground">{t('dm.friends')}</h3>
+                <p className="text-xs text-muted-foreground">{t('dm.friendsDescription')}</p>
               </div>
               <button
                 onClick={() => setShowAddFriend(true)}
                 className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold"
               >
-                Ajouter
+                {t('dm.add')}
               </button>
             </div>
 
@@ -279,15 +279,15 @@ export function DirectMessagesPanel({
             )}
 
             {friendsLoading ? (
-              <div className="text-sm text-muted-foreground">Chargement...</div>
+              <div className="text-sm text-muted-foreground">{t('dm.loading')}</div>
             ) : (
               <>
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Demandes entrantes
+                    {t('dm.incomingRequests')}
                   </h4>
                   {requests.incoming.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">Aucune demande en attente</p>
+                    <p className="text-xs text-muted-foreground">{t('dm.noIncomingRequests')}</p>
                   ) : (
                     requests.incoming.map((request) => (
                       <div
@@ -316,7 +316,7 @@ export function DirectMessagesPanel({
                           onClick={() => handleAcceptFriend(request.id)}
                           className="px-3 py-1.5 text-xs font-semibold bg-emerald-500/90 text-white rounded-lg"
                         >
-                          Accepter
+                          {t('dm.accept')}
                         </button>
                       </div>
                     ))
@@ -325,10 +325,10 @@ export function DirectMessagesPanel({
 
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Demandes envoyees
+                    {t('dm.outgoingRequests')}
                   </h4>
                   {requests.outgoing.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">Aucune demande envoyee</p>
+                    <p className="text-xs text-muted-foreground">{t('dm.noOutgoingRequests')}</p>
                   ) : (
                     requests.outgoing.map((request) => (
                       <div
@@ -353,7 +353,7 @@ export function DirectMessagesPanel({
                             {request.user?.username || 'Utilisateur'}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">En attente</span>
+                        <span className="text-xs text-muted-foreground">{t('dm.pending')}</span>
                       </div>
                     ))
                   )}
@@ -361,11 +361,11 @@ export function DirectMessagesPanel({
 
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Vos amis
+                    {t('dm.yourFriends')}
                   </h4>
                   {friends.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
-                      Ajoutez un ami pour commencer une discussion privee.
+                      {t('dm.noFriends')}
                     </p>
                   ) : (
                     friends.map((friend) => (
@@ -395,7 +395,7 @@ export function DirectMessagesPanel({
                           onClick={() => handleStartConversation(friend.user?.id)}
                           className="px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-lg"
                         >
-                          Message
+                          {t('dm.message')}
                         </button>
                       </div>
                     ))
@@ -407,37 +407,50 @@ export function DirectMessagesPanel({
         )}
       </div>
 
+      {/* Footer - Language switcher */}
+      <div className="p-2 border-t border-border">
+        <button
+          type="button"
+          onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          aria-label={t('language.label')}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+          {locale === 'fr' ? t('language.fr') : t('language.en')}
+        </button>
+      </div>
+
       <Modal
         isOpen={showAddFriend}
         onClose={() => setShowAddFriend(false)}
-        title="Ajouter un ami"
+        title={t('dm.modal.title')}
         footer={(
           <>
             <button
               onClick={() => setShowAddFriend(false)}
               className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              Annuler
+              {t('dm.modal.cancel')}
             </button>
             <button
               onClick={handleAddFriend}
               disabled={friendLoading || !friendUsername.trim()}
               className="px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg disabled:opacity-60"
             >
-              Envoyer
+              {t('dm.modal.send')}
             </button>
           </>
         )}
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
-            Entrez le nom d'utilisateur exact pour envoyer une demande.
+            {t('dm.modal.description')}
           </p>
           <input
             type="text"
             value={friendUsername}
             onChange={(e) => setFriendUsername(e.target.value)}
-            placeholder="Nom d'utilisateur"
+            placeholder={t('dm.modal.placeholder')}
             className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
           {friendError && (

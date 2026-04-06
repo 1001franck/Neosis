@@ -14,6 +14,7 @@ import React from 'react';
 import { useResponsiveLayout } from '@presentation/contexts/ResponsiveLayoutContext';
 import { MobileMenuButton } from '@presentation/components/common/MobileMenuButton';
 import { useTheme } from '@shared/hooks/useTheme';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface ChatHeaderProps {
   recipientName: string;
@@ -48,6 +49,7 @@ export function ChatHeader({
 }: ChatHeaderProps): React.ReactElement {
   const { toggleChannelSidebar, isChannelSidebarOpen, isMobile, toggleSidebar, isSidebarOpen } = useResponsiveLayout();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLocale();
 
   return (
     <div className="flex items-center h-12 px-2 sm:px-4 border-b border-border shadow-sm">
@@ -59,7 +61,7 @@ export function ChatHeader({
             className={`p-2 rounded transition-colors ${
               isSidebarOpen('server') ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
             }`}
-            aria-label="Ouvrir la liste des serveurs"
+            aria-label={t('chat.openServerList')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M4 4h16v4H4V4zm0 6h16v4H4v-4zm0 6h16v4H4v-4z" />
@@ -138,8 +140,8 @@ export function ChatHeader({
         <button
           onClick={toggleTheme}
           className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Basculer le thème"
-          title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+          aria-label={t('chat.toggleTheme')}
+          title={theme === 'dark' ? t('chat.lightMode') : t('chat.darkMode')}
         >
           {theme === 'dark' ? (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +158,7 @@ export function ChatHeader({
           <button
             onClick={onSearchClick}
             className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Rechercher"
+            aria-label={t('chat.search')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M21.707 20.293L16.314 14.9C17.403 13.504 18 11.799 18 10C18 7.863 17.167 5.854 15.656 4.344C14.146 2.832 12.137 2 10 2C7.863 2 5.854 2.832 4.344 4.344C2.833 5.854 2 7.863 2 10C2 12.137 2.833 14.146 4.344 15.656C5.854 17.168 7.863 18 10 18C11.799 18 13.504 17.404 14.9 16.314L20.293 21.706L21.707 20.293ZM10 16C8.397 16 6.891 15.376 5.758 14.243C4.624 13.11 4 11.603 4 10C4 8.397 4.624 6.891 5.758 5.758C6.891 4.624 8.397 4 10 4C11.603 4 13.109 4.624 14.242 5.758C15.376 6.891 16 8.397 16 10C16 11.603 15.376 13.11 14.242 14.243C13.109 15.376 11.603 16 10 16Z" />
@@ -172,7 +174,7 @@ export function ChatHeader({
                 ? 'text-foreground bg-muted'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
-            aria-label="Afficher les membres"
+            aria-label={t('chat.showMembers')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M14 8.00598C14 10.211 12.206 12.006 10 12.006C7.794 12.006 6 10.211 6 8.00598C6 5.80098 7.794 4.00598 10 4.00598C12.206 4.00598 14 5.80098 14 8.00598ZM2 19C2 15.14 5.141 12 9 12H11C14.859 12 18 15.14 18 19V20H2V19Z" />
@@ -190,8 +192,8 @@ export function ChatHeader({
                 ? 'text-foreground bg-muted'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
-            aria-label="Afficher les amis"
-            title="Amis"
+            aria-label={t('chat.showFriends')}
+            title={t('chat.friends')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M15 12C17.21 12 19 10.21 19 8C19 5.79 17.21 4 15 4C12.79 4 11 5.79 11 8C11 10.21 12.79 12 15 12ZM7 10C8.66 10 10 8.66 10 7C10 5.34 8.66 4 7 4C5.34 4 4 5.34 4 7C4 8.66 5.34 10 7 10ZM7 12C4.33 12 0 13.34 0 16V18H10V16C10 13.34 5.67 12 7 12ZM15 14C12.33 14 8 15.34 8 18V20H22V18C22 15.34 17.67 14 15 14Z"/>
@@ -207,7 +209,7 @@ export function ChatHeader({
                 ? 'text-foreground bg-muted'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
-            aria-label="Afficher les informations du channel"
+            aria-label={t('chat.showChannelInfo')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M5 3C3.897 3 3 3.897 3 5V19C3 20.103 3.897 21 5 21H19C20.103 21 21 20.103 21 19V5C21 3.897 20.103 3 19 3H5ZM5 19V5H13V19H5ZM19 19H15V5H19V19Z" />

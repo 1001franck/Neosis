@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useLocale } from '@shared/hooks/useLocale';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,6 +25,7 @@ const fadeUp = {
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
+  const { t } = useLocale();
   const [showPassword, setShowPassword] = useState(false);
   const { fields, error, isLoading, setField, setError, setLoading } = useFormState({
     email: '',
@@ -64,7 +66,7 @@ export default function LoginPage() {
     } catch (err) {
       const message = (err as Error).message;
       logger.error('Login failed', err);
-      setError(message || 'Erreur de connexion');
+      setError(message || t('auth.login.error'));
     } finally {
       setLoading(false);
     }
@@ -95,10 +97,10 @@ export default function LoginPage() {
 
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-indigo-200 bg-clip-text text-transparent">
-            Bon retour !
+            {t('auth.login.title')}
           </h1>
           <p className="text-gray-400 mt-1 text-sm">
-            Connectez-vous pour retrouver vos conversations
+            {t('auth.login.subtitle')}
           </p>
         </div>
       </motion.div>
@@ -118,7 +120,7 @@ export default function LoginPage() {
           {/* Email */}
           <motion.div variants={fadeUp} custom={2}>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Adresse email
+              {t('auth.login.email')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -131,7 +133,7 @@ export default function LoginPage() {
                 type="email"
                 value={fields.email}
                 onChange={(e) => setField('email', e.target.value)}
-                placeholder="votre@email.com"
+                placeholder={t('auth.login.emailPlaceholder')}
                 required
                 disabled={isLoading}
                 className="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 disabled:opacity-50"
@@ -142,7 +144,7 @@ export default function LoginPage() {
           {/* Mot de passe */}
           <motion.div variants={fadeUp} custom={3}>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Mot de passe
+              {t('auth.login.password')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -212,10 +214,10 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Connexion...
+                  {t('auth.login.loading')}
                 </div>
               ) : (
-                'Se connecter'
+                t('auth.login.submit')
               )}
             </button>
           </motion.div>
@@ -225,19 +227,19 @@ export default function LoginPage() {
       {/* Séparateur */}
       <motion.div variants={fadeUp} custom={5} className="flex items-center gap-3">
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <span className="text-gray-500 text-xs uppercase tracking-wider">ou</span>
+        <span className="text-gray-500 text-xs uppercase tracking-wider">{t('auth.login.or')}</span>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </motion.div>
 
       {/* Lien vers inscription */}
       <motion.div variants={fadeUp} custom={6} className="text-center">
         <p className="text-gray-400 text-sm">
-          Pas encore de compte ?{' '}
+          {t('auth.login.noAccount')}{' '}
           <Link
             href="/auth/register"
             className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200 hover:underline underline-offset-4"
           >
-            Créer un compte
+            {t('auth.login.createAccount')}
           </Link>
         </p>
       </motion.div>

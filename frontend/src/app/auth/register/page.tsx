@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useLocale } from '@shared/hooks/useLocale';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,6 +25,7 @@ const fadeUp = {
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
+  const { t } = useLocale();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const { fields, error, isLoading, setField, setError, setLoading } = useFormState({
@@ -43,10 +45,10 @@ export default function RegisterPage() {
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    if (score <= 1) return { level: 1, label: 'Faible', color: '#ef4444' };
-    if (score <= 2) return { level: 2, label: 'Moyen', color: '#f59e0b' };
-    if (score <= 3) return { level: 3, label: 'Bon', color: '#6366f1' };
-    return { level: 4, label: 'Fort', color: '#10b981' };
+    if (score <= 1) return { level: 1, label: t('auth.register.strength.weak'), color: '#ef4444' };
+    if (score <= 2) return { level: 2, label: t('auth.register.strength.medium'), color: '#f59e0b' };
+    if (score <= 3) return { level: 3, label: t('auth.register.strength.good'), color: '#6366f1' };
+    return { level: 4, label: t('auth.register.strength.strong'), color: '#10b981' };
   };
 
   const passwordStrength = getPasswordStrength(fields.password);
@@ -57,37 +59,37 @@ export default function RegisterPage() {
 
     // Validation
     if (fields.password !== fields.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('auth.register.errors.passwordMismatch'));
       return;
     }
 
     if (fields.password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères');
+      setError(t('auth.register.errors.passwordTooShort'));
       return;
     }
 
     if (!/[a-z]/.test(fields.password)) {
-      setError('Le mot de passe doit contenir au moins une lettre minuscule');
+      setError(t('auth.register.errors.passwordNoLower'));
       return;
     }
 
     if (!/[A-Z]/.test(fields.password)) {
-      setError('Le mot de passe doit contenir au moins une lettre majuscule');
+      setError(t('auth.register.errors.passwordNoUpper'));
       return;
     }
 
     if (!/[0-9]/.test(fields.password)) {
-      setError('Le mot de passe doit contenir au moins un chiffre');
+      setError(t('auth.register.errors.passwordNoNumber'));
       return;
     }
 
     if (fields.username.length < 3) {
-      setError("Le nom d'utilisateur doit contenir au moins 3 caractères");
+      setError(t('auth.register.errors.usernameTooShort'));
       return;
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(fields.username)) {
-      setError("Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores");
+      setError(t('auth.register.errors.usernameInvalid'));
       return;
     }
 
@@ -127,13 +129,13 @@ export default function RegisterPage() {
       logger.error('Registration failed', err);
       const raw = (err as Error).message || '';
       if (raw.toLowerCase().includes('already') || raw.toLowerCase().includes('existe')) {
-        setError('Un compte avec cet email ou ce nom d\'utilisateur existe déjà.');
+        setError(t('auth.register.errors.alreadyExists'));
       } else if (raw.includes('500') || raw.toLowerCase().includes('internal')) {
-        setError('Le serveur a rencontré une erreur. Réessayez dans quelques instants.');
+        setError(t('auth.register.errors.serverError'));
       } else if (raw.toLowerCase().includes('network') || raw.toLowerCase().includes('fetch')) {
-        setError('Impossible de contacter le serveur. Vérifiez votre connexion.');
+        setError(t('auth.register.errors.networkError'));
       } else {
-        setError(raw || "Erreur lors de l'inscription");
+        setError(raw || t('auth.register.errors.generic'));
       }
     } finally {
       setLoading(false);
@@ -168,10 +170,10 @@ export default function RegisterPage() {
 
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
-            Rejoignez-nous !
+            {t('auth.register.title')}
           </h1>
           <p className="text-gray-400 mt-1 text-sm">
-            Créez votre compte et commencez à discuter
+            {t('auth.register.subtitle')}
           </p>
         </div>
       </motion.div>
@@ -191,7 +193,7 @@ export default function RegisterPage() {
           {/* Nom d'utilisateur */}
           <motion.div variants={fadeUp} custom={2}>
             <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-              Nom d&apos;utilisateur
+              {t('auth.register.username')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -204,7 +206,7 @@ export default function RegisterPage() {
                 type="text"
                 value={fields.username}
                 onChange={(e) => setField('username', e.target.value)}
-                placeholder="VotreNom"
+                placeholder={t('auth.register.usernamePlaceholder')}
                 required
                 disabled={isLoading}
                 className="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200 disabled:opacity-50"
@@ -215,7 +217,7 @@ export default function RegisterPage() {
           {/* Email */}
           <motion.div variants={fadeUp} custom={3}>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Adresse email
+              {t('auth.register.email')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -228,7 +230,7 @@ export default function RegisterPage() {
                 type="email"
                 value={fields.email}
                 onChange={(e) => setField('email', e.target.value)}
-                placeholder="votre@email.com"
+                placeholder={t('auth.register.emailPlaceholder')}
                 required
                 disabled={isLoading}
                 className="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200 disabled:opacity-50"
@@ -239,7 +241,7 @@ export default function RegisterPage() {
           {/* Mot de passe */}
           <motion.div variants={fadeUp} custom={4}>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Mot de passe
+              {t('auth.register.password')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -305,7 +307,7 @@ export default function RegisterPage() {
           {/* Confirmation mot de passe */}
           <motion.div variants={fadeUp} custom={5}>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-              Confirmer le mot de passe
+              {t('auth.register.confirmPassword')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -353,14 +355,14 @@ export default function RegisterPage() {
                     <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-xs text-emerald-400">Les mots de passe correspondent</span>
+                    <span className="text-xs text-emerald-400">{t('auth.register.passwordMatch')}</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <span className="text-xs text-red-400">Les mots de passe ne correspondent pas</span>
+                    <span className="text-xs text-red-400">{t('auth.register.passwordNoMatch')}</span>
                   </>
                 )}
               </motion.div>
@@ -400,10 +402,10 @@ export default function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Inscription...
+                  {t('auth.register.loading')}
                 </div>
               ) : (
-                "S'inscrire"
+                t('auth.register.submit')
               )}
             </button>
           </motion.div>
@@ -413,19 +415,19 @@ export default function RegisterPage() {
       {/* Séparateur */}
       <motion.div variants={fadeUp} custom={7} className="flex items-center gap-3">
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <span className="text-gray-500 text-xs uppercase tracking-wider">ou</span>
+        <span className="text-gray-500 text-xs uppercase tracking-wider">{t('auth.register.or')}</span>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </motion.div>
 
       {/* Lien vers connexion */}
       <motion.div variants={fadeUp} custom={8} className="text-center">
         <p className="text-gray-400 text-sm">
-          Vous avez déjà un compte ?{' '}
+          {t('auth.register.hasAccount')}{' '}
           <Link
             href="/auth/login"
             className="text-purple-400 hover:text-purple-300 font-medium transition-colors duration-200 hover:underline underline-offset-4"
           >
-            Se connecter
+            {t('auth.register.login')}
           </Link>
         </p>
       </motion.div>
