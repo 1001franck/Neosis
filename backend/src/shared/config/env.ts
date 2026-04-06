@@ -16,8 +16,8 @@ function getEnvOrThrow(key: string): string {
  * Ne jamais utiliser de fallback hardcodé.
  */
 export const JWT_SECRET = getEnvOrThrow('JWT_SECRET');
-export const SUPABASE_URL = getEnvOrThrow('SUPABASE_URL');
-export const SUPABASE_SERVICE_ROLE_KEY = getEnvOrThrow('SUPABASE_SERVICE_ROLE_KEY');
+export const SUPABASE_URL = process.env['SUPABASE_URL'] ?? '';
+export const SUPABASE_SERVICE_ROLE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY'] ?? '';
 
 // Validation anti-déploiement accidentel avec secret dev
 if (process.env.NODE_ENV === 'production') {

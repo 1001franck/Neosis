@@ -18,6 +18,7 @@ import { directApi } from '@infrastructure/api/direct.api';
 import { logger } from '@shared/utils/logger';
 import { Modal } from '@presentation/components/common/Modal';
 import type { Friend, FriendRequests } from '@domain/direct/types';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface DirectMessage {
   id: string;
@@ -53,6 +54,7 @@ export function DirectMessagesPanel({
   const [friendError, setFriendError] = useState<string | null>(null);
   const [friendLoading, setFriendLoading] = useState(false);
   const { conversations, reload } = useDirectConversations();
+  const { locale, setLocale } = useLocale();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequests>({ incoming: [], outgoing: [] });
   const [friendsLoading, setFriendsLoading] = useState(false);

@@ -75,6 +75,7 @@ export const STORAGE_KEYS = {
   TOKEN: 'token',
   USER: 'user',
   THEME: 'theme',
+  LOCALE: 'locale',
   SIDEBAR_COLLAPSED: 'sidebar_collapsed',
 } as const;
 

@@ -5,6 +5,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@application/auth/useAuth';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { useTheme } from '@shared/hooks/useTheme';
+import { useLocale } from '@shared/hooks/useLocale';
 import { socket } from '@infrastructure/websocket/socket';
 
 /**
@@ -14,6 +15,7 @@ import { socket } from '@infrastructure/websocket/socket';
 export default function SettingsPage(): React.ReactNode {
   const { user, updateProfile, uploadAvatar, uploadBanner } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { locale, setLocale, t } = useLocale();
 
   // Form state
   const [username, setUsername] = useState(user?.username ?? '');
@@ -58,11 +60,11 @@ export default function SettingsPage(): React.ReactNode {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('Le fichier doit être une image');
+      setError(t('settings.errorImageOnly'));
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("L'image ne doit pas dépasser 10 Mo");
+      setError(t('settings.errorImageSize'));
       return;
     }
 
@@ -70,10 +72,10 @@ export default function SettingsPage(): React.ReactNode {
     try {
       const updated = await uploadAvatar(file);
       emitProfileUpdate({ avatar: updated.avatar ?? null });
-      setSuccess('Avatar mis à jour !');
+      setSuccess(t('settings.avatarUpdated'));
       setError(null);
     } catch (err) {
-      setError('Erreur lors de la mise à jour de l\'avatar');
+      setError(t('settings.errorAvatar'));
     } finally {
       setUploadingAvatar(false);
     }
@@ -93,9 +95,9 @@ export default function SettingsPage(): React.ReactNode {
         customStatus,
         statusEmoji,
       });
-      setSuccess('Profil mis à jour !');
+      setSuccess(t('settings.profileUpdated'));
     } catch (err) {
-      setError("Erreur lors de la mise à jour du profil");
+      setError(t('settings.errorProfile'));
     } finally {
       setSaving(false);
     }
@@ -106,21 +108,21 @@ export default function SettingsPage(): React.ReactNode {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setError('Le fichier doit être une image');
+      setError(t('settings.errorImageOnly'));
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("L'image ne doit pas dépasser 10 Mo");
+      setError(t('settings.errorImageSize'));
       return;
     }
     setUploadingBanner(true);
     try {
       const updated = await uploadBanner(file);
       emitProfileUpdate({ banner: updated.banner ?? null });
-      setSuccess('Bannière mise à jour !');
+      setSuccess(t('settings.bannerUpdated'));
       setError(null);
     } catch (err) {
-      setError("Erreur lors de la mise à jour de la bannière");
+      setError(t('settings.errorBanner'));
     } finally {
       setUploadingBanner(false);
     }
@@ -135,21 +137,32 @@ export default function SettingsPage(): React.ReactNode {
         <div className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b border-border">
           <div className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Profil
+              {t('settings.title')}
             </h1>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:bg-muted transition-colors font-medium text-sm"
-              aria-label="Basculer le thème"
-            >
-              {theme === 'dark' ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.07l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.93l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" /></svg>
-              )}
-              {theme === 'dark' ? 'Clair' : 'Sombre'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:bg-muted transition-colors font-medium text-sm"
+                aria-label={t('language.label')}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+                {locale === 'fr' ? t('language.fr') : t('language.en')}
+              </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:bg-muted transition-colors font-medium text-sm"
+                aria-label="Basculer le thème"
+              >
+                {theme === 'dark' ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.07l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.93l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" /></svg>
+                )}
+                {theme === 'dark' ? t('theme.light') : t('theme.dark')}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -166,7 +179,7 @@ export default function SettingsPage(): React.ReactNode {
                 />
               ) : (
                 <div className="w-full h-48 bg-gradient-to-r from-primary/20 to-primary/10 rounded-2xl border-2 border-dashed border-border flex items-center justify-center">
-                  <span className="text-muted text-lg">Ajouter une bannière</span>
+                  <span className="text-muted text-lg">{t('settings.addBanner')}</span>
                 </div>
               )}
               <button
@@ -176,7 +189,7 @@ export default function SettingsPage(): React.ReactNode {
                 className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium backdrop-blur"
                 aria-label="Changer la bannière"
               >
-                {uploadingBanner ? 'Envoi...' : 'Modifier'}
+                {uploadingBanner ? t('settings.uploadingBanner') : t('settings.editBanner')}
               </button>
               <input
                 ref={bannerInputRef}
@@ -247,12 +260,12 @@ export default function SettingsPage(): React.ReactNode {
                 <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Informations Générales
+                {t('settings.generalInfo')}
               </h3>
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold mb-3 text-foreground">
-                    Nom d'utilisateur
+                    {t('settings.username')}
                   </label>
                   <input
                     type="text"
@@ -261,13 +274,13 @@ export default function SettingsPage(): React.ReactNode {
                     disabled={saving}
                     required
                     className="w-full px-4 py-3 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder-muted"
-                    placeholder="Votre nom d'utilisateur"
+                    placeholder={t('settings.usernamePlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold mb-3 text-foreground">
-                    Bio
+                    {t('settings.bio')}
                   </label>
                   <textarea
                     value={bio}
@@ -275,7 +288,7 @@ export default function SettingsPage(): React.ReactNode {
                     disabled={saving}
                     maxLength={300}
                     className="w-full px-4 py-3 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder-muted resize-none"
-                    placeholder="Décrivez-vous..."
+                    placeholder={t('settings.bioPlaceholder')}
                     rows={4}
                   />
                   <div className="mt-2 text-xs text-muted text-right">
@@ -291,13 +304,13 @@ export default function SettingsPage(): React.ReactNode {
                 <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Statut Personnalisé
+                {t('settings.customStatus')}
               </h3>
               <div className="space-y-4">
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <label className="block text-sm font-semibold mb-3 text-foreground">
-                      Texte du statut
+                      {t('settings.statusText')}
                     </label>
                     <input
                       type="text"
@@ -305,12 +318,12 @@ export default function SettingsPage(): React.ReactNode {
                       onChange={e => setCustomStatus(e.target.value)}
                       disabled={saving}
                       className="w-full px-4 py-3 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder-muted"
-                      placeholder="Ex: En train de jouer..."
+                      placeholder={t('settings.statusPlaceholder')}
                     />
                   </div>
                   <div className="w-24">
                     <label className="block text-sm font-semibold mb-3 text-foreground">
-                      Emoji
+                      {t('settings.emoji')}
                     </label>
                     <input
                       type="text"
@@ -358,10 +371,10 @@ export default function SettingsPage(): React.ReactNode {
                     <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Enregistrement...
+                    {t('settings.saving')}
                   </span>
                 ) : (
-                  'Enregistrer les modifications'
+                  t('settings.save')
                 )}
               </button>
             </div>

@@ -6,6 +6,7 @@ import axios from 'axios';
 import { env } from '@shared/config/env';
 import { logger } from '@shared/utils/logger';
 import { storage } from '@infrastructure/storage/localStorage';
+import { STORAGE_KEYS } from '@shared/constants/app';
 
 export const apiClient = axios.create({
   baseURL: env.API_URL,
@@ -14,6 +15,15 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// === REQUEST INTERCEPTOR : Ajouter Accept-Language selon la langue choisie ===
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const locale = localStorage.getItem(STORAGE_KEYS.LOCALE) || 'fr';
+    config.headers['Accept-Language'] = locale;
+  }
+  return config;
 });
 
 // === RESPONSE INTERCEPTOR : Unwrap + gérer 401 (token expiré) ===

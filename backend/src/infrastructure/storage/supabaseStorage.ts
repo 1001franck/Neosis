@@ -3,12 +3,15 @@
  * Upload de fichiers vers Supabase Storage (persistant, cross-deploy)
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 import path from 'path';
 import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from '../../shared/config/env.js';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+let supabase: SupabaseClient | null = null;
+if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const BUCKET = 'uploads';
 
@@ -22,6 +25,8 @@ export async function uploadToSupabase(
   mimeType: string,
   folder: string = 'files'
 ): Promise<string> {
+  if (!supabase) throw new Error('Supabase non configuré (SUPABASE_URL manquante)');
+
   const ext = path.extname(originalName);
   const filename = `${folder}/${randomUUID()}${ext}`;
 
@@ -44,9 +49,11 @@ export async function uploadToSupabase(
  * Supprime un fichier depuis son URL publique Supabase
  */
 export async function deleteFromSupabase(publicUrl: string): Promise<void> {
+  if (!supabase) return;
+
   const marker = `/storage/v1/object/public/${BUCKET}/`;
   const idx = publicUrl.indexOf(marker);
-  if (idx === -1) return; // pas une URL Supabase, on ignore
+  if (idx === -1) return;
 
   const filePath = publicUrl.substring(idx + marker.length);
   await supabase.storage.from(BUCKET).remove([filePath]);

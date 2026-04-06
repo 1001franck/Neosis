@@ -1,15 +1,18 @@
 {
   "errors": {
     "USER_NOT_FOUND": "User not found",
-    "ALREADY_EXISTS": "This user already exists",
+    "USER_ALREADY_EXISTS": "This user already exists",
     "INVALID_CREDENTIALS": "Invalid email or password",
-    "FRIENDSHIP_EXISTS": "A relationship already exists between these users",
-    "FRIEND_REQUEST_NOT_FOUND": "Friend request not found",
-    "FORBIDDEN": "Access forbidden",
+    "TOKEN_EXPIRED": "Your session has expired, please log in again",
+    "UNAUTHORIZED": "You must be logged in to perform this action",
+    "INVALID_PERMISSIONS": "You do not have permission to perform this action",
     "SERVER_NOT_FOUND": "Server not found",
+    "MEMBER_NOT_FOUND": "Member not found",
     "CHANNEL_NOT_FOUND": "Channel not found",
     "MESSAGE_NOT_FOUND": "Message not found",
+    "MESSAGE_DELETED": "This message has been deleted",
     "VALIDATION_ERROR": "Invalid data",
-    "INTERNAL_ERROR": "Internal server error"
+    "NOT_FOUND": "Resource not found",
+    "INTERNAL_SERVER_ERROR": "Internal server error"
   }
 }
