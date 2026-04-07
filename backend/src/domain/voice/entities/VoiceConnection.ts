@@ -17,47 +17,47 @@ export class VoiceConnection {
     public readonly channelId: string,
     public isMuted: boolean,
     public isDeafened: boolean,
+    public isVideoEnabled: boolean,
+    public isScreenSharing: boolean,
     public readonly connectedAt: Date
   ) {
     this.validateState();
   }
 
-  /**
-   * Validation : si deafened, alors forcément muted
-   */
   private validateState(): void {
     if (this.isDeafened && !this.isMuted) {
-      this.isMuted = true; // Auto-correction : deafened implique muted
+      this.isMuted = true;
     }
   }
 
-  /**
-   * Active/désactive le micro
-   */
   setMuted(muted: boolean): void {
     this.isMuted = muted;
-
-    // Si on unmute mais qu'on est deafened, on undeafen aussi
     if (!muted && this.isDeafened) {
       this.isDeafened = false;
     }
   }
 
-  /**
-   * Active/désactive le son (implique aussi mute)
-   */
   setDeafened(deafened: boolean): void {
     this.isDeafened = deafened;
-
-    // Deafened implique forcément muted
     if (deafened) {
       this.isMuted = true;
     }
   }
 
+  setVideoEnabled(enabled: boolean): void {
+    this.isVideoEnabled = enabled;
+  }
+
   /**
-   * Convertit l'entité en objet simple pour l'API
+   * Screen share et caméra sont mutuellement exclusifs
    */
+  setScreenSharing(sharing: boolean): void {
+    this.isScreenSharing = sharing;
+    if (sharing) {
+      this.isVideoEnabled = false;
+    }
+  }
+
   toJSON() {
     return {
       id: this.id,
@@ -65,6 +65,8 @@ export class VoiceConnection {
       channelId: this.channelId,
       isMuted: this.isMuted,
       isDeafened: this.isDeafened,
+      isVideoEnabled: this.isVideoEnabled,
+      isScreenSharing: this.isScreenSharing,
       connectedAt: this.connectedAt
     };
   }

@@ -52,6 +52,7 @@ import { MarkChannelAsReadUseCase } from '../application/messages/usecases/markC
 import { JoinVoiceChannelUseCase } from '../application/voice/usecases/JoinVoiceChannelUseCase.js';
 import { LeaveVoiceChannelUseCase } from '../application/voice/usecases/LeaveVoiceChannelUseCase.js';
 import { UpdateVoiceStateUseCase } from '../application/voice/usecases/UpdateVoiceStateUseCase.js';
+import { UpdateVideoStateUseCase } from '../application/voice/usecases/UpdateVideoStateUseCase.js';
 import { GetChannelVoiceUsersUseCase } from '../application/voice/usecases/GetChannelVoiceUsersUseCase.js';
 import {
   RequestFriendUseCase,
@@ -456,6 +457,11 @@ export class Container {
   createUpdateVoiceStateUseCase() {
     const voiceRepository = this.createVoiceConnectionRepository();
     return new UpdateVoiceStateUseCase(voiceRepository);
+  }
+
+  createUpdateVideoStateUseCase() {
+    const voiceRepository = this.createVoiceConnectionRepository();
+    return new UpdateVideoStateUseCase(voiceRepository);
   }
 
   /**

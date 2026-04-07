@@ -89,6 +89,7 @@ const markChannelAsReadUseCase = container.markChannelAsReadUseCase();
 const joinVoiceChannelUseCase = container.createJoinVoiceChannelUseCase();
 const leaveVoiceChannelUseCase = container.createLeaveVoiceChannelUseCase();
 const updateVoiceStateUseCase = container.createUpdateVoiceStateUseCase();
+const updateVideoStateUseCase = container.createUpdateVideoStateUseCase();
 const getChannelVoiceUsersUseCase = container.createGetChannelVoiceUsersUseCase();
 
 // Friend / Direct Use Cases
@@ -150,10 +151,11 @@ const socketHandler = new SocketHandler(
 
 // Voice Handler (WebRTC signaling)
 const voiceHandler = new VoiceHandler(
-  socketHandler.getIO(), // Récupérer l'instance Socket.IO
+  socketHandler.getIO(),
   joinVoiceChannelUseCase,
   leaveVoiceChannelUseCase,
   updateVoiceStateUseCase,
+  updateVideoStateUseCase,
   getChannelVoiceUsersUseCase
 );
 

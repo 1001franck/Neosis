@@ -7,6 +7,7 @@ import type { Server as SocketIOServer, Socket } from 'socket.io';
 import type { JoinVoiceChannelUseCase } from '../../../application/voice/usecases/JoinVoiceChannelUseCase.js';
 import type { LeaveVoiceChannelUseCase } from '../../../application/voice/usecases/LeaveVoiceChannelUseCase.js';
 import type { UpdateVoiceStateUseCase } from '../../../application/voice/usecases/UpdateVoiceStateUseCase.js';
+import type { UpdateVideoStateUseCase } from '../../../application/voice/usecases/UpdateVideoStateUseCase.js';
 import type { GetChannelVoiceUsersUseCase } from '../../../application/voice/usecases/GetChannelVoiceUsersUseCase.js';
 
 /**
@@ -24,6 +25,7 @@ export class VoiceHandler {
     private joinVoiceChannelUseCase: JoinVoiceChannelUseCase,
     private leaveVoiceChannelUseCase: LeaveVoiceChannelUseCase,
     private updateVoiceStateUseCase: UpdateVoiceStateUseCase,
+    private updateVideoStateUseCase: UpdateVideoStateUseCase,
     private getChannelVoiceUsersUseCase: GetChannelVoiceUsersUseCase
   ) {}
 
@@ -44,6 +46,16 @@ export class VoiceHandler {
     // Mettre à jour l'état vocal (mute/deafen)
     socket.on('voice:state', async ({ isMuted, isDeafened }) => {
       await this.handleStateUpdate(socket, isMuted, isDeafened);
+    });
+
+    // Mettre à jour l'état vidéo (caméra)
+    socket.on('voice:video_state', async ({ isVideoEnabled }) => {
+      await this.handleVideoStateUpdate(socket, isVideoEnabled, false);
+    });
+
+    // Mettre à jour le partage d'écran
+    socket.on('voice:screen_share', async ({ isScreenSharing }) => {
+      await this.handleVideoStateUpdate(socket, false, isScreenSharing);
     });
 
     // WebRTC signaling : relayer les signaux entre peers
@@ -88,7 +100,9 @@ export class VoiceHandler {
         username,
         channelId,
         isMuted: connection.isMuted,
-        isDeafened: connection.isDeafened
+        isDeafened: connection.isDeafened,
+        isVideoEnabled: connection.isVideoEnabled,
+        isScreenSharing: connection.isScreenSharing
       });
 
       // Envoyer la liste complète des utilisateurs au nouveau venu
@@ -194,7 +208,9 @@ export class VoiceHandler {
         this.io.to(`voice:${channelId}`).emit('voice:user_state_changed', {
           userId,
           isMuted: connection.isMuted,
-          isDeafened: connection.isDeafened
+          isDeafened: connection.isDeafened,
+          isVideoEnabled: connection.isVideoEnabled,
+          isScreenSharing: connection.isScreenSharing
         });
       }
 
@@ -203,6 +219,51 @@ export class VoiceHandler {
       console.error('[Voice] State update error:', error);
       socket.emit('voice:error', {
         message: error instanceof Error ? error.message : 'Failed to update voice state'
+      });
+    }
+  }
+
+  /**
+   * Handler : Mettre à jour l'état vidéo (caméra / partage d'écran)
+   */
+  private async handleVideoStateUpdate(
+    socket: Socket,
+    isVideoEnabled: boolean,
+    isScreenSharing: boolean
+  ): Promise<void> {
+    try {
+      const userId = socket.data.userId;
+      const channelId = socket.data.voiceChannelId;
+
+      if (!userId) {
+        socket.emit('voice:error', { message: 'User not authenticated' });
+        return;
+      }
+
+      if (typeof isVideoEnabled !== 'boolean' || typeof isScreenSharing !== 'boolean') {
+        socket.emit('voice:error', { message: 'Invalid video state parameters' });
+        return;
+      }
+
+      const connection = await this.updateVideoStateUseCase.execute({
+        userId,
+        isVideoEnabled,
+        isScreenSharing
+      });
+
+      if (channelId) {
+        this.io.to(`voice:${channelId}`).emit('voice:user_state_changed', {
+          userId,
+          isMuted: connection.isMuted,
+          isDeafened: connection.isDeafened,
+          isVideoEnabled: connection.isVideoEnabled,
+          isScreenSharing: connection.isScreenSharing
+        });
+      }
+    } catch (error: unknown) {
+      console.error('[Voice] Video state update error:', error);
+      socket.emit('voice:error', {
+        message: error instanceof Error ? error.message : 'Failed to update video state'
       });
     }
   }

@@ -28,6 +28,8 @@ export class PrismaVoiceConnectionRepository implements VoiceConnectionRepositor
           channelId: connection.channelId,
           isMuted: connection.isMuted,
           isDeafened: connection.isDeafened,
+          isVideoEnabled: connection.isVideoEnabled,
+          isScreenSharing: connection.isScreenSharing,
           connectedAt: connection.connectedAt
         }
       });
@@ -81,6 +83,15 @@ export class PrismaVoiceConnectionRepository implements VoiceConnectionRepositor
     return this.toDomain(raw);
   }
 
+  async updateVideoState(userId: string, isVideoEnabled: boolean, isScreenSharing: boolean): Promise<VoiceConnection> {
+    const raw = await this.prisma.voiceConnection.update({
+      where: { userId },
+      data: { isVideoEnabled, isScreenSharing }
+    });
+
+    return this.toDomain(raw);
+  }
+
   /**
    * Supprimer une connexion vocale (quitter)
    */
@@ -108,6 +119,8 @@ export class PrismaVoiceConnectionRepository implements VoiceConnectionRepositor
     channelId: string;
     isMuted: boolean;
     isDeafened: boolean;
+    isVideoEnabled: boolean;
+    isScreenSharing: boolean;
     connectedAt: Date;
   }): VoiceConnection {
     return new VoiceConnection(
@@ -116,6 +129,8 @@ export class PrismaVoiceConnectionRepository implements VoiceConnectionRepositor
       raw.channelId,
       raw.isMuted,
       raw.isDeafened,
+      raw.isVideoEnabled,
+      raw.isScreenSharing,
       raw.connectedAt
     );
   }
