@@ -44,6 +44,15 @@ const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
+// Origines autorisées : prod Vercel + dev local + app desktop Tauri
+const ALLOWED_ORIGINS = [
+  FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:1420', // port Tauri dev par défaut
+  'tauri://localhost',     // origine Tauri en production
+  'https://tauri.localhost',
+].filter(Boolean);
+
 // ============ DEPENDENCY INJECTION ============
 const container = Container.getInstance();
 
@@ -206,7 +215,12 @@ socketHandler.getIO().on('connection', (socket) => {
 
 // ============ MIDDLEWARES ============
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origin (ex: app desktop native, curl)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origine non autorisée: ${origin}`));
+  },
   credentials: true
 }));
 app.use(express.json());
