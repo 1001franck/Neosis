@@ -14,13 +14,14 @@ interface VideoFeedProps {
   username: string;
   stream: MediaStream | null;
   isLocal?: boolean;
+  mirrored?: boolean;
   label?: string;
 }
 
 /**
  * Un flux vidéo individuel
  */
-function VideoFeed({ username, stream, isLocal, label }: VideoFeedProps) {
+function VideoFeed({ username, stream, isLocal, mirrored, label }: VideoFeedProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -38,7 +39,7 @@ function VideoFeed({ username, stream, isLocal, label }: VideoFeedProps) {
           playsInline
           muted={isLocal}
           className="w-full h-full object-cover"
-          style={isLocal ? { transform: 'scaleX(-1)' } : undefined}
+          style={mirrored ? { transform: 'scaleX(-1)' } : undefined}
         />
       ) : (
         // Placeholder si le stream n'est pas encore disponible
@@ -90,21 +91,23 @@ export function VoiceVideoGrid(): React.ReactElement | null {
 
   return (
     <div className={`p-3 grid ${gridCols} gap-3`}>
-      {/* Mon flux caméra */}
+      {/* Mon flux caméra — miroir activé */}
       {isVideoEnabled && (
         <VideoFeed
           username="Moi"
           isLocal={true}
+          mirrored={true}
           stream={client.getLocalVideoStream()}
         />
       )}
 
-      {/* Mon flux partage d'écran */}
+      {/* Mon flux partage d'écran — pas de miroir */}
       {isScreenSharing && (
         <VideoFeed
           username="Moi"
           label="Mon écran"
           isLocal={true}
+          mirrored={false}
           stream={client.getLocalScreenStream()}
         />
       )}
