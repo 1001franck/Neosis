@@ -21,8 +21,12 @@ export function VoiceControls(): React.ReactElement | null {
     connectedChannelId,
     isMuted,
     isDeafened,
+    isVideoEnabled,
+    isScreenSharing,
     toggleMute,
     toggleDeafen,
+    toggleCamera,
+    toggleScreenShare,
     leaveVoiceChannel,
   } = useVoice();
 
@@ -135,6 +139,66 @@ export function VoiceControls(): React.ReactElement | null {
           {hoveredButton === 'deafen' && (
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
               {isDeafened ? 'Activer le son' : 'Couper le son'}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
+            </div>
+          )}
+        </div>
+
+        {/* Bouton Caméra */}
+        <div className="relative group">
+          <button
+            onClick={() => void toggleCamera()}
+            onMouseEnter={() => setHoveredButton('camera')}
+            onMouseLeave={() => setHoveredButton(null)}
+            className={`
+              relative p-3 rounded-lg transition-all duration-200 transform hover:scale-105
+              ${isVideoEnabled
+                ? 'bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-500/30'
+                : 'bg-[#3f4147] hover:bg-[#4a4d55] shadow-md'
+              }
+            `}
+            title={isVideoEnabled ? 'Désactiver la caméra' : 'Activer la caméra'}
+          >
+            {isVideoEnabled ? (
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"/>
+              </svg>
+            )}
+          </button>
+          {hoveredButton === 'camera' && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
+              {isVideoEnabled ? 'Désactiver la caméra' : 'Activer la caméra'}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
+            </div>
+          )}
+        </div>
+
+        {/* Bouton Partage d'écran */}
+        <div className="relative group">
+          <button
+            onClick={() => void toggleScreenShare()}
+            onMouseEnter={() => setHoveredButton('screen')}
+            onMouseLeave={() => setHoveredButton(null)}
+            className={`
+              relative p-3 rounded-lg transition-all duration-200 transform hover:scale-105
+              ${isScreenSharing
+                ? 'bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/30'
+                : 'bg-[#3f4147] hover:bg-[#4a4d55] shadow-md'
+              }
+            `}
+            title={isScreenSharing ? 'Arrêter le partage' : 'Partager l\'écran'}
+          >
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zm-7-3.53v-2.19c-2.78.48-4.34 1.71-5.5 3.72.14-1.4.59-4.83 3.89-6.56l-.89-.86V6.5L15 10.26l-2 2-2 2.21z"/>
+            </svg>
+          </button>
+          {hoveredButton === 'screen' && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
+              {isScreenSharing ? 'Arrêter le partage' : "Partager l'écran"}
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
             </div>
           )}

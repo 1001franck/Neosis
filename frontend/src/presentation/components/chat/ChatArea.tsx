@@ -17,6 +17,7 @@ import { MessageList, type Message } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { TypingIndicator } from './TypingIndicator';
 import { ChannelSearchModal } from './ChannelSearchModal';
+import { VoiceVideoGrid } from '@presentation/components/voice/VoiceVideoGrid';
 import type { UserStatus } from '@shared/constants/app';
 
 export type { Message };
@@ -152,6 +153,9 @@ export function ChatArea({
           onMessageClick={handleMessageClick}
         />
       )}
+
+      {/* Grille vidéo — affichée si quelqu'un a la caméra ou le partage d'écran actif */}
+      <VoiceVideoGrid />
 
       {/* Messages List */}
       <MessageList

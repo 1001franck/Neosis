@@ -213,6 +213,8 @@ export function useVoice() {
     connectedChannelId,
     isMuted,
     isDeafened,
+    isVideoEnabled,
+    isScreenSharing,
     isConnecting,
     error,
     connectedUsers: connectedChannelId ? connectedUsers.get(connectedChannelId) || [] : [],
@@ -220,5 +222,7 @@ export function useVoice() {
     leaveVoiceChannel,
     toggleMute,
     toggleDeafen,
+    toggleCamera,
+    toggleScreenShare,
   };
 }
