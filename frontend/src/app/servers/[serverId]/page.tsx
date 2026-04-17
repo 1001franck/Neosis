@@ -602,6 +602,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     deletedByUserId: msg.deletedByUserId,
     deletedByRole: (msg as { deletedByRole?: PresentationMessage['deletedByRole'] }).deletedByRole,
     attachments: msg.attachments,
+    reactions: msg.reactions ?? [],
   }));
 
   // === LOADING STATE ===
