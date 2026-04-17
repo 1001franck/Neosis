@@ -79,17 +79,17 @@ export function setupListeners() {
         store.addMention(message.channelId);
         const authorName = message.author?.username ?? "Unknown";
         toastBus.emit({
-          type: ‘info’,
+          type: 'info',
           message: `${authorName} vous a mentionné`,
           duration: 4000,
         });
         // Notification native desktop
-        void sendDesktopNotification(‘Neosis — Mention’, `${authorName} vous a mentionné`);
+        void sendDesktopNotification('Neosis - Mention', `${authorName} vous a mentionné`);
       } else {
         // Notification pour tout nouveau message quand la fenêtre est masquée
-        if (typeof document !== ‘undefined’ && document.hidden) {
+        if (typeof document !== 'undefined' && document.hidden) {
           const authorName = message.author?.username ?? "Unknown";
-          void sendDesktopNotification(‘Neosis — Nouveau message’, `${authorName} : ${(message.content || ‘’).slice(0, 80)}`);
+          void sendDesktopNotification('Neosis - Nouveau message', `${authorName} : ${(message.content || '').slice(0, 80)}`);
         }
       }
     }
@@ -307,7 +307,7 @@ export function setupListeners() {
     // Notification native desktop pour les DMs
     const currentUserId = useAuthStore.getState().user?.id;
     if (message.senderId !== currentUserId) {
-      void sendDesktopNotification('Neosis — Message privé', (message.content || '').slice(0, 80));
+      void sendDesktopNotification('Neosis - Message privé', (message.content || '').slice(0, 80));
     }
   });
 
