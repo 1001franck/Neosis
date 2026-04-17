@@ -93,6 +93,20 @@ export const socketEmitters = {
   },
 
   /**
+   * Mettre à jour l'état vidéo (caméra)
+   */
+  updateVideoState: (isVideoEnabled: boolean) => {
+    socket.emit('voice:video_state', { isVideoEnabled });
+  },
+
+  /**
+   * Mettre à jour l'état du partage d'écran
+   */
+  updateScreenShare: (isScreenSharing: boolean) => {
+    socket.emit('voice:screen_share', { isScreenSharing });
+  },
+
+  /**
    * Envoyer un signal WebRTC à un autre utilisateur
    * (pour établir la connexion peer-to-peer audio)
    */

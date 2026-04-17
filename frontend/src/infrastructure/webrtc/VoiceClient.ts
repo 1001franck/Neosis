@@ -31,11 +31,12 @@ const ICE_SERVERS = [
  * Interface pour gérer une connexion peer-to-peer avec un autre utilisateur
  */
 interface PeerConnection {
-  userId: string;           // ID de l'utilisateur distant
-  connection: RTCPeerConnection;  // Connexion WebRTC
-  stream?: MediaStream;     // Stream audio reçu
-  audioElement?: HTMLAudioElement; // Élément audio (stocké pour pouvoir le stopper)
-  audioContext?: AudioContext; // Analyse audio pour "speaker"
+  userId: string;                  // ID de l'utilisateur distant
+  connection: RTCPeerConnection;   // Connexion WebRTC
+  stream?: MediaStream;            // Stream audio reçu
+  audioElement?: HTMLAudioElement; // Élément audio
+  videoStream?: MediaStream;       // Stream vidéo distant
+  audioContext?: AudioContext;     // Analyse audio pour "speaker"
   analyser?: AnalyserNode;
   dataArray?: Uint8Array;
   rafId?: number;
@@ -52,10 +53,15 @@ interface PeerConnection {
  * - Gérer mute/unmute
  */
 export class VoiceClient {
-  private localStream: MediaStream | null = null;  // Mon stream audio (mon micro)
-  private peers: Map<string, PeerConnection> = new Map();  // Connexions avec les autres users
-  private isMuted: boolean = false;  // État du micro
-  private isDeafened: boolean = false;  // État du son
+  private localStream: MediaStream | null = null;       // Mon stream audio (micro)
+  private localVideoStream: MediaStream | null = null;  // Mon stream vidéo (caméra)
+  private localScreenStream: MediaStream | null = null; // Mon stream partage d'écran
+  private peers: Map<string, PeerConnection> = new Map();
+  private isMuted: boolean = false;
+  private isDeafened: boolean = false;
+
+  // Callback déclenché quand le partage d'écran est arrêté via l'UI du navigateur
+  private onScreenShareEnded: (() => void) | null = null;
 
   constructor() {
     this.setupSignalingListener();
@@ -181,29 +187,56 @@ export class VoiceClient {
     };
 
     /**
-     * Track : On reçoit l'audio de l'autre utilisateur
-     * Dès qu'on reçoit un stream audio distant, on le joue automatiquement
+     * Track : On reçoit un track audio ou vidéo de l'autre utilisateur
      */
     peerConnection.ontrack = (event) => {
-      logger.info(' Received remote audio track', { userId });
-
       const [remoteStream] = event.streams;
-
-      // Créer un élément <audio> pour jouer le son
-      const audioElement = new Audio();
-      audioElement.srcObject = remoteStream;
-      audioElement.autoplay = true;  // Jouer automatiquement
-      audioElement.muted = this.isDeafened;  // Respecter l'état deafen
-
-      // Stocker le stream ET l'élément audio pour pouvoir les stopper au cleanup
       const peer = this.peers.get(userId);
-      if (peer) {
-        peer.stream = remoteStream;
-        peer.audioElement = audioElement;
-        this.startSpeakingMonitor(userId, remoteStream);
-      }
+      if (!peer) return;
 
-      logger.info('🔊 Playing remote audio', { userId });
+      if (event.track.kind === 'audio') {
+        logger.info('🔊 Received remote audio track', { userId });
+
+        // Un seul élément audio par peer
+        if (!peer.audioElement) {
+          const audioElement = new Audio();
+          audioElement.srcObject = remoteStream;
+          audioElement.autoplay = true;
+          audioElement.muted = this.isDeafened;
+          peer.audioElement = audioElement;
+          peer.stream = remoteStream;
+          this.startSpeakingMonitor(userId, remoteStream);
+        }
+      } else if (event.track.kind === 'video') {
+        logger.info('📹 Received remote video track', { userId });
+        peer.videoStream = remoteStream;
+
+        // Notifier les composants React qu'un stream vidéo est disponible
+        window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
+
+        // Nettoyer quand le track se termine
+        event.track.onended = () => {
+          peer.videoStream = undefined;
+          window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
+        };
+      }
+    };
+
+    /**
+     * Negotiation Needed : renégocier quand un track est ajouté/retiré après l'établissement
+     * (ex: ajout de la caméra en cours d'appel)
+     */
+    peerConnection.onnegotiationneeded = async () => {
+      // Ignorer si la connexion est déjà en cours de négociation
+      if (peerConnection.signalingState !== 'stable') return;
+      try {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socketEmitters.sendWebRTCSignal(userId, { type: 'offer', sdp: offer });
+        logger.debug('Renegotiation offer sent', { userId });
+      } catch (err) {
+        logger.error('Renegotiation failed', { userId, err });
+      }
     };
 
     /**
@@ -406,6 +439,107 @@ export class VoiceClient {
   }
 
   /**
+   * Activer la caméra et envoyer le stream vidéo aux peers
+   */
+  async enableCamera(): Promise<void> {
+    if (this.localVideoStream) return;
+
+    this.localVideoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const videoTrack = this.localVideoStream.getVideoTracks()[0];
+
+    // Ajouter la track vidéo à toutes les connexions existantes (déclenche onnegotiationneeded)
+    this.peers.forEach((peer) => {
+      peer.connection.addTrack(videoTrack, this.localVideoStream!);
+    });
+
+    logger.info('📹 Camera enabled');
+  }
+
+  /**
+   * Désactiver la caméra
+   */
+  disableCamera(): void {
+    if (!this.localVideoStream) return;
+
+    const videoTrack = this.localVideoStream.getVideoTracks()[0];
+
+    // Retirer la track de toutes les connexions (déclenche onnegotiationneeded)
+    this.peers.forEach((peer) => {
+      const sender = peer.connection.getSenders().find(s => s.track === videoTrack);
+      if (sender) peer.connection.removeTrack(sender);
+    });
+
+    this.localVideoStream.getTracks().forEach(t => t.stop());
+    this.localVideoStream = null;
+
+    logger.info('📹 Camera disabled');
+  }
+
+  /**
+   * Activer le partage d'écran
+   */
+  async enableScreenShare(): Promise<void> {
+    if (this.localScreenStream) return;
+
+    this.localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    const screenTrack = this.localScreenStream.getVideoTracks()[0];
+
+    // Arrêt depuis l'UI du navigateur (bouton "Stop sharing")
+    screenTrack.onended = () => {
+      this.localScreenStream = null;
+      if (this.onScreenShareEnded) this.onScreenShareEnded();
+    };
+
+    // Ajouter la track à toutes les connexions existantes
+    this.peers.forEach((peer) => {
+      peer.connection.addTrack(screenTrack, this.localScreenStream!);
+    });
+
+    logger.info('🖥️ Screen share enabled');
+  }
+
+  /**
+   * Désactiver le partage d'écran
+   */
+  disableScreenShare(): void {
+    if (!this.localScreenStream) return;
+
+    const screenTrack = this.localScreenStream.getVideoTracks()[0];
+
+    this.peers.forEach((peer) => {
+      const sender = peer.connection.getSenders().find(s => s.track === screenTrack);
+      if (sender) peer.connection.removeTrack(sender);
+    });
+
+    this.localScreenStream.getTracks().forEach(t => t.stop());
+    this.localScreenStream = null;
+
+    logger.info('🖥️ Screen share disabled');
+  }
+
+  /**
+   * Enregistrer le callback appelé quand l'utilisateur arrête le screenshare via le navigateur
+   */
+  setOnScreenShareEnded(cb: () => void): void {
+    this.onScreenShareEnded = cb;
+  }
+
+  /**
+   * Accéder aux streams pour l'affichage vidéo
+   */
+  getLocalVideoStream(): MediaStream | null {
+    return this.localVideoStream;
+  }
+
+  getLocalScreenStream(): MediaStream | null {
+    return this.localScreenStream;
+  }
+
+  getRemoteVideoStream(userId: string): MediaStream | undefined {
+    return this.peers.get(userId)?.videoStream;
+  }
+
+  /**
    * Nettoyer toutes les connexions (quand on quitte le voice channel)
    */
   cleanup(): void {
@@ -431,10 +565,22 @@ export class VoiceClient {
     });
     this.peers.clear();
 
-    // Arrêter le stream local (libérer le micro)
+    // Arrêter le stream audio local (libérer le micro)
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
+    }
+
+    // Arrêter la caméra si active
+    if (this.localVideoStream) {
+      this.localVideoStream.getTracks().forEach(track => track.stop());
+      this.localVideoStream = null;
+    }
+
+    // Arrêter le partage d'écran si actif
+    if (this.localScreenStream) {
+      this.localScreenStream.getTracks().forEach(track => track.stop());
+      this.localScreenStream = null;
     }
 
     logger.info(' Voice client cleaned up');

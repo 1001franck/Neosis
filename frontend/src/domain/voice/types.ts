@@ -10,10 +10,12 @@ export interface VoiceUser {
   userId: string;
   username: string;
   avatar: string | null;
-  isMuted: boolean;      // Micro coupé
-  isDeafened: boolean;   // Son coupé
-  isSpeaking?: boolean;  // En train de parler
-  connectedAt: string;   // ISO date string
+  isMuted: boolean;           // Micro coupé
+  isDeafened: boolean;        // Son coupé
+  isVideoEnabled?: boolean;   // Caméra activée
+  isScreenSharing?: boolean;  // Partage d'écran actif
+  isSpeaking?: boolean;       // En train de parler
+  connectedAt: string;        // ISO date string
 }
 
 /**
@@ -24,6 +26,8 @@ export interface VoiceState {
   connectedChannelId: string | null;  // ID du channel vocal actuel
   isMuted: boolean;               // Mon micro est coupé
   isDeafened: boolean;            // Mon son est coupé
+  isVideoEnabled: boolean;        // Ma caméra est activée
+  isScreenSharing: boolean;       // Mon partage d'écran est actif
   isConnecting: boolean;          // En train de se connecter
   error: string | null;           // Erreur éventuelle
 }

@@ -22,6 +22,8 @@ export function useVoice() {
     connectedChannelId,
     isMuted,
     isDeafened,
+    isVideoEnabled,
+    isScreenSharing,
     isConnecting,
     error,
     connectedUsers,
@@ -30,6 +32,8 @@ export function useVoice() {
     setConnecting,
     setMuted,
     setDeafened,
+    setVideoEnabled,
+    setScreenSharing,
     setError,
   } = useVoiceStore();
 
@@ -120,6 +124,63 @@ export function useVoice() {
 
     logger.info(`🔇 Audio ${newDeafened ? 'deafened' : 'undeafened'}`);
   }, [isDeafened, isMuted, setDeafened]);
+
+  /**
+   * Toggle caméra (mutuellement exclusif avec le screenshare)
+   */
+  const toggleCamera = useCallback(async () => {
+    const newVideoEnabled = !isVideoEnabled;
+
+    if (newVideoEnabled) {
+      // Désactiver le screenshare si actif (règle métier : exclusion mutuelle)
+      if (isScreenSharing) {
+        getVoiceClient().disableScreenShare();
+        setScreenSharing(false);
+        socketEmitters.updateScreenShare(false);
+      }
+      await getVoiceClient().enableCamera();
+    } else {
+      getVoiceClient().disableCamera();
+    }
+
+    setVideoEnabled(newVideoEnabled);
+    socketEmitters.updateVideoState(newVideoEnabled);
+    logger.info(`📹 Camera ${newVideoEnabled ? 'enabled' : 'disabled'}`);
+  }, [isVideoEnabled, isScreenSharing, setVideoEnabled, setScreenSharing]);
+
+  /**
+   * Toggle partage d'écran (mutuellement exclusif avec la caméra)
+   */
+  const toggleScreenShare = useCallback(async () => {
+    const newScreenSharing = !isScreenSharing;
+
+    if (newScreenSharing) {
+      // Désactiver la caméra si active (règle métier : exclusion mutuelle)
+      if (isVideoEnabled) {
+        getVoiceClient().disableCamera();
+        setVideoEnabled(false);
+        socketEmitters.updateVideoState(false);
+      }
+      await getVoiceClient().enableScreenShare();
+    } else {
+      getVoiceClient().disableScreenShare();
+    }
+
+    setScreenSharing(newScreenSharing);
+    socketEmitters.updateScreenShare(newScreenSharing);
+    logger.info(`🖥️ Screen share ${newScreenSharing ? 'enabled' : 'disabled'}`);
+  }, [isScreenSharing, isVideoEnabled, setScreenSharing, setVideoEnabled]);
+
+  /**
+   * Enregistrer le callback pour l'arrêt du screenshare via le navigateur
+   */
+  useEffect(() => {
+    getVoiceClient().setOnScreenShareEnded(() => {
+      setScreenSharing(false);
+      socketEmitters.updateScreenShare(false);
+      logger.info('🖥️ Screen share stopped by browser');
+    });
+  }, [setScreenSharing]);
 
   /**
    * Créer une connexion WebRTC avec un pair

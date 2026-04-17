@@ -301,12 +301,14 @@ export function setupListeners() {
   /**
    * Un utilisateur a rejoint le voice channel
    */
-  socket.on('voice:user_joined', ({ userId, username, channelId, isMuted, isDeafened }: {
+  socket.on('voice:user_joined', ({ userId, username, channelId, isMuted, isDeafened, isVideoEnabled, isScreenSharing }: {
     userId: string;
     username: string;
     channelId: string;
     isMuted: boolean;
     isDeafened: boolean;
+    isVideoEnabled?: boolean;
+    isScreenSharing?: boolean;
   }) => {
     logger.info('User joined voice channel', { userId, username, channelId });
 
@@ -317,6 +319,8 @@ export function setupListeners() {
       avatar: member?.user.avatar ?? null,
       isMuted,
       isDeafened,
+      isVideoEnabled: isVideoEnabled ?? false,
+      isScreenSharing: isScreenSharing ?? false,
       connectedAt: new Date().toISOString(),
     };
 
@@ -334,15 +338,17 @@ export function setupListeners() {
   /**
    * L'état vocal d'un utilisateur a changé (mute/deafen)
    */
-  socket.on('voice:user_state_changed', ({ userId, isMuted, isDeafened }: {
+  socket.on('voice:user_state_changed', ({ userId, isMuted, isDeafened, isVideoEnabled, isScreenSharing }: {
     userId: string;
     isMuted: boolean;
     isDeafened: boolean;
+    isVideoEnabled?: boolean;
+    isScreenSharing?: boolean;
   }) => {
     const { connectedChannelId } = useVoiceStore.getState();
     if (connectedChannelId) {
-      logger.info('User voice state changed', { userId, isMuted, isDeafened });
-      useVoiceStore.getState().updateUserState(connectedChannelId, userId, isMuted, isDeafened);
+      logger.info('User voice state changed', { userId, isMuted, isDeafened, isVideoEnabled, isScreenSharing });
+      useVoiceStore.getState().updateUserState(connectedChannelId, userId, isMuted, isDeafened, isVideoEnabled, isScreenSharing);
     }
   });
 

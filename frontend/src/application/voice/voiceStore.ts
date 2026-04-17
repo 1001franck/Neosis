@@ -22,13 +22,15 @@ interface VoiceStore extends VoiceState {
   setConnecting: (isConnecting: boolean) => void;
   setMuted: (isMuted: boolean) => void;
   setDeafened: (isDeafened: boolean) => void;
+  setVideoEnabled: (isVideoEnabled: boolean) => void;
+  setScreenSharing: (isScreenSharing: boolean) => void;
   setError: (error: string | null) => void;
 
   // Gestion des utilisateurs
   setChannelUsers: (channelId: string, users: VoiceUser[]) => void;
   addUser: (channelId: string, user: VoiceUser) => void;
   removeUser: (channelId: string, userId: string) => void;
-  updateUserState: (channelId: string, userId: string, isMuted: boolean, isDeafened: boolean) => void;
+  updateUserState: (channelId: string, userId: string, isMuted: boolean, isDeafened: boolean, isVideoEnabled?: boolean, isScreenSharing?: boolean) => void;
   setUserSpeaking: (channelId: string, userId: string, isSpeaking: boolean) => void;
   setVoiceCount: (channelId: string, count: number) => void;
 
@@ -44,6 +46,8 @@ const initialState: VoiceState = {
   connectedChannelId: null,
   isMuted: false,
   isDeafened: false,
+  isVideoEnabled: false,
+  isScreenSharing: false,
   isConnecting: false,
   error: null,
 };
@@ -75,6 +79,8 @@ export const useVoiceStore = create<VoiceStore>((set) => ({
     isConnecting: false,
     isMuted: false,
     isDeafened: false,
+    isVideoEnabled: false,
+    isScreenSharing: false,
     connectedUsers: new Map(),
   }),
 
@@ -95,6 +101,16 @@ export const useVoiceStore = create<VoiceStore>((set) => ({
     isDeafened,
     isMuted: isDeafened ? true : state.isMuted, // Deafen implique mute
   })),
+
+  /**
+   * Activer/désactiver la caméra
+   */
+  setVideoEnabled: (isVideoEnabled: boolean) => set({ isVideoEnabled }),
+
+  /**
+   * Activer/désactiver le partage d'écran
+   */
+  setScreenSharing: (isScreenSharing: boolean) => set({ isScreenSharing }),
 
   /**
    * Définir une erreur
@@ -137,9 +153,9 @@ export const useVoiceStore = create<VoiceStore>((set) => ({
   }),
 
   /**
-   * Mettre à jour l'état d'un utilisateur (mute/deafen)
+   * Mettre à jour l'état d'un utilisateur (mute/deafen/video/screen)
    */
-  updateUserState: (channelId: string, userId: string, isMuted: boolean, isDeafened: boolean) => set((state) => {
+  updateUserState: (channelId: string, userId: string, isMuted: boolean, isDeafened: boolean, isVideoEnabled?: boolean, isScreenSharing?: boolean) => set((state) => {
     const newMap = new Map(state.connectedUsers);
     const currentUsers = newMap.get(channelId) || [];
 
@@ -147,7 +163,13 @@ export const useVoiceStore = create<VoiceStore>((set) => ({
       channelId,
       currentUsers.map(u =>
         u.userId === userId
-          ? { ...u, isMuted, isDeafened }
+          ? {
+              ...u,
+              isMuted,
+              isDeafened,
+              ...(isVideoEnabled !== undefined ? { isVideoEnabled } : {}),
+              ...(isScreenSharing !== undefined ? { isScreenSharing } : {}),
+            }
           : u
       )
     );
