@@ -7,8 +7,10 @@
  * État de l'utilisateur dans un voice channel
  */
 export interface VoiceState {
-  isMuted: boolean;    // Micro coupé
-  isDeafened: boolean; // Son coupé (implique aussi muted)
+  isMuted: boolean;         // Micro coupé
+  isDeafened: boolean;      // Son coupé (implique aussi muted)
+  isVideoEnabled: boolean;  // Caméra activée
+  isScreenSharing: boolean; // Partage d'écran actif
 }
 
 /**
@@ -20,5 +22,7 @@ export interface VoiceUser {
   avatar: string | null;
   isMuted: boolean;
   isDeafened: boolean;
+  isVideoEnabled: boolean;
+  isScreenSharing: boolean;
   connectedAt: Date;
 }

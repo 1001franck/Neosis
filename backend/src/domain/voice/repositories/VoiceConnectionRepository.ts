@@ -34,6 +34,11 @@ export interface VoiceConnectionRepository {
   updateState(userId: string, isMuted: boolean, isDeafened: boolean): Promise<VoiceConnection>;
 
   /**
+   * Mettre à jour l'état vidéo (caméra / partage d'écran)
+   */
+  updateVideoState(userId: string, isVideoEnabled: boolean, isScreenSharing: boolean): Promise<VoiceConnection>;
+
+  /**
    * Supprimer une connexion vocale (= quitter le voice channel)
    */
   delete(userId: string): Promise<void>;

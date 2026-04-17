@@ -207,8 +207,10 @@ model VoiceConnection {
   channelId   String
   channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
-  isMuted     Boolean  @default(false) // Micro coupé
-  isDeafened  Boolean  @default(false) // Son coupé (implique aussi muted)
+  isMuted         Boolean  @default(false) // Micro coupé
+  isDeafened      Boolean  @default(false) // Son coupé (implique aussi muted)
+  isVideoEnabled  Boolean  @default(false) // Caméra activée
+  isScreenSharing Boolean  @default(false) // Partage d'écran actif
 
   connectedAt DateTime @default(now())
 
