@@ -6,6 +6,7 @@ import axios from 'axios';
 import { env } from '@shared/config/env';
 import { logger } from '@shared/utils/logger';
 import { storage } from '@infrastructure/storage/localStorage';
+import { STORAGE_KEYS } from '@shared/constants/app';
 
 export const apiClient = axios.create({
   baseURL: env.API_URL,
@@ -16,11 +17,13 @@ export const apiClient = axios.create({
   },
 });
 
-// Client dédié aux uploads — timeout étendu à 60s pour les fichiers volumineux
-export const uploadClient = axios.create({
-  baseURL: env.API_URL,
-  timeout: 60000,
-  withCredentials: true,
+// === REQUEST INTERCEPTOR : Ajouter Accept-Language selon la langue choisie ===
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const locale = localStorage.getItem(STORAGE_KEYS.LOCALE) || 'fr';
+    config.headers['Accept-Language'] = locale;
+  }
+  return config;
 });
 
 // === RESPONSE INTERCEPTOR : Unwrap + gérer 401 (token expiré) ===

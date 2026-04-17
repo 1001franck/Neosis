@@ -5,6 +5,9 @@
   },
   "dependencies": {
     "express-intlayer": "^8.4.5",
+    "i18next": "^25.8.20",
+    "i18next-fs-backend": "^2.6.1",
+    "i18next-http-middleware": "^3.9.2",
     "intlayer": "^8.4.5"
   },
   "imports": {

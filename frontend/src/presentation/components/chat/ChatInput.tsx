@@ -20,6 +20,7 @@ import { useTypingIndicator } from '@presentation/hooks/useTypingIndicator';
 import { uploadApi } from '@infrastructure/api/upload.api';
 import type { Attachment } from '@domain/messages/types';
 import { logger } from '@shared/utils/logger';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface BanInfo {
   expiresAt?: string | null;
@@ -54,6 +55,7 @@ const ChatInputComponent = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLocale();
 
   // Typing indicator avec debounce automatique
   useTypingIndicator({
@@ -74,14 +76,14 @@ const ChatInputComponent = ({
 
     // Vérifier le nombre de fichiers
     if (files.length + selectedFiles.length > MAX_FILES) {
-      setUploadError(`Maximum ${MAX_FILES} fichiers à la fois`);
+      setUploadError(t('chat.maxFiles'));
       return;
     }
 
     // Vérifier la taille
     const tooBig = files.find(f => f.size > MAX_FILE_SIZE);
     if (tooBig) {
-      setUploadError(`Fichier trop volumineux: ${tooBig.name} (max 10 MB)`);
+      setUploadError(t('chat.fileTooLarge'));
       return;
     }
 
@@ -110,7 +112,7 @@ const ChatInputComponent = ({
         uploadedAttachments = await uploadApi.uploadFiles(selectedFiles, channelId);
         logger.info('Files uploaded', { count: uploadedAttachments.length });
       } catch (err) {
-        setUploadError('Échec de l\'upload. Réessayez.');
+        setUploadError(t('chat.uploadFailed'));
         logger.error('Upload failed', err);
         setIsUploading(false);
         return;
@@ -171,11 +173,11 @@ const ChatInputComponent = ({
           <div>
             <p className="text-red-300 font-medium">
               {expiryText
-                ? `Vous êtes banni temporairement jusqu'au ${expiryText}`
-                : 'Vous avez été banni temporairement de ce serveur'}
+                ? `${t('chat.bannedTemporary')} ${expiryText}`
+                : t('chat.bannedPermanent')}
             </p>
             {banInfo.reason && (
-              <p className="text-red-400/70 text-xs mt-0.5">Raison : {banInfo.reason}</p>
+              <p className="text-red-400/70 text-xs mt-0.5">{t('chat.banReason')} {banInfo.reason}</p>
             )}
           </div>
         </div>
@@ -262,7 +264,7 @@ const ChatInputComponent = ({
               onClick={() => { fileInputRef.current?.click(); }}
               onMouseDown={(e) => e.preventDefault()}
             className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 hover:bg-muted/30 transition-colors"
-              aria-label="Ajouter un fichier"
+              aria-label={t('chat.addFile')}
               tabIndex={-1}
             >
               <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -311,7 +313,7 @@ const ChatInputComponent = ({
           value={messageInput}
           onChange={(e) => setMessageInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={isUploading ? 'Upload en cours...' : `Message @${recipientName || 'ici'}`}
+          placeholder={isUploading ? t('chat.uploading') : `Message @${recipientName || 'ici'}`}
           disabled={isUploading}
           className="w-full pl-10 sm:pl-11 pr-28 sm:pr-32 py-2.5 sm:py-3 bg-muted text-foreground placeholder-muted-foreground rounded-lg focus:outline-none disabled:opacity-50 text-sm sm:text-base"
         />
@@ -323,7 +325,7 @@ const ChatInputComponent = ({
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            aria-label="Joindre un fichier"
+            aria-label={t('chat.attachFile')}
             tabIndex={-1}
           >
             <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -355,7 +357,7 @@ const ChatInputComponent = ({
             type="button"
             onClick={() => { setShowEmojiPicker(prev => !prev); setShowGifPicker(false); }}
             className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Emoji"
+            aria-label={t('chat.emoji')}
             tabIndex={-1}
           >
             <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -371,7 +373,7 @@ const ChatInputComponent = ({
             onClick={handleSendMessage}
             disabled={isUploading || (!messageInput.trim() && selectedFiles.length === 0)}
             className="text-muted-foreground hover:text-primary disabled:opacity-30 transition-colors"
-            aria-label="Envoyer le message"
+            aria-label={t('chat.sendMessage')}
             tabIndex={-1}
           >
             <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">

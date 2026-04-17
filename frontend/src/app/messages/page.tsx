@@ -11,10 +11,12 @@ import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { useAuth } from '@application/auth/useAuth';
 import { useServers } from '@application/servers/useServers';
 import { logger } from '@shared/utils/logger';
+import { useLocale } from '@shared/hooks/useLocale';
 
 export default function MessagesHomePage(): React.ReactNode {
   const { user } = useAuth();
   const { servers, getServers } = useServers();
+  const { t } = useLocale();
 
   useEffect(() => {
     getServers().catch((err) => {
@@ -32,9 +34,9 @@ export default function MessagesHomePage(): React.ReactNode {
                 <path d="M20 2H4C2.9 2 2.01 2.9 2.01 4L2 22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM6 9H18V11H6V9ZM14 14H6V12H14V14ZM18 8H6V6H18V8Z"/>
               </svg>
             </div>
-            <h1 className="text-xl font-semibold text-foreground">Messages prives</h1>
+            <h1 className="text-xl font-semibold text-foreground">{t('messages.title')}</h1>
             <p className="text-sm text-muted-foreground">
-              Selectionnez une conversation dans la colonne de gauche ou ajoutez un ami pour demarrer.
+              {t('messages.selectConversation')}
             </p>
           </div>
         </div>

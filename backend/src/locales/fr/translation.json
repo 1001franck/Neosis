@@ -1,0 +1,18 @@
+{
+  "errors": {
+    "USER_NOT_FOUND": "Utilisateur introuvable",
+    "USER_ALREADY_EXISTS": "Cet utilisateur existe déjà",
+    "INVALID_CREDENTIALS": "Email ou mot de passe incorrect",
+    "TOKEN_EXPIRED": "Votre session a expiré, veuillez vous reconnecter",
+    "UNAUTHORIZED": "Vous devez être connecté pour effectuer cette action",
+    "INVALID_PERMISSIONS": "Vous n'avez pas la permission d'effectuer cette action",
+    "SERVER_NOT_FOUND": "Serveur introuvable",
+    "MEMBER_NOT_FOUND": "Membre introuvable",
+    "CHANNEL_NOT_FOUND": "Canal introuvable",
+    "MESSAGE_NOT_FOUND": "Message introuvable",
+    "MESSAGE_DELETED": "Ce message a été supprimé",
+    "VALIDATION_ERROR": "Données invalides",
+    "NOT_FOUND": "Ressource introuvable",
+    "INTERNAL_SERVER_ERROR": "Erreur interne du serveur"
+  }
+}
