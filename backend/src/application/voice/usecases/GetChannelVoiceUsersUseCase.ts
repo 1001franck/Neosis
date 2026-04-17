@@ -60,6 +60,8 @@ export class GetChannelVoiceUsersUseCase extends BaseUseCase<GetChannelVoiceUser
           avatar: user.avatarUrl,
           isMuted: connection.isMuted,
           isDeafened: connection.isDeafened,
+          isVideoEnabled: connection.isVideoEnabled,
+          isScreenSharing: connection.isScreenSharing,
           connectedAt: connection.connectedAt
         });
       }

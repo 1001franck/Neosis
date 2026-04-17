@@ -88,6 +88,8 @@ export class JoinVoiceChannelUseCase extends BaseUseCase<JoinVoiceChannelDTO, { 
       data.channelId,
       false, // isMuted = false par défaut
       false, // isDeafened = false par défaut
+      false, // isVideoEnabled = false par défaut
+      false, // isScreenSharing = false par défaut
       new Date()
     );
 

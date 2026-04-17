@@ -32,7 +32,7 @@ import { globalRateLimit, messageRateLimit } from './presentation/http/middlewar
 import { SocketHandler } from './presentation/websocket/socketHandler.js';
 import { VoiceHandler } from './presentation/websocket/handlers/voiceHandler.js';
 import i18next from './shared/i18n/i18n.js';
-import middleware from 'i18next-http-middleware';
+import * as middleware from 'i18next-http-middleware';
 
 const app = express();
 
