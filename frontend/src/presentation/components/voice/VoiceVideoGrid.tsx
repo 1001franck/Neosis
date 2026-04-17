@@ -38,6 +38,7 @@ function VideoFeed({ username, stream, isLocal, label }: VideoFeedProps) {
           playsInline
           muted={isLocal}
           className="w-full h-full object-cover"
+          style={isLocal ? { transform: 'scaleX(-1)' } : undefined}
         />
       ) : (
         // Placeholder si le stream n'est pas encore disponible
