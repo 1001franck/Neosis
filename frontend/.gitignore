@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tauri — binaires compilés (src-tauri/src et config sont commités)
+/src-tauri/target/
