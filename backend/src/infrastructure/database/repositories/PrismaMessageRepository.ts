@@ -32,6 +32,7 @@ export class PrismaMessageRepository implements MessageRepository {
           },
         },
         attachments: true,
+        reactions: { select: { emoji: true, userId: true } },
       },
     });
 
@@ -57,6 +58,7 @@ export class PrismaMessageRepository implements MessageRepository {
           },
         },
         attachments: true,
+        reactions: { select: { emoji: true, userId: true } },
       },
     });
 
@@ -75,6 +77,7 @@ export class PrismaMessageRepository implements MessageRepository {
     const messages = await this.prisma.message.findMany({
       where: {
         channelId,
+        deletedAt: null,
         ...(before && { createdAt: { lt: before } }),
       },
       orderBy: { createdAt: 'desc' },
@@ -122,6 +125,7 @@ export class PrismaMessageRepository implements MessageRepository {
           },
         },
         attachments: true,
+        reactions: { select: { emoji: true, userId: true } },
       },
     });
 
@@ -227,6 +231,7 @@ export class PrismaMessageRepository implements MessageRepository {
           },
         },
         attachments: true,
+        reactions: { select: { emoji: true, userId: true } },
       },
     });
 
@@ -287,6 +292,20 @@ export class PrismaMessageRepository implements MessageRepository {
 
     if (userId && prismaMessage.deletions && prismaMessage.deletions.length > 0) {
       message.deletedForUserId = userId;
+    }
+
+    // Agréger les réactions par emoji
+    if (prismaMessage.reactions && prismaMessage.reactions.length > 0) {
+      const reactionMap = new Map<string, string[]>();
+      for (const r of prismaMessage.reactions as { emoji: string; userId: string }[]) {
+        if (!reactionMap.has(r.emoji)) reactionMap.set(r.emoji, []);
+        reactionMap.get(r.emoji)!.push(r.userId);
+      }
+      message.reactions = Array.from(reactionMap.entries()).map(([emoji, userIds]) => ({
+        emoji,
+        count: userIds.length,
+        userIds,
+      }));
     }
 
     return message;

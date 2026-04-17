@@ -17,6 +17,7 @@ import { MemberRole } from '../../../domain/members/entities/Member.js';
 import { AppError, ErrorCode } from '../../../shared/errors/AppError.js';
 import { uploadToSupabase, deleteFromSupabase } from '../../../infrastructure/storage/supabaseStorage.js';
 import type { IBanRepository } from '../../../domain/bans/repositories/IBanRepository.js';
+import { GetServerBansUseCase } from '../../../application/members/usecases/GetServerBansUseCase.js';
 import type { Server as SocketIOServer } from 'socket.io';
 
 /**
@@ -38,6 +39,7 @@ export class ServerController {
     private kickMemberUseCase: KickMemberUseCase,
     private banMemberUseCase: BanMemberUseCase,
     private banRepository: IBanRepository,
+    private getServerBansUseCase: GetServerBansUseCase,
     private io?: SocketIOServer
   ) {}
 
@@ -47,13 +49,14 @@ export class ServerController {
    */
   createServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, imageUrl } = req.body;
-      const userId = req.userId;
+      const { name, imageUrl, description } = req.body;
+      const userId = req.userId!;
 
       const server = await this.createServerUseCase.execute({
         name,
         ownerId: userId,
-        imageUrl
+        imageUrl,
+        description
       });
 
       res.status(201).json({
@@ -91,7 +94,7 @@ export class ServerController {
    */
   getUserServers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const servers = await this.getUserServersUseCase.execute(userId);
 
@@ -111,7 +114,7 @@ export class ServerController {
   joinServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { inviteCode } = req.body;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const server = await this.joinServerUseCase.execute({
         userId,
@@ -136,7 +139,7 @@ export class ServerController {
     try {
       const id = req.params.id as string;
       const { name, description, imageUrl } = req.body;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const server = await this.updateServerUseCase.execute({
         serverId: id,
@@ -181,7 +184,7 @@ export class ServerController {
 
       // Supprimer l'ancienne image de Supabase si elle existe
       if (server.imageUrl) {
-        await deleteFromSupabase(server.imageUrl).catch(() => {});
+        await deleteFromSupabase(server.imageUrl).catch((e) => console.warn('Échec suppression ancienne image serveur:', e));
       }
 
       // Uploader vers Supabase
@@ -211,7 +214,7 @@ export class ServerController {
   deleteServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id as string;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       await this.deleteServerUseCase.execute({
         serverId: id,
@@ -231,7 +234,7 @@ export class ServerController {
   leaveServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id as string;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       await this.leaveServerUseCase.execute({
         userId,
@@ -276,7 +279,7 @@ export class ServerController {
       const serverId = req.params.id as string;
       const memberId = req.params.memberId as string;
       const { role } = req.body;
-      const requesterId = req.userId;
+      const requesterId = req.userId!;
 
       // Validation du rôle
       if (!Object.values(MemberRole).includes(role)) {
@@ -316,7 +319,7 @@ export class ServerController {
     try {
       const serverId = req.params.id as string;
       const { newOwnerId } = req.body;
-      const currentOwnerId = req.userId;
+      const currentOwnerId = req.userId!;
 
       if (!newOwnerId) {
         return res.status(400).json({
@@ -349,7 +352,7 @@ export class ServerController {
     try {
       const serverId = req.params.id as string;
       const memberId = req.params.memberId as string;
-      const requesterId = req.userId;
+      const requesterId = req.userId!;
 
       const { userId: targetUserId } = await this.kickMemberUseCase.execute({
         requesterId,
@@ -377,7 +380,7 @@ export class ServerController {
     try {
       const serverId = req.params.id as string;
       const memberId = req.params.memberId as string;
-      const requesterId = req.userId;
+      const requesterId = req.userId!;
       const durationRaw = req.body?.durationHours ?? req.query?.durationHours;
       const reason = req.body?.reason as string | undefined;
 
@@ -419,19 +422,14 @@ export class ServerController {
       const serverId = req.params.id as string;
       const userId = req.userId as string;
 
-      // Vérifier que l'utilisateur est membre du serveur
-      const allBans = await this.banRepository.findByServerId(serverId);
-      const now = new Date();
-      const activeBans = allBans
-        .filter(b => b.expiresAt !== null && b.expiresAt > now)
-        .map(b => ({
-          userId: b.userId,
-          isPermanent: false,
-          expiresAt: b.expiresAt!.toISOString(),
-          reason: b.reason,
-        }));
+      // Vérifier que le requester est ADMIN ou OWNER du serveur
+      const members = await this.getServerMembersUseCase.execute({ serverId, userId });
+      const requester = members.find(m => m.userId === userId);
+      if (!requester || !requester.isAdminOrOwner()) {
+        return res.status(403).json({ success: false, error: 'Seuls les admins et le propriétaire peuvent voir les bans' });
+      }
 
-      void userId; // la vérification de membre est implicite (route protégée par auth)
+      const activeBans = await this.getServerBansUseCase.execute(serverId);
 
       return res.status(200).json({ success: true, data: activeBans });
     } catch (error) {
@@ -446,7 +444,7 @@ export class ServerController {
   getMyBanStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const serverId = req.params.id as string;
-      const userId = req.userId;
+      const userId = req.userId!;
 
       const ban = await this.banRepository.findActiveByUserAndServer(userId, serverId);
 

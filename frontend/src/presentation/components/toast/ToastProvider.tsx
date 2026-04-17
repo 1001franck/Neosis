@@ -55,6 +55,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   /**
+   * Supprimer un toast
+   */
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  /**
    * Créer un nouveau toast
    */
   const addToast = useCallback(
@@ -76,15 +83,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
         }, duration);
       }
     },
-    []
+    [removeToast]
   );
-
-  /**
-   * Supprimer un toast
-   */
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
 
   const value: ToastContextValue = {
     toast: {

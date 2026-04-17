@@ -11,6 +11,7 @@ import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { ChatArea, type Message } from '@presentation/components/chat/ChatArea';
 import { useAuth } from '@application/auth/useAuth';
+import { useServers } from '@application/servers/useServers';
 import { useDirectMessages } from '@application/direct/useDirectMessages';
 import { directApi } from '@infrastructure/api/direct.api';
 import type { DirectConversation, DirectMessage } from '@domain/direct/types';
@@ -49,9 +50,14 @@ export default function DirectConversationPage(): React.ReactNode {
     ? conversationIdParam[0]
     : conversationIdParam;
   const { user } = useAuth();
+  const { servers, getServers } = useServers();
   const { messages, isLoading, error, sendMessage } = useDirectMessages(conversationId);
   const [conversation, setConversation] = useState<DirectConversation | null>(null);
   const [conversationError, setConversationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getServers().catch((err) => logger.error('Failed to load servers', err));
+  }, [getServers]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -72,7 +78,7 @@ export default function DirectConversationPage(): React.ReactNode {
 
   return (
     <ProtectedRoute>
-      <MainLayout showDirectMessages>
+      <MainLayout showDirectMessages servers={servers} user={user ? { username: user.username, avatar: user.avatar ?? undefined } : undefined}>
         <div className="flex-1 flex flex-col">
           {conversationError && (
             <div className="p-4 text-sm text-red-500">{conversationError}</div>
@@ -92,6 +98,8 @@ export default function DirectConversationPage(): React.ReactNode {
                 if (!conversationId) return;
                 await sendMessage(content);
               },
+              onTypingStart: () => {},
+              onTypingStop: () => {},
             }}
           />
         </div>

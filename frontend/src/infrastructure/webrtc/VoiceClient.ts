@@ -91,7 +91,7 @@ export class VoiceClient {
           },
           video: false  // Pas de vidéo, juste l'audio
         });
-      } catch (err) {
+      } catch (_err) {
         // Fallback: contraintes simples si le navigateur refuse les avancées
         logger.warn('Retrying microphone access with basic constraints');
         this.localStream = await navigator.mediaDevices.getUserMedia({
@@ -158,7 +158,7 @@ export class VoiceClient {
       try {
         peerConnection.addTransceiver('audio', { direction: 'recvonly' });
         logger.info('Listening-only peer connection created', { userId });
-      } catch (err) {
+      } catch (_err) {
         logger.warn('Failed to add recvonly transceiver', { userId });
       }
     }
@@ -250,8 +250,10 @@ export class VoiceClient {
    * - ice-candidate : Information de connectivité
    */
   private setupSignalingListener(): void {
+     
     socket.on('voice:webrtc_signal', async ({ fromUserId, signal }: {
       fromUserId: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- signal WebRTC opaque, format imposé par la spec WebRTC
       signal: any;
     }) => {
       logger.debug('Received WebRTC signal', { fromUserId, type: signal.type });

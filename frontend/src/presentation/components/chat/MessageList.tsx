@@ -19,7 +19,6 @@ import { MessageAttachments } from './MessageAttachments';
 import { MessageReactions } from './MessageReactions';
 import type { MessageReaction } from '@domain/messages/types';
 import type { Attachment } from '@domain/messages/types';
-import { logger } from '@shared/utils/logger';
 import { formatTimestamp, formatDateSeparator } from '@shared/utils/date';
 import { shouldGroupMessages, shouldShowDateSeparator } from '@domain/messages/utils';
 
@@ -353,10 +352,10 @@ export function MessageList({
                     {message.attachments && message.attachments.length > 0 && (
                       <MessageAttachments attachments={message.attachments} />
                     )}
-                    {message.reactions && message.reactions.length > 0 && currentUserId && (
+                    {currentUserId && ((message.reactions?.length ?? 0) > 0 || hoveredMessageId === message.id) && (
                       <div className="mt-1">
                         <MessageReactions
-                          reactions={message.reactions}
+                          reactions={message.reactions ?? []}
                           currentUserId={currentUserId}
                           onAddReaction={(emoji) => onAddReaction?.(message.id, emoji)}
                           onRemoveReaction={(emoji) => onRemoveReaction?.(message.id, emoji)}
@@ -463,10 +462,10 @@ export function MessageList({
                     </div>
 
                     {/* Reactions */}
-                    {message.reactions && message.reactions.length > 0 && currentUserId && (
+                    {currentUserId && ((message.reactions?.length ?? 0) > 0 || hoveredMessageId === message.id) && (
                       <div className="mt-1">
                         <MessageReactions
-                          reactions={message.reactions}
+                          reactions={message.reactions ?? []}
                           currentUserId={currentUserId}
                           onAddReaction={(emoji) => onAddReaction?.(message.id, emoji)}
                           onRemoveReaction={(emoji) => onRemoveReaction?.(message.id, emoji)}

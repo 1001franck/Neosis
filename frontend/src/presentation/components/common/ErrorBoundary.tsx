@@ -82,7 +82,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             {/* Title */}
             <h2 className="text-xl font-semibold text-white text-center">
-              Oups ! Une erreur s'est produite
+              Oups ! Une erreur s&apos;est produite
             </h2>
 
             {/* Error message */}
@@ -94,7 +94,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             {/* Description */}
             <p className="text-sm text-muted-foreground text-center">
-              L'équipe de développement a été notifiée. Essayez de recharger la page.
+              L&apos;équipe de développement a été notifiée. Essayez de recharger la page.
             </p>
 
             {/* Actions */}

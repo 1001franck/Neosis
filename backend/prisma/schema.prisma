@@ -43,6 +43,7 @@ model User {
   channelReads UserChannelRead[] // Lecture par channel
   voiceConnection VoiceConnection? // Connexion vocale active (max 1)
   messageDeletions MessageDeletion[] // Messages supprimés par cet utilisateur
+  messageReactions MessageReaction[] // Réactions aux messages
   friendshipsOne Friendship[] @relation("FriendshipUserOne")
   friendshipsTwo Friendship[] @relation("FriendshipUserTwo")
   friendshipsRequested Friendship[] @relation("FriendshipRequester")
@@ -88,7 +89,7 @@ model Member {
 model Channel {
   id          String      @id @default(uuid())
   name        String
-  topic       String?  @db.VarChar(1024) // Topic/description du channel
+  topic       String?     @db.VarChar(1024) // Topic/description du channel
   type        ChannelType @default(TEXT)
   position    Int         @default(0) // Position dans la liste (pour tri)
 
@@ -104,7 +105,7 @@ model Channel {
 model Message {
   id        String   @id @default(uuid())
   content   String   @db.Text
-
+  
   memberId  String
   member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   
@@ -113,6 +114,7 @@ model Message {
   
   attachments Attachment[]
   deletions  MessageDeletion[]
+  reactions  MessageReaction[]
   
   // Statuts globaux (Niveau 3)
   deliveredAt DateTime? 
@@ -121,6 +123,18 @@ model Message {
   deletedAt DateTime? // Pour le Soft Delete
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
 }
 
 model MessageDeletion {

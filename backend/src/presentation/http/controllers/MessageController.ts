@@ -3,7 +3,6 @@ import {
   CreateMessageUseCase,
   GetMessageByIdUseCase,
   GetChannelMessagesUseCase,
-  GetRecentMessagesUseCase,
   UpdateMessageUseCase,
   DeleteMessageUseCase
 } from '../../../application/messages/usecases/messageUseCase.js';
@@ -17,7 +16,6 @@ export class MessageController {
     private createMessageUseCase: CreateMessageUseCase,
     private getMessageByIdUseCase: GetMessageByIdUseCase,
     private getChannelMessagesUseCase: GetChannelMessagesUseCase,
-    private getRecentMessagesUseCase: GetRecentMessagesUseCase,
     private updateMessageUseCase: UpdateMessageUseCase,
     private deleteMessageUseCase: DeleteMessageUseCase
   ) {}
@@ -77,11 +75,20 @@ export class MessageController {
       const userId = req.userId as string;
       const { limit, before } = req.query;
 
+      // Valider que "before" est une date ISO valide avant de la parser
+      let beforeDate: Date | undefined;
+      if (before) {
+        beforeDate = new Date(before as string);
+        if (isNaN(beforeDate.getTime())) {
+          return res.status(400).json({ success: false, error: 'Paramètre "before" invalide, format ISO 8601 attendu' });
+        }
+      }
+
       const messages = await this.getChannelMessagesUseCase.execute({
         channelId,
         userId,
         limit: limit ? parseInt(limit as string) : undefined,
-        before: before ? new Date(before as string) : undefined
+        before: beforeDate
       });
 
       res.status(200).json({
@@ -103,19 +110,14 @@ export class MessageController {
       const { content } = req.body;
       const userId = req.userId as string;
 
-      // channelId peut venir de la route nested ou être résolu via le message
-      let channelId = req.params.channelId as string;
-
-      if (!channelId) {
-        const existingMessage = await this.getMessageByIdUseCase.execute({ messageId: id, userId });
-        channelId = existingMessage.channelId;
-      }
+      // channelId est optionnel — le use case le résout lui-même via findById si absent
+      const channelId = req.params.channelId as string | undefined;
 
       const message = await this.updateMessageUseCase.execute({
         messageId: id,
         userId,
-        channelId,
-        content
+        content,
+        ...(channelId !== undefined && { channelId }),
       });
 
       res.status(200).json({

@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // Désactivation des règles du plugin React Compiler (expérimental, non utilisé dans ce projet)
+    rules: {
+      'react-hooks/react-hooks': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
+      'react-compiler/react-compiler': 'off',
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { TOAST_COLORS } from '@shared/constants/colors';
 
@@ -27,6 +27,13 @@ export function Toast({ type, message, onClose, duration = 5000, action }: Toast
   const [isExiting, setIsExiting] = useState(false);
   const [progress, setProgress] = useState(100);
 
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  }, [onClose]);
+
   // Auto-close avec barre de progression
   useEffect(() => {
     if (duration === 0) return;
@@ -46,14 +53,7 @@ export function Toast({ type, message, onClose, duration = 5000, action }: Toast
       clearInterval(interval);
       clearTimeout(timer);
     };
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  };
+  }, [duration, handleClose]);
 
   const styles = {
     success: `bg-green-500 border-[${TOAST_COLORS.SUCCESS_BORDER}] text-white`,

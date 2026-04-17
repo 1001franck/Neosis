@@ -11,7 +11,6 @@
 import { useCallback } from 'react';
 import { useMemberStore } from './memberStore';
 import { memberService } from './memberService';
-import type { Member } from '@domain/members/types';
 import type { UpdateMemberRequest } from '@domain/members/types';
 import { logger } from '@shared/utils/logger';
 

@@ -72,14 +72,7 @@ export class BanMemberUseCase extends BaseUseCase<BanMemberDTO, { userId: string
       throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Cannot ban the server owner', 403);
     }
 
-    // 6. Protection supplémentaire : impossible de bannir un admin
-    // (Cette vérification est redondante car seul OWNER peut arriver ici,
-    // mais on la garde pour la clarté et la sécurité défensive)
-    if (target.isAdmin()) {
-      throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Cannot ban an admin', 403);
-    }
-
-    // 7. Calculer la date d'expiration
+    // 6. Calculer la date d'expiration
     let expiresAt: Date | null = null;
     if (data.durationHours !== undefined && data.durationHours !== null && data.durationHours > 0) {
       expiresAt = new Date(Date.now() + data.durationHours * 60 * 60 * 1000);

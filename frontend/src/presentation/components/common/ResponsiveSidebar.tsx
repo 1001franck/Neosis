@@ -65,8 +65,6 @@ export const ResponsiveSidebar = React.memo(function ResponsiveSidebar({
   const borderClass = position === 'left' ? 'border-r' : 'border-l';
 
   // Paramètres de drag selon la position
-  const dragDirection = position === 'left' ? 'x' : 'x';
-  const dragConstraints = position === 'left' ? { left: -300, right: 0 } : { left: 0, right: 300 };
 
   // Classes de positionnement
   const positionClasses = position === 'left'

@@ -13,7 +13,6 @@
 'use client';
 
 import { memo, useState, useMemo, useCallback, useEffect } from 'react';
-import type { Message } from '@domain/messages/types';
 import type { Message as MessageListMessage } from './MessageList';
 import { formatTimestamp } from '@shared/utils/date';
 import { logger } from '@shared/utils/logger';
@@ -40,7 +39,7 @@ interface SearchFilters {
 const ChannelSearchModalComponent = ({
   isOpen,
   onClose,
-  channelId,
+  channelId: _channelId,
   channelName,
   messages,
   onMessageClick,

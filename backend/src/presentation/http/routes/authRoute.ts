@@ -18,8 +18,8 @@ export function createAuthRoutes(authController: AuthController): Router {
   router.post('/signup', authRateLimit, validate(RegisterDTO), authController.signup.bind(authController));
   router.post('/login', authRateLimit, validate(LoginDTO), authController.login.bind(authController));
 
-  // Routes protégées
-  router.post('/logout', authMiddleware, authController.logout.bind(authController));
+  // Logout sans authMiddleware — doit fonctionner même avec un token expiré
+  router.post('/logout', authController.logout.bind(authController));
   router.get('/me', authMiddleware, authController.getCurrentUser.bind(authController));
   router.put('/me', authMiddleware, validate(UpdateProfileDTO), authController.updateProfile.bind(authController));
   router.post('/me/avatar', authMiddleware, upload.single('avatar'), authController.uploadAvatar.bind(authController));

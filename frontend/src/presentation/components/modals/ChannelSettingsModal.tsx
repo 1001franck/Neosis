@@ -99,7 +99,7 @@ export function ChannelSettingsModal({
           <div>
             <h2 className="text-xl font-bold text-foreground">Paramètres du channel</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Personnalisez l'apparence et le contenu de #{channel.name}
+              Personnalisez l&apos;apparence et le contenu de #{channel.name}
             </p>
           </div>
           <button
@@ -199,7 +199,7 @@ export function ChannelSettingsModal({
                   <div className="flex-1">
                     <p className="text-sm font-medium text-blue-400 mb-1">Channel par défaut</p>
                     <p className="text-sm text-blue-300/80">
-                      Le channel "general" est le channel par défaut de votre serveur. Il ne peut pas être supprimé, mais vous pouvez le renommer.
+                      Le channel &quot;general&quot; est le channel par défaut de votre serveur. Il ne peut pas être supprimé, mais vous pouvez le renommer.
                     </p>
                   </div>
                 </div>

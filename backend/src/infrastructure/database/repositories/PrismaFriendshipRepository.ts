@@ -47,6 +47,10 @@ export class PrismaFriendshipRepository implements FriendshipRepository {
     return this.toDomain(updated);
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.friendship.delete({ where: { id } });
+  }
+
   async listForUser(userId: string): Promise<Friendship[]> {
     const rows = await this.prisma.friendship.findMany({
       where: {

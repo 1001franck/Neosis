@@ -127,6 +127,8 @@ export class Member {
       userId: this.userId,
       serverId: this.serverId,
       role: this.role,
+      // Tout membre existant en base est actif (kick/ban = suppression du record)
+      status: 'active' as const,
       joinedAt: this.joinedAt,
       ...(this.user && { user: this.user }),
     };

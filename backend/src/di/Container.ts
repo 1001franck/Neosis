@@ -9,7 +9,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaUserRepository } from '../infrastructure/database/repositories/PrismaUserRepository.js';
 import { PrismaServerRepository } from '../infrastructure/database/repositories/prismaServerRepository.js';
 import { PrismaChannelRepository } from '../infrastructure/database/repositories/prismaChannelRepository.js';
-import { PrismaMessageRepository } from '../infrastructure/database/repositories/prismaMessageRepository.js';
+import { PrismaMessageRepository } from '../infrastructure/database/repositories/PrismaMessageRepository.js';
 import { PrismaMemberRepository } from '../infrastructure/database/repositories/PrismaMemberRepository.js';
 import { PrismaBanRepository } from '../infrastructure/database/repositories/PrismaBanRepository.js';
 import { PrismaReadReceiptRepository } from '../infrastructure/database/repositories/prismaReadReceiptRepository.js';
@@ -17,6 +17,8 @@ import { PrismaVoiceConnectionRepository } from '../infrastructure/database/repo
 import { PrismaFriendshipRepository } from '../infrastructure/database/repositories/PrismaFriendshipRepository.js';
 import { PrismaDirectConversationRepository } from '../infrastructure/database/repositories/PrismaDirectConversationRepository.js';
 import { PrismaDirectMessageRepository } from '../infrastructure/database/repositories/PrismaDirectMessageRepository.js';
+import { PrismaMessageReactionRepository } from '../infrastructure/database/repositories/PrismaMessageReactionRepository.js';
+import { AddReactionUseCase, RemoveReactionUseCase } from '../application/messages/usecases/ReactionUseCases.js';
 import { RegisterUserUseCase } from '../application/auth/usecases/RegisterUserUseCase.js';
 import { LoginUserUseCase } from '../application/auth/usecases/LoginUserUseCase.js';
 import { CreateServerUseCase } from '../application/servers/usecases/createServerUserCase.js';
@@ -33,6 +35,7 @@ import { GetServerMembersUseCase } from '../application/members/usecases/GetServ
 import { UpdateMemberRoleUseCase } from '../application/members/usecases/UpdateMemberRoleUseCase.js';
 import { KickMemberUseCase } from '../application/members/usecases/KickMemberUseCase.js';
 import { BanMemberUseCase } from '../application/members/usecases/BanMemberUseCase.js';
+import { GetServerBansUseCase } from '../application/members/usecases/GetServerBansUseCase.js';
 import {
   CreateChannelUseCase,
   GetChannelByIdUseCase,
@@ -56,6 +59,9 @@ import { GetChannelVoiceUsersUseCase } from '../application/voice/usecases/GetCh
 import {
   RequestFriendUseCase,
   AcceptFriendUseCase,
+  DeclineFriendUseCase,
+  CancelFriendRequestUseCase,
+  RemoveFriendUseCase,
   ListFriendsUseCase,
   ListFriendRequestsUseCase,
 } from '../application/direct/usecases/friendUseCases.js';
@@ -85,6 +91,7 @@ export class Container {
   private _friendshipRepository?: PrismaFriendshipRepository;
   private _directConversationRepository?: PrismaDirectConversationRepository;
   private _directMessageRepository?: PrismaDirectMessageRepository;
+  private _messageReactionRepository?: PrismaMessageReactionRepository;
 
   private constructor() {
     const databaseUrl = process.env.DATABASE_URL;
@@ -312,6 +319,12 @@ export class Container {
     return new BanMemberUseCase(memberRepository, banRepository);
   }
 
+  getServerBansUseCase() {
+    const banRepository = this.createBanRepository();
+    const userRepository = this.createUserRepository();
+    return new GetServerBansUseCase(banRepository, userRepository);
+  }
+
   // ============ CHANNEL USE CASES ============
 
   /**
@@ -479,6 +492,21 @@ export class Container {
     return new AcceptFriendUseCase(friendshipRepository);
   }
 
+  createDeclineFriendUseCase() {
+    const friendshipRepository = this.createFriendshipRepository();
+    return new DeclineFriendUseCase(friendshipRepository);
+  }
+
+  createCancelFriendRequestUseCase() {
+    const friendshipRepository = this.createFriendshipRepository();
+    return new CancelFriendRequestUseCase(friendshipRepository);
+  }
+
+  createRemoveFriendUseCase() {
+    const friendshipRepository = this.createFriendshipRepository();
+    return new RemoveFriendUseCase(friendshipRepository);
+  }
+
   createListFriendsUseCase() {
     const friendshipRepository = this.createFriendshipRepository();
     return new ListFriendsUseCase(friendshipRepository);
@@ -515,6 +543,33 @@ export class Container {
     const messageRepository = this.createDirectMessageRepository();
     const conversationRepository = this.createDirectConversationRepository();
     return new GetDirectMessagesUseCase(messageRepository, conversationRepository);
+  }
+
+  // ============ REACTION REPOSITORIES & USE CASES ============
+
+  createMessageReactionRepository() {
+    if (!this._messageReactionRepository) {
+      this._messageReactionRepository = new PrismaMessageReactionRepository(this.prisma);
+    }
+    return this._messageReactionRepository;
+  }
+
+  addReactionUseCase() {
+    return new AddReactionUseCase(
+      this.createMessageReactionRepository(),
+      this.createMessageRepository(),
+      this.createMemberRepository(),
+      this.createChannelRepository()
+    );
+  }
+
+  removeReactionUseCase() {
+    return new RemoveReactionUseCase(
+      this.createMessageReactionRepository(),
+      this.createMessageRepository(),
+      this.createMemberRepository(),
+      this.createChannelRepository()
+    );
   }
 
   /**

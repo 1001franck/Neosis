@@ -8,6 +8,15 @@ export interface MessageAuthor {
 }
 
 /**
+ * Réaction agrégée sur un message
+ */
+export interface MessageReactionData {
+  emoji: string;
+  count: number;
+  userIds: string[];
+}
+
+/**
  * Pièce jointe d'un message
  */
 export interface MessageAttachment {
@@ -29,6 +38,9 @@ export class Message {
   /** Pièces jointes (peuplées par le repository) */
   public attachments: MessageAttachment[] = [];
 
+  /** Réactions agrégées (peuplées par le repository) */
+  public reactions: MessageReactionData[] = [];
+
   /** Message supprimé uniquement pour un user (Delete for me) */
   public deletedForUserId?: string | null;
 
@@ -47,7 +59,8 @@ export class Message {
   }
 
   /**
-   * Supprime les balises HTML du contenu pour prévenir les attaques XSS
+   * Supprime les balises HTML pour prévenir les attaques XSS
+   * On supprime les balises entières (ex: <b>texte</b> → texte, <img src="x" onerror="..."> → "")
    */
   static sanitize(content: string): string {
     return content.replace(/<[^>]*>/g, '');
@@ -115,8 +128,8 @@ export class Message {
       id: this.id,
       content: this.content,
       memberId: this.memberId,
-      // authorId = user.id (pas memberId) pour que le frontend puisse identifier l'auteur
-      authorId: this.author?.id ?? null,
+      // authorId = user.id, avec fallback sur memberId si l'auteur n'est pas peuplé
+      authorId: this.author?.id ?? this.memberId,
       channelId: this.channelId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
@@ -127,6 +140,7 @@ export class Message {
       isDeletedForUser: !!this.deletedForUserId,
       deletedForUserId: this.deletedForUserId ?? null,
       attachments: this.attachments,
+      reactions: this.reactions,
       ...(this.author && {
         author: {
           id: this.author.id,

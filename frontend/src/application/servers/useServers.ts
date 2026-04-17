@@ -12,7 +12,7 @@ import { useCallback } from 'react';
 import { useServerStore } from './serverStore';
 import type { ServerStoreState } from './serverStore';
 import { serverService } from './serverService';
-import type { Server, ServerWithMembers, CreateServerRequest, UpdateServerRequest } from '@domain/servers/types';
+import type { Server, CreateServerRequest, UpdateServerRequest } from '@domain/servers/types';
 import { logger } from '@shared/utils/logger';
 
 /**
@@ -34,7 +34,6 @@ export function useServers() {
   const setCurrentServer = useServerStore((state: ServerStoreState) => state.setCurrentServer);
   const setLoading = useServerStore((state: ServerStoreState) => state.setLoading);
   const setError = useServerStore((state: ServerStoreState) => state.setError);
-  const reset = useServerStore((state: ServerStoreState) => state.reset);
 
   /**
    * Récupérer la liste de tous les serveurs

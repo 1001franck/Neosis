@@ -156,7 +156,7 @@ export class AuthController {
 
       // Supprimer l'ancien avatar de Supabase s'il existe
       if (user.avatarUrl) {
-        await deleteFromSupabase(user.avatarUrl).catch(() => {});
+        await deleteFromSupabase(user.avatarUrl).catch((e) => console.warn('Échec suppression ancien avatar:', e));
       }
 
       user.avatarUrl = await uploadToSupabase(file.buffer, file.originalname, file.mimetype, 'avatars');
@@ -194,7 +194,7 @@ export class AuthController {
 
       // Supprimer l'ancienne bannière de Supabase si elle existe
       if (user.bannerUrl) {
-        await deleteFromSupabase(user.bannerUrl).catch(() => {});
+        await deleteFromSupabase(user.bannerUrl).catch((e) => console.warn('Échec suppression ancienne bannière:', e));
       }
 
       user.bannerUrl = await uploadToSupabase(file.buffer, file.originalname, file.mimetype, 'banners');

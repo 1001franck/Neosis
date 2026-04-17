@@ -22,6 +22,7 @@ import { normalizeMessage } from '@domain/messages/normalizeMessage';
 import { MessageStatus } from '@domain/messages/types';
 import type { DirectMessage } from '@domain/direct/types';
 import type { VoiceUser } from '@domain/voice/types';
+import type { Member } from '@domain/members/types';
 import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
 import { toastBus } from '@shared/utils/toastBus';
@@ -29,7 +30,7 @@ import { toastBus } from '@shared/utils/toastBus';
 function messageMentionsUser(content: string, username: string): boolean {
   const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const mentionRegex = new RegExp(`(^|\\s)@${escaped}(\\b|$)`, 'i');
-  const everyoneRegex = /(^|\\s)@(everyone|all)(\\b|$)/i;
+  const everyoneRegex = /(^|\s)@(everyone|all)(\b|$)/i;
   return mentionRegex.test(content) || everyoneRegex.test(content);
 }
 
@@ -44,6 +45,7 @@ export function setupListeners() {
    * Nouveau message recu
    * Backend emet: message:new
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- données brutes socket, normalisées immédiatement
   socket.on('message:new', (rawMessage: any) => {
     const message = normalizeMessage(rawMessage);
     logger.info('Message new event received', { messageId: message.id });
@@ -88,6 +90,7 @@ export function setupListeners() {
    * Message modifie
    * Backend emet: message:updated
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- données brutes socket, normalisées immédiatement
   socket.on('message:updated', (rawMessage: any) => {
     const message = normalizeMessage(rawMessage);
     logger.info('Message updated event received', { messageId: message.id });
@@ -216,11 +219,29 @@ export function setupListeners() {
     }
   });
 
+  // === REACTION EVENTS ===
+
+  /**
+   * Réactions mises à jour sur un message
+   * Backend émet : reaction:updated { messageId, reactions }
+   */
+  socket.on('reaction:updated', ({ messageId, reactions }: { messageId: string; reactions: { emoji: string; count: number; userIds: string[] }[] }) => {
+    const store = useMessageStore.getState();
+    const message = store.messages.find((m) => m.id === messageId);
+    if (message) {
+      store.updateMessage(messageId, { ...message, reactions });
+    }
+  });
+
   // === ERROR EVENTS ===
 
-  socket.on('message:error', ({ message }: { message: string }) => {
-    logger.error('Socket message error', { message });
-    useMessageStore.getState().setError(message);
+  socket.on('message:error', ({ message, clientTempId }: { message: string; clientTempId?: string | null }) => {
+    logger.error('Socket message error', { message, clientTempId });
+    // Supprimer le message optimiste orphelin si le clientTempId est fourni
+    if (clientTempId) {
+      useMessageStore.getState().removeMessage(clientTempId);
+    }
+    toastBus.emit({ type: 'error', message });
   });
 
   // === BAN / KICK EVENTS ===
@@ -289,7 +310,7 @@ export function setupListeners() {
   }) => {
     logger.info('User joined voice channel', { userId, username, channelId });
 
-    const member = useMemberStore.getState().members.find((m) => m.userId === userId);
+    const member = useMemberStore.getState().members.find((m: Member) => m.userId === userId);
     const voiceUser: VoiceUser = {
       userId,
       username,
@@ -359,6 +380,7 @@ export function setupListeners() {
 export function cleanupListeners() {
   socket.off('message:new');
   socket.off('message:updated');
+  socket.off('reaction:updated');
   socket.off('message:deleted');
   socket.off('typing:user_started');
   socket.off('typing:user_stopped');

@@ -35,6 +35,11 @@ import i18next from './shared/i18n/i18n.js';
 import middleware from 'i18next-http-middleware';
 
 const app = express();
+
+// Nécessaire pour que les middlewares (rate limiter, logs) lisent la vraie IP
+// derrière un reverse proxy (Nginx, Railway, Render, etc.)
+app.set('trust proxy', 1);
+
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -44,9 +49,6 @@ const container = Container.getInstance();
 
 // Repositories
 const userRepository = container.createUserRepository();
-const serverRepository = container.createServerRepository();
-const channelRepository = container.createChannelRepository();
-const messageRepository = container.createMessageRepository();
 const banRepository = container.createBanRepository();
 
 // Auth Use Cases
@@ -68,6 +70,7 @@ const getServerMembersUseCase = container.getServerMembersUseCase();
 const updateMemberRoleUseCase = container.updateMemberRoleUseCase();
 const kickMemberUseCase = container.kickMemberUseCase();
 const banMemberUseCase = container.banMemberUseCase();
+const getServerBansUseCase = container.getServerBansUseCase();
 
 // Channel Use Cases
 const createChannelUseCase = container.createChannelUseCase();
@@ -80,7 +83,6 @@ const deleteChannelUseCase = container.deleteChannelUseCase();
 const createMessageUseCase = container.createMessageUseCase();
 const getMessageByIdUseCase = container.getMessageByIdUseCase();
 const getChannelMessagesUseCase = container.getChannelMessagesUseCase();
-const getRecentMessagesUseCase = container.getRecentMessagesUseCase();
 const updateMessageUseCase = container.updateMessageUseCase();
 const deleteMessageUseCase = container.deleteMessageUseCase();
 const markChannelAsReadUseCase = container.markChannelAsReadUseCase();
@@ -94,6 +96,9 @@ const getChannelVoiceUsersUseCase = container.createGetChannelVoiceUsersUseCase(
 // Friend / Direct Use Cases
 const requestFriendUseCase = container.createRequestFriendUseCase();
 const acceptFriendUseCase = container.createAcceptFriendUseCase();
+const declineFriendUseCase = container.createDeclineFriendUseCase();
+const cancelFriendRequestUseCase = container.createCancelFriendRequestUseCase();
+const removeFriendUseCase = container.createRemoveFriendUseCase();
 const listFriendsUseCase = container.createListFriendsUseCase();
 const listFriendRequestsUseCase = container.createListFriendRequestsUseCase();
 const createDirectConversationUseCase = container.createDirectConversationUseCase();
@@ -115,7 +120,6 @@ const messageController = new MessageController(
   createMessageUseCase,
   getMessageByIdUseCase,
   getChannelMessagesUseCase,
-  getRecentMessagesUseCase,
   updateMessageUseCase,
   deleteMessageUseCase
 );
@@ -128,6 +132,9 @@ const voiceController = new VoiceController(getChannelVoiceUsersUseCase);
 const friendController = new FriendController(
   requestFriendUseCase,
   acceptFriendUseCase,
+  declineFriendUseCase,
+  cancelFriendRequestUseCase,
+  removeFriendUseCase,
   listFriendsUseCase,
   listFriendRequestsUseCase,
   userRepository
@@ -145,7 +152,9 @@ const socketHandler = new SocketHandler(
   updateMessageUseCase,
   deleteMessageUseCase,
   markChannelAsReadUseCase,
-  userRepository
+  userRepository,
+  container.addReactionUseCase(),
+  container.removeReactionUseCase()
 );
 
 // Voice Handler (WebRTC signaling)
@@ -172,6 +181,7 @@ const serverController = new ServerController(
   kickMemberUseCase,
   banMemberUseCase,
   banRepository,
+  getServerBansUseCase,
   socketHandler.getIO()
 );
 
@@ -179,14 +189,17 @@ const serverController = new ServerController(
 const directMessageController = new DirectMessageController(
   sendDirectMessageUseCase,
   getDirectMessagesUseCase,
-  userRepository,
   getDirectConversationUseCase,
   socketHandler.getIO()
 );
 
 // Enregistrer les handlers voice pour chaque connexion
 socketHandler.getIO().on('connection', (socket) => {
-  voiceHandler.register(socket);
+  try {
+    voiceHandler.register(socket);
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement du handler voice:', error);
+  }
 });
 
 // ============ MIDDLEWARES ============
@@ -234,8 +247,8 @@ app.use('/channels/:channelId/messages', authMiddleware, messageRateLimit, creat
 app.use('/upload', authMiddleware, createUploadRoutes(uploadController));
 app.use('/channels/:channelId/media', authMiddleware, createChannelMediaRoutes(uploadController));
 
-// Voice routes
-app.use('/voice', createVoiceRouter(voiceController));
+// Voice routes (protégées par authMiddleware)
+app.use('/voice', authMiddleware, createVoiceRouter(voiceController));
 
 // Friend / Direct routes
 app.use('/friends', authMiddleware, createFriendRoutes(friendController));

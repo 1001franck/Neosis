@@ -3,11 +3,13 @@ import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
 import { Logger } from '../../shared/utils/logger.js';
 import { JWT_SECRET } from '../../shared/config/env.js';
+import { AppError } from '../../shared/errors/AppError.js';
 import {
   CreateMessageUseCase,
   UpdateMessageUseCase,
   DeleteMessageUseCase
 } from '../../application/messages/usecases/messageUseCase.js';
+import { AddReactionUseCase, RemoveReactionUseCase } from '../../application/messages/usecases/ReactionUseCases.js';
 import { MarkChannelAsReadUseCase } from '../../application/messages/usecases/markChannelAsReadUseCase.js';
 import type { IUserRepository } from '../../domain/users/repositories/UserRepository.js';
 
@@ -41,7 +43,9 @@ export class SocketHandler {
     private updateMessageUseCase: UpdateMessageUseCase,
     private deleteMessageUseCase: DeleteMessageUseCase,
     private markChannelAsReadUseCase: MarkChannelAsReadUseCase,
-    private userRepository: IUserRepository
+    private userRepository: IUserRepository,
+    private addReactionUseCase: AddReactionUseCase,
+    private removeReactionUseCase: RemoveReactionUseCase
   ) {
     this.logger = new Logger('SocketHandler');
 
@@ -117,6 +121,8 @@ export class SocketHandler {
       this.handleTypingStop(socket);
       this.handleMarkRead(socket);
       this.handleProfileUpdate(socket);
+      this.handleAddReaction(socket);
+      this.handleRemoveReaction(socket);
       this.handleDisconnect(socket);
     });
   }
@@ -126,9 +132,13 @@ export class SocketHandler {
    */
   private handleJoinServer(socket: Socket): void {
     socket.on('server:join', (serverId: string) => {
-      socket.join(`server:${serverId}`);
-      this.logger.info(`User ${socket.data.userId} joined server room ${serverId}`);
-      this.emitOnlineUsers(serverId);
+      try {
+        socket.join(`server:${serverId}`);
+        this.logger.info(`User ${socket.data.userId} joined server room ${serverId}`);
+        this.emitOnlineUsers(serverId);
+      } catch (error) {
+        this.logger.error('Erreur lors du join serveur:', error);
+      }
     });
   }
 
@@ -137,9 +147,13 @@ export class SocketHandler {
    */
   private handleLeaveServer(socket: Socket): void {
     socket.on('server:leave', (serverId: string) => {
-      socket.leave(`server:${serverId}`);
-      this.logger.info(`User ${socket.data.userId} left server room ${serverId}`);
-      this.emitOnlineUsers(serverId);
+      try {
+        socket.leave(`server:${serverId}`);
+        this.logger.info(`User ${socket.data.userId} left server room ${serverId}`);
+        this.emitOnlineUsers(serverId);
+      } catch (error) {
+        this.logger.error('Erreur lors du leave serveur:', error);
+      }
     });
   }
 
@@ -212,7 +226,8 @@ export class SocketHandler {
         this.logger.info(`Message sent in channel ${data.channelId}`);
       } catch (error) {
         this.logger.error('Error sending message:', error);
-        socket.emit('message:error', { message: 'Failed to send message' });
+        const msg = error instanceof AppError ? error.message : 'Échec de l\'envoi du message';
+        socket.emit('message:error', { message: msg, clientTempId: data.clientTempId ?? null });
       }
     });
   }
@@ -239,7 +254,8 @@ export class SocketHandler {
         this.logger.info(`Message ${data.messageId} updated`);
       } catch (error) {
         this.logger.error('Error updating message:', error);
-        socket.emit('message:error', { message: 'Failed to update message' });
+        const msg = error instanceof AppError ? error.message : 'Échec de la modification du message';
+        socket.emit('message:error', { message: msg });
       }
     });
   }
@@ -279,7 +295,46 @@ export class SocketHandler {
         this.logger.info(`Message ${data.messageId} deleted`);
       } catch (error) {
         this.logger.error('Error deleting message:', error);
-        socket.emit('message:error', { message: 'Failed to delete message' });
+        const msg = error instanceof AppError ? error.message : 'Échec de la suppression du message';
+        socket.emit('message:error', { message: msg });
+      }
+    });
+  }
+
+  /**
+   * Gère l'ajout d'une réaction à un message
+   * Client → Serveur : reaction:add { messageId, channelId, emoji }
+   * Serveur → Channel : reaction:updated { messageId, reactions }
+   */
+  private handleAddReaction(socket: Socket): void {
+    socket.on('reaction:add', async (data: { messageId: string; channelId: string; emoji: string }) => {
+      try {
+        const { userId } = socket.data as SocketData;
+        const reactions = await this.addReactionUseCase.execute({ messageId: data.messageId, userId, emoji: data.emoji });
+        this.io.to(`channel:${data.channelId}`).emit('reaction:updated', { messageId: data.messageId, reactions });
+      } catch (error) {
+        this.logger.error('Error adding reaction:', error);
+        const msg = error instanceof AppError ? error.message : 'Échec de l\'ajout de la réaction';
+        socket.emit('message:error', { message: msg });
+      }
+    });
+  }
+
+  /**
+   * Gère la suppression d'une réaction d'un message
+   * Client → Serveur : reaction:remove { messageId, channelId, emoji }
+   * Serveur → Channel : reaction:updated { messageId, reactions }
+   */
+  private handleRemoveReaction(socket: Socket): void {
+    socket.on('reaction:remove', async (data: { messageId: string; channelId: string; emoji: string }) => {
+      try {
+        const { userId } = socket.data as SocketData;
+        const reactions = await this.removeReactionUseCase.execute({ messageId: data.messageId, userId, emoji: data.emoji });
+        this.io.to(`channel:${data.channelId}`).emit('reaction:updated', { messageId: data.messageId, reactions });
+      } catch (error) {
+        this.logger.error('Error removing reaction:', error);
+        const msg = error instanceof AppError ? error.message : 'Échec de la suppression de la réaction';
+        socket.emit('message:error', { message: msg });
       }
     });
   }

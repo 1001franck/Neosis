@@ -7,7 +7,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import Link from 'next/link';
+
 import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 import { Avatar } from '../common/Avatar';

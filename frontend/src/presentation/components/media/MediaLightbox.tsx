@@ -64,7 +64,6 @@ const MediaLightboxComponent = ({
     handleZoomOut,
     handleResetZoom,
     handleMouseDown,
-    handleWheel
   } = useMediaZoom();
 
   // Keyboard navigation

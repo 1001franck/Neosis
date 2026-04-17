@@ -12,6 +12,18 @@ export const AcceptFriendDTO = z.object({
 
 export type AcceptFriendInput = z.infer<typeof AcceptFriendDTO>;
 
+export const DeclineFriendDTO = z.object({
+  friendshipId: z.string().uuid('friendshipId invalide')
+});
+
+export type DeclineFriendInput = z.infer<typeof DeclineFriendDTO>;
+
+export const CancelFriendRequestDTO = z.object({
+  friendshipId: z.string().uuid('friendshipId invalide')
+});
+
+export type CancelFriendRequestInput = z.infer<typeof CancelFriendRequestDTO>;
+
 export const CreateDirectConversationDTO = z.object({
   otherUserId: z.string().uuid('otherUserId invalide')
 });

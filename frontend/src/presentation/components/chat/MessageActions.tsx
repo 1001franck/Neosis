@@ -21,7 +21,7 @@ interface MessageActionsProps {
 }
 
 export function MessageActions({
-  onReact,
+  onReact: _onReact,
   onEdit,
   onDelete,
   isOwnMessage,

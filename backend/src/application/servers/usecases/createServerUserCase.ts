@@ -14,6 +14,7 @@ export interface CreateServerDTO {
   name: string;
   ownerId: string;
   imageUrl?: string;
+  description?: string;
 }
 
 /**
@@ -66,7 +67,8 @@ export class CreateServerUseCase extends BaseUseCase<CreateServerDTO, Server> {
       data.ownerId,
       inviteCode,
       data.imageUrl || null,
-      new Date()
+      new Date(),
+      data.description || null
     );
 
     // Persiste le serveur
@@ -94,7 +96,9 @@ export class CreateServerUseCase extends BaseUseCase<CreateServerDTO, Server> {
       await this.channelRepository.create(generalChannel);
     } catch (error) {
       // Rollback : supprimer le serveur (cascade supprime members + channels)
-      await this.serverRepository.delete(createdServer.id).catch(() => {});
+      await this.serverRepository.delete(createdServer.id).catch((rollbackError) => {
+        console.error(`Échec du rollback pour le serveur ${createdServer.id}:`, rollbackError);
+      });
       throw error;
     }
 

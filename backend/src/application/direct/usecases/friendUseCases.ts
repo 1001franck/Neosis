@@ -66,6 +66,63 @@ export class AcceptFriendUseCase {
   }
 }
 
+export class DeclineFriendUseCase {
+  constructor(private friendshipRepository: FriendshipRepository) {}
+
+  async execute(userId: string, friendshipId: string): Promise<void> {
+    const friendship = await this.friendshipRepository.findById(friendshipId);
+    if (!friendship) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Demande introuvable', 404);
+    }
+    if (friendship.status !== 'PENDING') {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'La demande n\'est plus en attente', 400);
+    }
+    if (friendship.requesterId === userId) {
+      throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Utilisez l\'annulation pour retirer votre propre demande', 403);
+    }
+    if (friendship.userOneId !== userId && friendship.userTwoId !== userId) {
+      throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Accès interdit', 403);
+    }
+    await this.friendshipRepository.delete(friendshipId);
+  }
+}
+
+export class CancelFriendRequestUseCase {
+  constructor(private friendshipRepository: FriendshipRepository) {}
+
+  async execute(userId: string, friendshipId: string): Promise<void> {
+    const friendship = await this.friendshipRepository.findById(friendshipId);
+    if (!friendship) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Demande introuvable', 404);
+    }
+    if (friendship.status !== 'PENDING') {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'La demande n\'est plus en attente', 400);
+    }
+    if (friendship.requesterId !== userId) {
+      throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Seul l\'expéditeur peut annuler la demande', 403);
+    }
+    await this.friendshipRepository.delete(friendshipId);
+  }
+}
+
+export class RemoveFriendUseCase {
+  constructor(private friendshipRepository: FriendshipRepository) {}
+
+  async execute(userId: string, friendshipId: string): Promise<void> {
+    const friendship = await this.friendshipRepository.findById(friendshipId);
+    if (!friendship) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Relation introuvable', 404);
+    }
+    if (friendship.status !== 'ACCEPTED') {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Cette relation n\'est pas un ami accepté', 400);
+    }
+    if (friendship.userOneId !== userId && friendship.userTwoId !== userId) {
+      throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Accès interdit', 403);
+    }
+    await this.friendshipRepository.delete(friendshipId);
+  }
+}
+
 export class ListFriendsUseCase {
   constructor(private friendshipRepository: FriendshipRepository) {}
 
