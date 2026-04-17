@@ -77,7 +77,7 @@ export function setupListeners() {
       const isMention = messageMentionsUser(message.content || '', currentUser.username);
       if (isMention) {
         store.addMention(message.channelId);
-        const authorName = message.author?.username || ‘Quelqu\’un’;
+        const authorName = message.author?.username ?? "Quelqu’un";
         toastBus.emit({
           type: ‘info’,
           message: `${authorName} vous a mentionné`,
@@ -88,7 +88,7 @@ export function setupListeners() {
       } else {
         // Notification pour tout nouveau message quand la fenêtre est masquée
         if (typeof document !== ‘undefined’ && document.hidden) {
-          const authorName = message.author?.username || ‘Quelqu\’un’;
+          const authorName = message.author?.username ?? "Quelqu’un";
           void sendDesktopNotification(‘Neosis — Nouveau message’, `${authorName} : ${(message.content || ‘’).slice(0, 80)}`);
         }
       }
