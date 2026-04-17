@@ -22,8 +22,12 @@ export function VoiceMiniPanel(): React.ReactElement | null {
     connectedChannelId,
     isMuted,
     isDeafened,
+    isVideoEnabled,
+    isScreenSharing,
     toggleMute,
     toggleDeafen,
+    toggleCamera,
+    toggleScreenShare,
     leaveVoiceChannel,
     connectedUsers,
   } = useVoice();
@@ -86,29 +90,52 @@ export function VoiceMiniPanel(): React.ReactElement | null {
         )}
 
         {/* Controls */}
-        <div className="px-3 py-2 flex items-center justify-between">
-          <button
-            onClick={toggleMute}
-            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
-              isMuted ? 'bg-red-500 text-white' : 'bg-secondary text-foreground'
-            }`}
-          >
-            {isMuted ? 'Activer le micro' : 'Couper le micro'}
-          </button>
-          <button
-            onClick={toggleDeafen}
-            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
-              isDeafened ? 'bg-red-500 text-white' : 'bg-secondary text-foreground'
-            }`}
-          >
-            {isDeafened ? 'Activer le son' : 'Couper le son'}
-          </button>
-          <button
-            onClick={() => leaveVoiceChannel()}
-            className="px-3 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
-          >
-            Quitter
-          </button>
+        <div className="px-3 py-2 flex flex-wrap items-center gap-2">
+          {/* Ligne 1 : micro + son */}
+          <div className="flex items-center gap-2 w-full">
+            <button
+              onClick={toggleMute}
+              className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                isMuted ? 'bg-red-500 text-white' : 'bg-secondary text-foreground'
+              }`}
+            >
+              {isMuted ? 'Activer le micro' : 'Couper le micro'}
+            </button>
+            <button
+              onClick={toggleDeafen}
+              className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                isDeafened ? 'bg-red-500 text-white' : 'bg-secondary text-foreground'
+              }`}
+            >
+              {isDeafened ? 'Activer le son' : 'Couper le son'}
+            </button>
+          </div>
+
+          {/* Ligne 2 : caméra + écran + quitter */}
+          <div className="flex items-center gap-2 w-full">
+            <button
+              onClick={() => void toggleCamera()}
+              className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                isVideoEnabled ? 'bg-blue-500 text-white' : 'bg-secondary text-foreground'
+              }`}
+            >
+              {isVideoEnabled ? 'Caméra ON' : 'Caméra'}
+            </button>
+            <button
+              onClick={() => void toggleScreenShare()}
+              className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                isScreenSharing ? 'bg-green-500 text-white' : 'bg-secondary text-foreground'
+              }`}
+            >
+              {isScreenSharing ? 'Partage ON' : 'Partager'}
+            </button>
+            <button
+              onClick={() => leaveVoiceChannel()}
+              className="flex-1 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+            >
+              Quitter
+            </button>
+          </div>
         </div>
       </div>
     </div>
