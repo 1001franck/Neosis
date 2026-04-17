@@ -8,6 +8,9 @@
 
 'use client';
 
+// Requis pour l'export statique Tauri — les params sont resolus cote client
+export function generateStaticParams() { return []; }
+
 import { useState, useEffect, useCallback, useRef, useMemo, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChannelView } from '@presentation/components/layout/ChannelView';

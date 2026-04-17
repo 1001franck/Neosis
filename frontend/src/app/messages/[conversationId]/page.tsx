@@ -5,6 +5,9 @@
 
 'use client';
 
+// Requis pour l'export statique Tauri — les params sont resolus cote client
+export function generateStaticParams() { return []; }
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
