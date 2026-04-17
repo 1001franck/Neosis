@@ -3,10 +3,23 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, WindowEvent,
 };
+use tauri_plugin_notification::NotificationExt;
+
+/// Commande appelable depuis le frontend TypeScript
+/// Envoie une notification native Windows
+#[tauri::command]
+fn notify(app: tauri::AppHandle, title: String, body: String) {
+    let _ = app.notification()
+        .builder()
+        .title(&title)
+        .body(&body)
+        .show();
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             // Plugin de logs en mode debug
             if cfg!(debug_assertions) {
@@ -16,6 +29,14 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            // Notification de bienvenue au démarrage
+            let _ = app.notification()
+                .builder()
+                .title("Neosis")
+                .body("Neosis est lancé et disponible dans le tray.")
+                .show();
+
 
             // === SYSTEM TRAY ===
             // Menu contextuel du tray
@@ -68,6 +89,7 @@ pub fn run() {
                 let _ = window.hide();
             }
         })
+        .invoke_handler(tauri::generate_handler![notify])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

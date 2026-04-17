@@ -10,6 +10,9 @@
     "core:tray:default",
     "core:window:allow-hide",
     "core:window:allow-show",
-    "core:window:allow-set-focus"
+    "core:window:allow-set-focus",
+    "notification:default",
+    "notification:allow-request-permission",
+    "notification:allow-notify"
   ]
 }

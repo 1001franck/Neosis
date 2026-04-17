@@ -26,6 +26,7 @@ import type { Member } from '@domain/members/types';
 import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
 import { toastBus } from '@shared/utils/toastBus';
+import { sendDesktopNotification } from '@shared/hooks/useDesktopNotification';
 
 function messageMentionsUser(content: string, username: string): boolean {
   const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -76,12 +77,20 @@ export function setupListeners() {
       const isMention = messageMentionsUser(message.content || '', currentUser.username);
       if (isMention) {
         store.addMention(message.channelId);
-        const authorName = message.author?.username || 'Quelqu’un';
+        const authorName = message.author?.username || ‘Quelqu\’un’;
         toastBus.emit({
-          type: 'info',
+          type: ‘info’,
           message: `${authorName} vous a mentionné`,
           duration: 4000,
         });
+        // Notification native desktop
+        void sendDesktopNotification(‘Neosis — Mention’, `${authorName} vous a mentionné`);
+      } else {
+        // Notification pour tout nouveau message quand la fenêtre est masquée
+        if (typeof document !== ‘undefined’ && document.hidden) {
+          const authorName = message.author?.username || ‘Quelqu\’un’;
+          void sendDesktopNotification(‘Neosis — Nouveau message’, `${authorName} : ${(message.content || ‘’).slice(0, 80)}`);
+        }
       }
     }
   });
@@ -294,6 +303,12 @@ export function setupListeners() {
   socket.on('direct:message:new', (message: DirectMessage) => {
     logger.info('DM received via socket', { messageId: message.id, conversationId: message.conversationId });
     useDirectMessageStore.getState().addIncomingMessage(message);
+
+    // Notification native desktop pour les DMs
+    const currentUserId = useAuthStore.getState().user?.id;
+    if (message.senderId !== currentUserId) {
+      void sendDesktopNotification('Neosis — Message privé', (message.content || '').slice(0, 80));
+    }
   });
 
   // === VOICE EVENTS ===
