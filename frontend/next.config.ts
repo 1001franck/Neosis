@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
   reactCompiler: false,
 
   // Mode export statique pour Tauri (pas de SSR dans l'app desktop)
-  ...(isTauri ? { output: 'export', images: { unoptimized: true } } : {}),
+  // trailingSlash genere auth/login/index.html que Tauri peut servir via le filesystem
+  ...(isTauri ? { output: 'export', trailingSlash: true, images: { unoptimized: true } } : {}),
 
   // Rewrites actifs uniquement en mode web (pas en export statique)
   ...(!isTauri ? {
