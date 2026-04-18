@@ -15,6 +15,9 @@ import { setupListeners, cleanupListeners } from '@infrastructure/websocket/list
 import type { LoginRequest, RegisterRequest, UpdateProfileRequest } from '@domain/auth/types';
 import { logger } from '@shared/utils/logger';
 
+// Flag module-level : empêche deux initialisations parallèles si plusieurs composants montent simultanément
+let _authInitStarted = false;
+
 export function useAuth() {
   // === STATE SELECTORS ===
   const user = useAuthStore((state: AuthStoreState) => state.user);
@@ -32,12 +35,13 @@ export function useAuth() {
    * Restaure depuis le localStorage puis valide la session via GET /auth/me
    */
   useEffect(() => {
-    // Garde : si déjà initialisé (ou en cours dans un autre composant), ne pas relancer
-    if (useAuthStore.getState().isInitialized) return;
+    // Garde : ne lancer qu'une seule fois, même si plusieurs composants montent en même temps
+    if (_authInitStarted || useAuthStore.getState().isInitialized) return;
+    _authInitStarted = true;
 
     const initializeAuth = async () => {
       try {
-        // D'abord restaurer depuis le localStorage pour un affichage rapide
+        // Restaurer depuis localStorage (synchrone — immédiat)
         const storedUser = authService.getStoredUser();
 
         if (storedUser) {
@@ -45,8 +49,11 @@ export function useAuth() {
           setAuthenticated(true);
         }
 
-        // Toujours valider la session côté serveur via le cookie httpOnly
-        // Même sans storedUser, le cookie 7 jours peut encore être valide
+        // Déclarer l'app initialisée DÈS ICI pour débloquer l'UI immédiatement
+        // La validation réseau ci-dessous se fait en arrière-plan
+        setInitialized(true);
+
+        // Valider la session côté serveur (cookie httpOnly ou token Bearer)
         const validUser = await authService.checkSession();
         if (validUser) {
           setUser(validUser);
@@ -56,14 +63,13 @@ export function useAuth() {
           setupListeners();
           logger.info('Auth restored and validated', { userId: validUser.id });
         } else if (storedUser) {
-          // Server returned 401 — cookie expired/invalid
+          // Server returned 401 — session expirée
           reset();
           logger.warn('Stored session invalid, logged out');
         }
         // Si ni storedUser ni validUser → reste non authentifié (ProtectedRoute redirigera)
       } catch (error) {
         // Erreur réseau — dégradation gracieuse
-        // Garder l'utilisateur stocké si existant (ne pas forcer la déconnexion sur erreur réseau)
         if (authService.getStoredUser()) {
           logger.warn('Session check failed (network), keeping stored session');
           connectSocket();
@@ -72,7 +78,7 @@ export function useAuth() {
         } else {
           logger.error('Failed to initialize auth', error instanceof Error ? error.message : 'Unknown error');
         }
-      } finally {
+        // Assurer que l'UI est débloquée même en cas d'erreur réseau
         setInitialized(true);
       }
     };

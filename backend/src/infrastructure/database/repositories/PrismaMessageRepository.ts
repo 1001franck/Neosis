@@ -95,6 +95,7 @@ export class PrismaMessageRepository implements MessageRepository {
           },
         },
         attachments: true,
+        reactions: { select: { emoji: true, userId: true } },
         deletions: userId ? { where: { userId }, select: { userId: true } } : false,
       },
     });
@@ -188,6 +189,7 @@ export class PrismaMessageRepository implements MessageRepository {
           },
         },
         attachments: true,
+        reactions: { select: { emoji: true, userId: true } },
         deletions: userId ? { where: { userId }, select: { userId: true } } : false,
       },
     });
