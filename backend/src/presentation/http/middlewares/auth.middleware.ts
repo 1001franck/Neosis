@@ -7,8 +7,9 @@ interface JwtPayload {
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  // Lecture du token depuis le cookie httpOnly uniquement
-  const token = req.cookies?.token;
+  // Cookie httpOnly (web) ou Authorization header (app desktop Tauri)
+  const token = req.cookies?.token
+    ?? req.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {
     res.status(401).json({ success: false, error: "Accès refusé. Token manquant." });

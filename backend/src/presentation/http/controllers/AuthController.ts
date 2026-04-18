@@ -32,7 +32,8 @@ export class AuthController {
       const user = await this.registerUseCase.execute(req.body);
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
       res.cookie('token', token, COOKIE_OPTIONS);
-      res.status(201).json({ success: true, data: { user: user.toPublic() } });
+      // Token aussi dans le body pour les clients sans cookies (app desktop Tauri)
+      res.status(201).json({ success: true, data: { user: user.toPublic(), token } });
     } catch (error) {
       next(error);
     }
@@ -47,7 +48,8 @@ export class AuthController {
       const user = await this.loginUseCase.execute(req.body);
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
       res.cookie('token', token, COOKIE_OPTIONS);
-      res.status(200).json({ success: true, data: { user: user.toPublic() } });
+      // Token aussi dans le body pour les clients sans cookies (app desktop Tauri)
+      res.status(200).json({ success: true, data: { user: user.toPublic(), token } });
     } catch (error) {
       next(error);
     }

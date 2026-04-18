@@ -18,6 +18,10 @@ export const authApi = {
    */
   login: async (request: LoginRequest): Promise<{ user: AuthUser }> => {
     const response = await apiClient.post(`${ENDPOINT}/login`, request);
+    // Stocker le token pour les environnements sans cookies (app desktop Tauri)
+    if (response.data.token) {
+      localStorage.setItem('auth_token', response.data.token);
+    }
     return { user: response.data.user };
   },
 
@@ -27,6 +31,9 @@ export const authApi = {
    */
   register: async (request: RegisterRequest): Promise<{ user: AuthUser }> => {
     const response = await apiClient.post(`${ENDPOINT}/signup`, request);
+    if (response.data.token) {
+      localStorage.setItem('auth_token', response.data.token);
+    }
     return { user: response.data.user };
   },
 
@@ -36,6 +43,7 @@ export const authApi = {
    */
   logout: async (): Promise<void> => {
     await apiClient.post(`${ENDPOINT}/logout`);
+    localStorage.removeItem('auth_token');
   },
 
   /**

@@ -10,18 +10,26 @@ import { STORAGE_KEYS } from '@shared/constants/app';
 
 export const apiClient = axios.create({
   baseURL: env.API_URL,
-  timeout: 5000,
+  // 15s pour absorber le cold start de Render (backend en veille)
+  timeout: 15000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// === REQUEST INTERCEPTOR : Ajouter Accept-Language selon la langue choisie ===
+// === REQUEST INTERCEPTOR : Accept-Language + Authorization token (app desktop) ===
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const locale = localStorage.getItem(STORAGE_KEYS.LOCALE) || 'fr';
     config.headers['Accept-Language'] = locale;
+
+    // En environnement Tauri les cookies cross-origin ne fonctionnent pas
+    // On envoie le token en Authorization header si disponible
+    const token = localStorage.getItem('auth_token');
+    if (token && !config.headers['Authorization']) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
   }
   return config;
 });

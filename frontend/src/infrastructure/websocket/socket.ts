@@ -20,6 +20,11 @@ socket.on('disconnect', () => {
 
 export function connectSocket() {
   if (!socket.connected) {
+    // Transmettre le token JWT en auth pour les environnements sans cookies (Tauri)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (token) {
+      socket.auth = { token };
+    }
     socket.connect();
   }
 }

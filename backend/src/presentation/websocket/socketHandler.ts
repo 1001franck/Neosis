@@ -67,10 +67,13 @@ export class SocketHandler {
   private setupMiddleware(): void {
     this.io.use(async (socket, next) => {
       try {
-        // Lire le token depuis le cookie httpOnly transmis via le handshake
+        // Cookie httpOnly (web) ou Authorization header (app desktop Tauri)
         const cookieHeader = socket.handshake.headers.cookie || '';
         const tokenMatch = cookieHeader.split(';').map(c => c.trim()).find(c => c.startsWith('token='));
-        const token = tokenMatch ? tokenMatch.split('=')[1] : null;
+        const cookieToken = tokenMatch ? tokenMatch.split('=')[1] : null;
+        const authHeader = socket.handshake.headers.authorization as string | undefined;
+        const bearerToken = authHeader?.replace('Bearer ', '') || null;
+        const token = cookieToken ?? bearerToken ?? (socket.handshake.auth?.token as string | undefined) ?? null;
 
         if (!token) {
           return next(new Error('Authentication error: token missing'));
