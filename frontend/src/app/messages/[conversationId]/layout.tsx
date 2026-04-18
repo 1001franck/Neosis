@@ -7,10 +7,7 @@ import type { ReactNode } from 'react';
 
 const ConversationPageClient = dynamic(() => import('./ConversationPageClient'), { ssr: false });
 
-export default function ConversationLayout({
-  children: _children,
-}: {
-  children: ReactNode;
-}): ReactNode {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function ConversationLayout(_props: { children: ReactNode }): ReactNode {
   return <ConversationPageClient />;
 }
