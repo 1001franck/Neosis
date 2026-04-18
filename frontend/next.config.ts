@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const isTauri = process.env.TAURI_BUILD === '1';
 
 const nextConfig: NextConfig = {
-  reactCompiler: true,
+  // Desactive pour le build Tauri (Turbopack requis, incompatible avec generateStaticParams + wrappers)
+  reactCompiler: !isTauri,
 
   // Mode export statique pour Tauri (pas de SSR dans l'app desktop)
   ...(isTauri ? { output: 'export', images: { unoptimized: true } } : {}),
