@@ -6,7 +6,7 @@
  * Ce hook ne manipule plus le token directement.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAuthStore } from './authStore';
 import type { AuthStoreState } from './authStore';
 import { authService } from './authService';
@@ -16,22 +16,25 @@ import type { LoginRequest, RegisterRequest, UpdateProfileRequest } from '@domai
 import { logger } from '@shared/utils/logger';
 
 export function useAuth() {
-  const [isInitialized, setIsInitialized] = useState(false);
-
   // === STATE SELECTORS ===
   const user = useAuthStore((state: AuthStoreState) => state.user);
   const isAuthenticated = useAuthStore((state: AuthStoreState) => state.isAuthenticated);
+  const isInitialized = useAuthStore((state: AuthStoreState) => state.isInitialized);
 
   // === STORE ACTIONS ===
   const setUser = useAuthStore((state: AuthStoreState) => state.setUser);
   const setAuthenticated = useAuthStore((state: AuthStoreState) => state.setAuthenticated);
+  const setInitialized = useAuthStore((state: AuthStoreState) => state.setInitialized);
   const reset = useAuthStore((state: AuthStoreState) => state.reset);
 
   /**
-   * Initialiser l'authentification au montage
+   * Initialiser l'authentification au montage — une seule fois globalement
    * Restaure depuis le localStorage puis valide la session via GET /auth/me
    */
   useEffect(() => {
+    // Garde : si déjà initialisé (ou en cours dans un autre composant), ne pas relancer
+    if (useAuthStore.getState().isInitialized) return;
+
     const initializeAuth = async () => {
       try {
         // D'abord restaurer depuis le localStorage pour un affichage rapide
@@ -59,8 +62,8 @@ export function useAuth() {
         }
         // Si ni storedUser ni validUser → reste non authentifié (ProtectedRoute redirigera)
       } catch (error) {
-        // Network error during checkSession — graceful degradation
-        // Keep the stored user if one exists (don't force logout on network hiccup)
+        // Erreur réseau — dégradation gracieuse
+        // Garder l'utilisateur stocké si existant (ne pas forcer la déconnexion sur erreur réseau)
         if (authService.getStoredUser()) {
           logger.warn('Session check failed (network), keeping stored session');
           connectSocket();
@@ -70,12 +73,12 @@ export function useAuth() {
           logger.error('Failed to initialize auth', error instanceof Error ? error.message : 'Unknown error');
         }
       } finally {
-        setIsInitialized(true);
+        setInitialized(true);
       }
     };
 
     initializeAuth();
-  }, [setUser, setAuthenticated, reset]);
+  }, [setUser, setAuthenticated, setInitialized, reset]);
 
   /**
    * Connexion utilisateur
