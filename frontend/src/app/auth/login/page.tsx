@@ -3,8 +3,6 @@
 import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 import { useFormState } from '@shared/hooks/useFormState';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useLocale } from '@shared/hooks/useLocale';
@@ -24,7 +22,6 @@ const fadeUp = {
  */
 export default function LoginPage() {
   const { login } = useAuth();
-  const router = useRouter();
   const { t } = useLocale();
   const [showPassword, setShowPassword] = useState(false);
   const { fields, error, isLoading, setField, setError, setLoading } = useFormState({
@@ -53,15 +50,16 @@ export default function LoginPage() {
         // Si l'utilisateur a des serveurs, rediriger vers le premier
         if (servers && servers.length > 0) {
           logger.info('Redirecting to first server', { serverId: servers[0].id });
-          router.push(`/servers/${servers[0].id}`);
+          // Navigation complète pour compatibilité Tauri static export
+          window.location.href = `/servers/${servers[0].id}/`;
         } else {
           // Sinon, rediriger vers la page pour créer/rejoindre un serveur
           logger.info('No servers found, redirecting to neosis');
-          router.push('/neosis');
+          window.location.href = '/neosis/';
         }
       } else {
         // En cas d'erreur, rediriger vers neosis par défaut
-        router.push('/neosis');
+        window.location.href = '/neosis/';
       }
     } catch (err) {
       const message = (err as Error).message;
@@ -235,12 +233,12 @@ export default function LoginPage() {
       <motion.div variants={fadeUp} custom={6} className="text-center">
         <p className="text-gray-400 text-sm">
           {t('auth.login.noAccount')}{' '}
-          <Link
-            href="/auth/register"
+          <a
+            href="/auth/register/"
             className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200 hover:underline underline-offset-4"
           >
             {t('auth.login.createAccount')}
-          </Link>
+          </a>
         </p>
       </motion.div>
     </motion.div>

@@ -7,8 +7,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+// Pas de useRouter ni Link Next.js : navigation via window.location / <a> pour Tauri static export
 import { motion } from 'framer-motion';
 import { useAuth } from '@application/auth/useAuth';
 import { Space_Grotesk, Newsreader } from 'next/font/google';
@@ -202,7 +201,6 @@ const features = [
 
 export default function LandingPage(): React.ReactNode {
   const { isAuthenticated, isInitialized } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     const redirectAuthenticatedUser = async () => {
@@ -215,21 +213,22 @@ export default function LandingPage(): React.ReactNode {
           if (response.ok) {
             const { data: servers } = await response.json();
             if (servers && servers.length > 0) {
-              router.push(`/servers/${servers[0].id}`);
+              // Navigation complète pour compatibilité Tauri static export
+              window.location.href = `/servers/${servers[0].id}/`;
             } else {
-              router.push('/neosis');
+              window.location.href = '/neosis/';
             }
           } else {
-            router.push('/neosis');
+            window.location.href = '/neosis/';
           }
         } catch {
-          router.push('/neosis');
+          window.location.href = '/neosis/';
         }
       }
     };
 
     redirectAuthenticatedUser();
-  }, [isAuthenticated, isInitialized, router]);
+  }, [isAuthenticated, isInitialized]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -285,18 +284,18 @@ export default function LandingPage(): React.ReactNode {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/auth/login"
+          <a
+            href="/auth/login/"
             className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
           >
             Connexion
-          </Link>
-          <Link
-            href="/auth/register"
+          </a>
+          <a
+            href="/auth/register/"
             className="px-5 py-2.5 text-sm font-medium bg-[#003366] text-white rounded-full hover:bg-[#004766] transition-all"
           >
             S&apos;inscrire
-          </Link>
+          </a>
         </div>
       </motion.nav>
 
@@ -346,21 +345,21 @@ export default function LandingPage(): React.ReactNode {
               animate="visible"
               custom={0.3}
             >
-              <Link
-                href="/auth/register"
+              <a
+                href="/auth/register/"
                 className="inline-flex items-center gap-2 px-7 py-3.5 text-sm font-semibold text-white bg-[#003366] rounded-full hover:bg-[#004766] transition-all"
               >
                 Commencer
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                 </svg>
-              </Link>
-              <Link
-                href="/auth/login"
+              </a>
+              <a
+                href="/auth/login/"
                 className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-medium text-white/70 border border-white/10 rounded-full hover:text-white hover:border-white/20 transition-all"
               >
                 Se connecter
-              </Link>
+              </a>
             </motion.div>
           </div>
 
@@ -440,15 +439,15 @@ export default function LandingPage(): React.ReactNode {
             Lancez un serveur et invitez votre équipe en quelques secondes.
           </motion.p>
           <motion.div className="mt-8" variants={fadeUp} custom={0.2}>
-            <Link
-              href="/auth/register"
+            <a
+              href="/auth/register/"
               className="inline-flex items-center gap-2 px-9 py-3.5 text-sm font-semibold text-white bg-[#003366] rounded-full hover:bg-[#004766] transition-all"
             >
               Créer mon compte
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
-            </Link>
+            </a>
           </motion.div>
         </motion.div>
       </section>

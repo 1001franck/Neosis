@@ -3,8 +3,6 @@
 import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 import { useFormState } from '@shared/hooks/useFormState';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useLocale } from '@shared/hooks/useLocale';
@@ -24,7 +22,6 @@ const fadeUp = {
  */
 export default function RegisterPage() {
   const { register } = useAuth();
-  const router = useRouter();
   const { t } = useLocale();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -115,15 +112,16 @@ export default function RegisterPage() {
         // Si l'utilisateur a des serveurs, rediriger vers le premier
         if (servers && servers.length > 0) {
           logger.info('Redirecting to first server', { serverId: servers[0].id });
-          router.push(`/servers/${servers[0].id}`);
+          // Navigation complète pour compatibilité Tauri static export
+          window.location.href = `/servers/${servers[0].id}/`;
         } else {
           // Nouvel utilisateur, aucun serveur → rediriger vers neosis pour créer/rejoindre
           logger.info('New user, no servers, redirecting to neosis');
-          router.push('/neosis');
+          window.location.href = '/neosis/';
         }
       } else {
         // En cas d'erreur, rediriger vers neosis par défaut
-        router.push('/neosis');
+        window.location.href = '/neosis/';
       }
     } catch (err) {
       logger.error('Registration failed', err);
@@ -423,12 +421,12 @@ export default function RegisterPage() {
       <motion.div variants={fadeUp} custom={8} className="text-center">
         <p className="text-gray-400 text-sm">
           {t('auth.register.hasAccount')}{' '}
-          <Link
-            href="/auth/login"
+          <a
+            href="/auth/login/"
             className="text-purple-400 hover:text-purple-300 font-medium transition-colors duration-200 hover:underline underline-offset-4"
           >
             {t('auth.register.login')}
-          </Link>
+          </a>
         </p>
       </motion.div>
     </motion.div>

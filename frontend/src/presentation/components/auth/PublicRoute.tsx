@@ -11,7 +11,6 @@
 'use client';
 
 import React, { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 
@@ -33,7 +32,6 @@ interface PublicRouteProps {
  * }
  */
 export function PublicRoute({ children }: PublicRouteProps): React.ReactNode {
-  const router = useRouter();
   const { isAuthenticated, isInitialized } = useAuth();
 
   React.useEffect(() => {
@@ -42,12 +40,12 @@ export function PublicRoute({ children }: PublicRouteProps): React.ReactNode {
       return;
     }
 
-    // Rediriger vers dashboard si déjà authentifié
+    // Rediriger vers dashboard si déjà authentifié — navigation complète pour Tauri
     if (isAuthenticated) {
       logger.info('Utilisateur déjà authentifié - redirection vers servers');
-      router.push('/servers');
+      window.location.href = '/servers/';
     }
-  }, [isAuthenticated, isInitialized, router]);
+  }, [isAuthenticated, isInitialized]);
 
   // Afficher un loader pendant l'initialisation
   if (!isInitialized) {
