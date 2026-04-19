@@ -8,16 +8,14 @@ import { logger } from '@shared/utils/logger';
 import { storage } from '@infrastructure/storage/localStorage';
 import { STORAGE_KEYS } from '@shared/constants/app';
 
-// En Tauri, window.__TAURI_INTERNALS__ est injecté par le runtime
-const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-
 export const apiClient = axios.create({
   baseURL: env.API_URL,
   // 15s pour absorber le cold start de Render (backend en veille)
   timeout: 15000,
-  // En Tauri les cookies cross-origin sont bloqués par WebView2 — on utilise Bearer token
-  // withCredentials: true causerait un preflight CORS crédentiel inutile en desktop
-  withCredentials: !isTauri,
+  // withCredentials: false — le backend retourne le token dans le body (pas seulement cookie)
+  // Le Bearer token via localStorage est utilisé pour toutes les requêtes (web + Tauri)
+  // withCredentials: true causait un preflight CORS crédentiel bloqué dans WebView2 Tauri
+  withCredentials: false,
   headers: {
     'Content-Type': 'application/json',
   },
