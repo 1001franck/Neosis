@@ -50,9 +50,18 @@ export class SocketHandler {
     this.logger = new Logger('SocketHandler');
 
     // Initialise Socket.IO avec CORS configure
+    // Inclure toutes les origines valides : web prod, dev local, app desktop Tauri
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'http://localhost:3000',
+      'http://localhost:1420',
+      'tauri://localhost',
+      'https://tauri.localhost',
+    ].filter(Boolean);
+
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: allowedOrigins,
         credentials: true
       }
     });
