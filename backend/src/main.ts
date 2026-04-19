@@ -45,12 +45,15 @@ const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Origines autorisées : prod Vercel + dev local + app desktop Tauri
+// Windows WebView2 utilise http(s)://tauri.localhost selon la version
+// macOS/Linux utilise tauri://localhost
 const ALLOWED_ORIGINS = [
   FRONTEND_URL,
   'http://localhost:3000',
-  'http://localhost:1420', // port Tauri dev par défaut
-  'tauri://localhost',     // origine Tauri en production
-  'https://tauri.localhost',
+  'http://localhost:1420',    // port Tauri dev par défaut
+  'tauri://localhost',        // macOS / Linux
+  'https://tauri.localhost',  // Windows WebView2 (HTTPS)
+  'http://tauri.localhost',   // Windows WebView2 (HTTP, certaines versions)
 ].filter(Boolean);
 
 // ============ DEPENDENCY INJECTION ============
@@ -218,6 +221,8 @@ app.use(cors({
   origin: (origin, callback) => {
     // Autoriser les requêtes sans origin (ex: app desktop native, curl)
     if (!origin) return callback(null, true);
+    // Autoriser toutes les variantes du protocole Tauri (tauri://, http://tauri.localhost, https://tauri.localhost)
+    if (origin.includes('tauri.localhost') || origin.startsWith('tauri://')) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origine non autorisée: ${origin}`));
   },
