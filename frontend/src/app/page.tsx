@@ -11,7 +11,6 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@application/auth/useAuth';
 import { Space_Grotesk, Newsreader } from 'next/font/google';
-import { serversApi } from '@infrastructure/api/servers.api';
 
 const space = Space_Grotesk({ subsets: ['latin'], display: 'swap' });
 const news = Newsreader({ subsets: ['latin'], display: 'swap' });
@@ -206,16 +205,9 @@ export default function LandingPage(): React.ReactNode {
   useEffect(() => {
     const redirectAuthenticatedUser = async () => {
       if (isAuthenticated && isInitialized) {
-        try {
-          const servers = await serversApi.getServers();
-          if (servers && servers.length > 0) {
-            window.location.href = `/servers/${servers[0].id}/`;
-          } else {
-            window.location.href = '/neosis/';
-          }
-        } catch {
-          window.location.href = '/neosis/';
-        }
+        // Rediriger vers /neosis/ — fichier statique qui existe dans out/
+        // Neosis gère ensuite la redirection SPA vers le bon serveur (router.push)
+        window.location.href = '/neosis/';
       }
     };
 

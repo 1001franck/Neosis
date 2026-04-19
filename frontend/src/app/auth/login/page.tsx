@@ -6,7 +6,6 @@ import { useFormState } from '@shared/hooks/useFormState';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useLocale } from '@shared/hooks/useLocale';
-import { serversApi } from '@infrastructure/api/servers.api';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -40,19 +39,9 @@ export default function LoginPage() {
       await login({ email: fields.email, password: fields.password });
       logger.info('Login successful');
 
-      // Charger les serveurs via apiClient (Bearer token — compatible Tauri)
-      try {
-        const servers = await serversApi.getServers();
-        if (servers && servers.length > 0) {
-          logger.info('Redirecting to first server', { serverId: servers[0].id });
-          window.location.href = `/servers/${servers[0].id}/`;
-        } else {
-          logger.info('No servers found, redirecting to neosis');
-          window.location.href = '/neosis/';
-        }
-      } catch {
-        window.location.href = '/neosis/';
-      }
+      // Rediriger vers /neosis/ — fichier statique qui existe dans out/
+      // Neosis gère ensuite la redirection SPA vers le bon serveur (router.push)
+      window.location.href = '/neosis/';
     } catch (err) {
       const message = (err as Error).message;
       logger.error('Login failed', err);

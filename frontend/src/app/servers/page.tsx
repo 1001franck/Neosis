@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/auth/useAuth';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 
@@ -9,12 +8,11 @@ import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
  * PAGE SERVERS - Affiche la liste des serveurs de l'utilisateur
  */
 export default function ServersPage(): React.ReactNode {
-  const router = useRouter();
   useAuth();
 
-  // Rediriger vers /neosis (page d'entrée des serveurs)
+  // Rediriger vers /neosis/ — fichier statique existant dans out/
   useEffect(() => {
-    router.replace('/neosis');
+    window.location.href = '/neosis/';
   }, []);
 
   return (

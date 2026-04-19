@@ -51,17 +51,23 @@ export class SocketHandler {
 
     // Initialise Socket.IO avec CORS configure
     // Inclure toutes les origines valides : web prod, dev local, app desktop Tauri
-    const allowedOrigins = [
+    // Accepter toutes les variantes Tauri dynamiquement
+    const isTauriOrigin = (origin: string) =>
+      origin.includes('tauri.localhost') || origin.startsWith('tauri://');
+
+    const staticOrigins = [
       process.env.FRONTEND_URL || 'http://localhost:3000',
       'http://localhost:3000',
       'http://localhost:1420',
-      'tauri://localhost',
-      'https://tauri.localhost',
     ].filter(Boolean);
 
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: allowedOrigins,
+        origin: (origin, callback) => {
+          if (!origin) return callback(null, true);
+          if (isTauriOrigin(origin) || staticOrigins.includes(origin)) return callback(null, true);
+          callback(new Error(`CORS Socket.IO: origine non autorisée: ${origin}`));
+        },
         credentials: true
       }
     });

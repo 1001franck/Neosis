@@ -11,7 +11,6 @@
 'use client';
 
 import React, { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 
@@ -32,7 +31,6 @@ interface ProtectedRouteProps {
  * }
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps): React.ReactNode {
-  const router = useRouter();
   const { isAuthenticated, isInitialized } = useAuth();
 
   React.useEffect(() => {
@@ -41,12 +39,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps): React.ReactNo
       return;
     }
 
-    // Rediriger vers login si pas authentifié
+    // Rediriger vers login si pas authentifié — navigation complète pour Tauri
     if (!isAuthenticated) {
       logger.warn('Accès refusé - redirection vers login');
-      router.push('/auth/login');
+      window.location.href = '/auth/login/';
     }
-  }, [isAuthenticated, isInitialized, router]);
+  }, [isAuthenticated, isInitialized]);
 
   // Afficher un loader pendant l'initialisation
   if (!isInitialized) {
