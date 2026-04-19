@@ -6,6 +6,7 @@ import { useFormState } from '@shared/hooks/useFormState';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useLocale } from '@shared/hooks/useLocale';
+import { serversApi } from '@infrastructure/api/servers.api';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -101,26 +102,17 @@ export default function RegisterPage() {
       });
       logger.info('Registration successful');
 
-      // Charger les serveurs de l'utilisateur
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/servers`, {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const { data: servers } = await response.json();
-
-        // Si l'utilisateur a des serveurs, rediriger vers le premier
+      // Charger les serveurs via apiClient (Bearer token — compatible Tauri)
+      try {
+        const servers = await serversApi.getServers();
         if (servers && servers.length > 0) {
           logger.info('Redirecting to first server', { serverId: servers[0].id });
-          // Navigation complète pour compatibilité Tauri static export
           window.location.href = `/servers/${servers[0].id}/`;
         } else {
-          // Nouvel utilisateur, aucun serveur → rediriger vers neosis pour créer/rejoindre
           logger.info('New user, no servers, redirecting to neosis');
           window.location.href = '/neosis/';
         }
-      } else {
-        // En cas d'erreur, rediriger vers neosis par défaut
+      } catch {
         window.location.href = '/neosis/';
       }
     } catch (err) {

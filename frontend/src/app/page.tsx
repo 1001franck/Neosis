@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@application/auth/useAuth';
 import { Space_Grotesk, Newsreader } from 'next/font/google';
+import { serversApi } from '@infrastructure/api/servers.api';
 
 const space = Space_Grotesk({ subsets: ['latin'], display: 'swap' });
 const news = Newsreader({ subsets: ['latin'], display: 'swap' });
@@ -206,18 +207,9 @@ export default function LandingPage(): React.ReactNode {
     const redirectAuthenticatedUser = async () => {
       if (isAuthenticated && isInitialized) {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/servers`, {
-            credentials: 'include',
-          });
-
-          if (response.ok) {
-            const { data: servers } = await response.json();
-            if (servers && servers.length > 0) {
-              // Navigation complète pour compatibilité Tauri static export
-              window.location.href = `/servers/${servers[0].id}/`;
-            } else {
-              window.location.href = '/neosis/';
-            }
+          const servers = await serversApi.getServers();
+          if (servers && servers.length > 0) {
+            window.location.href = `/servers/${servers[0].id}/`;
           } else {
             window.location.href = '/neosis/';
           }
