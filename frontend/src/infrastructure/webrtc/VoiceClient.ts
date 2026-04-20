@@ -18,13 +18,31 @@ import { logger } from '@shared/utils/logger';
 import { useVoiceStore } from '@application/voice/voiceStore';
 
 /**
- * Configuration STUN pour le NAT traversal
- * STUN = Session Traversal Utilities for NAT
- * Permet de découvrir votre adresse IP publique pour les connexions P2P
+ * Configuration ICE : STUN + TURN pour le NAT traversal
+ *
+ * STUN : découvre l'IP publique (NAT cone). Insuffisant pour NAT symétrique (4G/5G, certains FAI).
+ * TURN : relai en cas d'échec P2P direct — indispensable pour la fiabilité en production.
+ *
+ * Serveurs TURN publics openrelay.metered.ca (gratuits, sans inscription).
  */
-const ICE_SERVERS = [
-  { urls: 'stun:stun.l.google.com:19302' },      // Serveur STUN gratuit de Google
+const ICE_SERVERS: RTCIceServer[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
 ];
 
 /**
@@ -204,7 +222,11 @@ export class VoiceClient {
 
         // Un seul élément audio par peer
         if (!peer.audioElement) {
-          const audioElement = new Audio();
+          const audioElement = document.createElement('audio');
+          // Attacher au DOM pour éviter le GC et contourner l'autoplay Tauri/WebView2
+          audioElement.style.display = 'none';
+          audioElement.id = `voice-audio-${userId}`;
+          document.body.appendChild(audioElement);
           audioElement.srcObject = remoteStream;
           audioElement.autoplay = true;
           audioElement.muted = this.isDeafened;
@@ -482,10 +504,11 @@ export class VoiceClient {
       if (peer.audioContext) {
         peer.audioContext.close();
       }
-      // Stopper et libérer l'élément audio
+      // Stopper et libérer l'élément audio + retirer du DOM
       if (peer.audioElement) {
         peer.audioElement.pause();
         peer.audioElement.srcObject = null;
+        peer.audioElement.remove();
       }
       peer.connection.close();
       this.peers.delete(userId);
@@ -629,10 +652,11 @@ export class VoiceClient {
       if (peer.audioContext) {
         peer.audioContext.close();
       }
-      // Stopper l'élément audio
+      // Stopper l'élément audio + retirer du DOM
       if (peer.audioElement) {
         peer.audioElement.pause();
         peer.audioElement.srcObject = null;
+        peer.audioElement.remove();
       }
       peer.connection.close();
     });
