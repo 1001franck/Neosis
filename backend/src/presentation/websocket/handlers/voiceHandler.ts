@@ -48,14 +48,14 @@ export class VoiceHandler {
       await this.handleStateUpdate(socket, isMuted, isDeafened);
     });
 
-    // Mettre à jour l'état vidéo (caméra)
+    // Mettre à jour l'état vidéo (caméra) — ne touche pas isScreenSharing
     socket.on('voice:video_state', async ({ isVideoEnabled }) => {
-      await this.handleVideoStateUpdate(socket, isVideoEnabled, false);
+      await this.handleVideoStateUpdate(socket, isVideoEnabled, undefined);
     });
 
-    // Mettre à jour le partage d'écran
+    // Mettre à jour le partage d'écran — ne touche pas isVideoEnabled
     socket.on('voice:screen_share', async ({ isScreenSharing }) => {
-      await this.handleVideoStateUpdate(socket, false, isScreenSharing);
+      await this.handleVideoStateUpdate(socket, undefined, isScreenSharing);
     });
 
     // WebRTC signaling : relayer les signaux entre peers
@@ -228,8 +228,8 @@ export class VoiceHandler {
    */
   private async handleVideoStateUpdate(
     socket: Socket,
-    isVideoEnabled: boolean,
-    isScreenSharing: boolean
+    isVideoEnabled: boolean | undefined,
+    isScreenSharing: boolean | undefined
   ): Promise<void> {
     try {
       const userId = socket.data.userId;
@@ -240,8 +240,12 @@ export class VoiceHandler {
         return;
       }
 
-      if (typeof isVideoEnabled !== 'boolean' || typeof isScreenSharing !== 'boolean') {
+      if (isVideoEnabled !== undefined && typeof isVideoEnabled !== 'boolean') {
         socket.emit('voice:error', { message: 'Invalid video state parameters' });
+        return;
+      }
+      if (isScreenSharing !== undefined && typeof isScreenSharing !== 'boolean') {
+        socket.emit('voice:error', { message: 'Invalid screen share parameters' });
         return;
       }
 

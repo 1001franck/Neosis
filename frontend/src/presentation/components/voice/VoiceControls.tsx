@@ -11,9 +11,10 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useVoice } from '@application/voice/useVoice';
 import { useChannels } from '@application/channels/useChannels';
+import { getVoiceClient } from '@infrastructure/webrtc/VoiceClient';
 
 export function VoiceControls(): React.ReactElement | null {
   const {
@@ -32,6 +33,14 @@ export function VoiceControls(): React.ReactElement | null {
 
   const { channels } = useChannels();
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+
+  // Détecter si l'autoplay audio est bloqué par le navigateur
+  useEffect(() => {
+    const handler = () => setAudioBlocked(true);
+    window.addEventListener('voice:audio-autoplay-blocked', handler);
+    return () => window.removeEventListener('voice:audio-autoplay-blocked', handler);
+  }, []);
 
   // Ne rien afficher si pas connecté
   if (!isConnected || !connectedChannelId) {
@@ -44,6 +53,18 @@ export function VoiceControls(): React.ReactElement | null {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e1f22] via-[#232428] to-[#1e1f22] border-t border-[#3f4147] px-3 py-2.5 flex items-center gap-3 z-50 shadow-2xl">
+      {/* Bannière déblocage audio — navigateurs qui bloquent l'autoplay */}
+      {audioBlocked && (
+        <button
+          onClick={() => {
+            getVoiceClient().unlockAudio();
+            setAudioBlocked(false);
+          }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-yellow-500 text-black text-xs font-semibold px-4 py-1.5 rounded-t-lg hover:bg-yellow-400 transition-colors"
+        >
+          Cliquer pour activer le son
+        </button>
+      )}
       {/* Section gauche : Info du channel */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Indicateur de connexion animé */}

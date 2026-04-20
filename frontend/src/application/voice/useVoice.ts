@@ -172,15 +172,17 @@ export function useVoice() {
   }, [isScreenSharing, isVideoEnabled, setScreenSharing, setVideoEnabled]);
 
   /**
-   * Enregistrer le callback pour l'arrêt du screenshare via le navigateur
+   * Enregistrer le callback pour l'arrêt du screenshare via le navigateur.
+   * Re-enregistré à chaque connexion car destroyVoiceClient() crée un nouveau singleton.
    */
   useEffect(() => {
+    if (!isConnected) return;
     getVoiceClient().setOnScreenShareEnded(() => {
       setScreenSharing(false);
       socketEmitters.updateScreenShare(false);
       logger.info('🖥️ Screen share stopped by browser');
     });
-  }, [setScreenSharing]);
+  }, [isConnected, setScreenSharing]);
 
   return {
     isConnected,

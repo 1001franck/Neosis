@@ -33,12 +33,13 @@ const ICE_SERVERS = [
 interface PeerConnection {
   userId: string;                  // ID de l'utilisateur distant
   connection: RTCPeerConnection;   // Connexion WebRTC
-  isInitiator: boolean;            // Vrai si on a initié la connexion
-  negotiationComplete: boolean;    // Vrai après le premier échange offer/answer
+  isInitiator: boolean;            // true = on a initié (impolite peer dans perfect negotiation)
+  negotiationComplete: boolean;    // true après le premier échange offer/answer
+  makingOffer: boolean;            // true pendant la création d'une offre (guard re-entrée)
   stream?: MediaStream;            // Stream audio reçu
   audioElement?: HTMLAudioElement; // Élément audio
-  videoStream?: MediaStream;       // Stream caméra distant
-  screenStream?: MediaStream;      // Stream partage d'écran distant
+  videoStream?: MediaStream;       // Stream vidéo distant (caméra ou écran selon exclusion mutuelle)
+  screenStream?: MediaStream;      // Réservé pour usage futur
   audioContext?: AudioContext;     // Analyse audio pour "speaker"
   analyser?: AnalyserNode;
   dataArray?: Uint8Array;
@@ -212,6 +213,8 @@ export class VoiceClient {
           // Forcer la lecture — autoplay seul peut être bloqué par le navigateur
           audioElement.play().catch(err => {
             logger.warn('Audio autoplay bloqué, interaction utilisateur requise', { userId, err });
+            // Notifier l'UI pour proposer un bouton de déblocage
+            window.dispatchEvent(new CustomEvent('voice:audio-autoplay-blocked'));
           });
           this.startSpeakingMonitor(userId, remoteStream);
         }
@@ -242,28 +245,43 @@ export class VoiceClient {
     };
 
     /**
-     * Negotiation Needed : renégocier quand un track est ajouté/retiré après l'établissement
-     * (ex: ajout de la caméra en cours d'appel)
+     * Negotiation Needed — Pattern "perfect negotiation"
      *
-     * Supprimé pour le non-initiateur tant que le premier échange offer/answer n'est pas terminé,
-     * pour éviter le glare (les deux côtés envoient une offre simultanément).
+     * Déclenché par addTrack() ou removeTrack(). Ce handler gère à la fois
+     * la négociation initiale (initiateur uniquement) et les renégociations
+     * (ajout caméra, partage d'écran en cours d'appel).
+     *
+     * Guard makingOffer : empêche deux offres concurrentes si l'événement
+     * se déclenche pendant qu'on attend déjà la réponse à un createOffer().
      */
     peerConnection.onnegotiationneeded = async () => {
-      if (peerConnection.signalingState !== 'stable') return;
-
       const peer = this.peers.get(userId);
       if (!peer) return;
 
-      // Le non-initiateur attend l'offre de l'autre côté pour la connexion initiale
+      // Le non-initiateur ne crée jamais l'offre initiale — il attend celle du pair
       if (!peer.isInitiator && !peer.negotiationComplete) return;
 
+      // Éviter la re-entrée : si on est déjà en train de créer une offre, on abandonne
+      if (peer.makingOffer) return;
+
+      // Si la connexion n'est pas stable, l'événement sera re-déclenché plus tard
+      if (peerConnection.signalingState !== 'stable') return;
+
       try {
+        peer.makingOffer = true;
         const offer = await peerConnection.createOffer();
+
+        // Vérifier que l'état n'a pas changé pendant l'await createOffer()
+        // (un signal entrant peut avoir modifié l'état entre-temps)
+        if (peerConnection.signalingState !== 'stable') return;
+
         await peerConnection.setLocalDescription(offer);
         socketEmitters.sendWebRTCSignal(userId, { type: 'offer', sdp: offer });
-        logger.debug('Renegotiation offer sent', { userId });
+        logger.debug('Offer sent', { userId, renegotiation: peer.negotiationComplete });
       } catch (err) {
-        logger.error('Renegotiation failed', { userId, err });
+        logger.error('Offer creation failed', { userId, err });
+      } finally {
+        peer.makingOffer = false;
       }
     };
 
@@ -282,23 +300,18 @@ export class VoiceClient {
       }
     };
 
-    // Stocker la connexion
-    this.peers.set(userId, { userId, connection: peerConnection, isInitiator: initiator, negotiationComplete: false });
+    // Stocker la connexion — onnegotiationneeded (déclenché par addTrack ci-dessus)
+    // sera traité par l'event loop juste après ; le flag isInitiator détermine qui envoie l'offre
+    this.peers.set(userId, {
+      userId,
+      connection: peerConnection,
+      isInitiator: initiator,
+      negotiationComplete: false,
+      makingOffer: false,
+    });
 
-    // === SIGNALING : Échange de configuration ===
-
-    if (initiator) {
-      // Si on est l'initiateur, on crée une "offer" (proposition de connexion)
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
-
-      // Envoyer l'offer à l'autre utilisateur via Socket.IO
-      logger.debug('Sending offer to peer', { userId });
-      socketEmitters.sendWebRTCSignal(userId, {
-        type: 'offer',
-        sdp: offer
-      });
-    }
+    // L'offre initiale est envoyée par onnegotiationneeded dès qu'il se déclenche.
+    // On ne crée PAS d'offre manuellement ici pour éviter la double offre.
   }
 
   /**
@@ -321,39 +334,47 @@ export class VoiceClient {
 
       const peer = this.peers.get(fromUserId);
 
-      // Si on reçoit une offer, on doit répondre
+      // === OFFER reçue ===
       if (signal.type === 'offer') {
-        // Créer la connexion si elle n'existe pas
+        // Créer la connexion si elle n'existe pas (pair qui nous contacte en premier)
         if (!peer) {
           await this.createPeerConnection(fromUserId, false);
         }
 
-        const peerConnection = this.peers.get(fromUserId)?.connection;
-        if (!peerConnection) return;
+        const currentPeer = this.peers.get(fromUserId);
+        const peerConnection = currentPeer?.connection;
+        if (!peerConnection || !currentPeer) return;
 
-        // Accepter l'offer
+        // Perfect negotiation — détection de collision d'offres
+        const offerCollision = currentPeer.makingOffer || peerConnection.signalingState !== 'stable';
+
+        if (offerCollision) {
+          if (currentPeer.isInitiator) {
+            // Impolite peer : on ignore l'offre entrante — on a priorité
+            logger.debug('Offer collision: ignoring incoming offer (we are initiator)', { fromUserId });
+            return;
+          }
+          // Polite peer : on rollback notre offre en cours et on accepte celle du pair
+          logger.debug('Offer collision: rolling back to accept incoming offer', { fromUserId });
+          await peerConnection.setLocalDescription({ type: 'rollback' });
+          currentPeer.makingOffer = false;
+        }
+
         await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-
-        // Créer une answer (réponse)
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
-        // Envoyer l'answer
         logger.debug('Sending answer to peer', { fromUserId });
-        socketEmitters.sendWebRTCSignal(fromUserId, {
-          type: 'answer',
-          sdp: answer
-        });
+        socketEmitters.sendWebRTCSignal(fromUserId, { type: 'answer', sdp: answer });
 
-        // Premier échange terminé — les renegociations sont désormais permises
-        const answeredPeer = this.peers.get(fromUserId);
-        if (answeredPeer) answeredPeer.negotiationComplete = true;
+        // Premier échange terminé — renégociations autorisées désormais
+        currentPeer.negotiationComplete = true;
       }
 
-      // Si on reçoit une answer, on l'applique
+      // === ANSWER reçue ===
       else if (signal.type === 'answer' && peer) {
         await peer.connection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-        // Premier échange terminé — les renegociations (caméra, écran) sont désormais permises
+        // Premier échange terminé — renégociations autorisées désormais
         peer.negotiationComplete = true;
         logger.info('Answer received and applied', { fromUserId });
       }
@@ -556,6 +577,20 @@ export class VoiceClient {
    */
   setOnScreenShareEnded(cb: () => void): void {
     this.onScreenShareEnded = cb;
+  }
+
+  /**
+   * Débloquer tous les éléments audio après interaction utilisateur
+   * (contourne la politique autoplay des navigateurs)
+   */
+  unlockAudio(): void {
+    this.peers.forEach((peer) => {
+      if (peer.audioElement && peer.audioElement.paused) {
+        peer.audioElement.play().catch(() => {
+          // Silencieux — l'utilisateur vient d'interagir, ça doit passer
+        });
+      }
+    });
   }
 
   /**

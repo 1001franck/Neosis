@@ -12,6 +12,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useVoice } from '@application/voice/useVoice';
 import { getVoiceClient } from '@infrastructure/webrtc/VoiceClient';
+import { useAuthStore } from '@application/auth/authStore';
 
 interface VideoFeedProps {
   username: string;
@@ -77,7 +78,11 @@ export function VoiceVideoGrid(): React.ReactElement | null {
   }, []);
 
   // Utilisateurs distants avec vidéo ou partage d'écran actif
-  const videoUsers = connectedUsers.filter(u => u.isVideoEnabled || u.isScreenSharing);
+  // On exclut l'utilisateur courant (déjà affiché en local)
+  const currentUserId = useAuthStore.getState().user?.id;
+  const videoUsers = connectedUsers.filter(u =>
+    (u.isVideoEnabled || u.isScreenSharing) && u.userId !== currentUserId
+  );
 
   const hasAnyVideo = isVideoEnabled || isScreenSharing || videoUsers.length > 0;
   if (!isConnected || !hasAnyVideo) return null;
