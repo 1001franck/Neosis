@@ -18,7 +18,7 @@ export interface UpdateVideoStateDTO {
  * Use Case : Mettre à jour l'état vidéo (caméra / partage d'écran)
  *
  * Règle métier : caméra et partage d'écran sont mutuellement exclusifs.
- * Si isScreenSharing passe à true, isVideoEnabled est forcé à false.
+ * Si isScreenSharing passe à true, isVideoEnabled est forcé à false et inversement.
  */
 export class UpdateVideoStateUseCase extends BaseUseCase<UpdateVideoStateDTO, VoiceConnection> {
   constructor(private voiceRepository: VoiceConnectionRepository) {
@@ -40,20 +40,17 @@ export class UpdateVideoStateUseCase extends BaseUseCase<UpdateVideoStateDTO, Vo
       );
     }
 
-    let newVideoEnabled = connection.isVideoEnabled;
-    let newScreenSharing = connection.isScreenSharing;
+    let newVideoEnabled = data.isVideoEnabled !== undefined ? data.isVideoEnabled : connection.isVideoEnabled;
+    let newScreenSharing = data.isScreenSharing !== undefined ? data.isScreenSharing : connection.isScreenSharing;
 
-    if (data.isVideoEnabled !== undefined) {
-      newVideoEnabled = data.isVideoEnabled;
-    }
-
-    if (data.isScreenSharing !== undefined) {
-      newScreenSharing = data.isScreenSharing;
-    }
-
-    // Règle métier : screen share et caméra sont mutuellement exclusifs
-    if (newScreenSharing) {
-      newVideoEnabled = false;
+    // Règle métier : exclusion mutuelle caméra / partage d'écran
+    if (newScreenSharing && newVideoEnabled) {
+      // Le dernier changement reçu a la priorité
+      if (data.isScreenSharing !== undefined) {
+        newVideoEnabled = false;
+      } else {
+        newScreenSharing = false;
+      }
     }
 
     return await this.voiceRepository.updateVideoState(data.userId, newVideoEnabled, newScreenSharing);

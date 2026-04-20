@@ -27,6 +27,7 @@ import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
 import { toastBus } from '@shared/utils/toastBus';
 import { sendDesktopNotification } from '@shared/hooks/useDesktopNotification';
+import { getVoiceClient } from '@infrastructure/webrtc/VoiceClient';
 
 function messageMentionsUser(content: string, username: string): boolean {
   const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -368,11 +369,22 @@ export function setupListeners() {
   });
 
   /**
-   * Réception de la liste des utilisateurs du voice channel
+   * Réception de la liste des utilisateurs du voice channel (reçu uniquement par le nouvel entrant)
+   * On initie les connexions WebRTC vers chaque utilisateur déjà présent — ce côté est toujours l'initiateur.
+   * Les utilisateurs déjà présents attendent l'offre et répondent → évite le glare WebRTC.
    */
   socket.on('voice:channel_users', ({ channelId, users }: { channelId: string; users: VoiceUser[] }) => {
     logger.info('Received voice channel users', { channelId, count: users.length });
     useVoiceStore.getState().setChannelUsers(channelId, users);
+
+    const currentUserId = useAuthStore.getState().user?.id;
+    users.forEach(user => {
+      if (user.userId === currentUserId) return;
+      logger.info('🔗 Initiating WebRTC connection to existing peer', { userId: user.userId });
+      getVoiceClient().createPeerConnection(user.userId, true).catch(err => {
+        logger.error('Failed to initiate peer connection', { userId: user.userId, err });
+      });
+    });
   });
 
   /**

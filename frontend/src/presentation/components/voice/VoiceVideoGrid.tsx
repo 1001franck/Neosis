@@ -1,7 +1,10 @@
 /**
  * PRESENTATION - VOICE VIDEO GRID
  * Affiche les flux vidéo des participants (caméra ou partage d'écran)
- * Style Google Meet : grille responsive de flux vidéo
+ * Style Google Meet : grille responsive sans espaces vides
+ *
+ * Règle : caméra et partage d'écran sont mutuellement exclusifs.
+ * Un seul flux vidéo actif par participant à la fois.
  */
 
 'use client';
@@ -42,14 +45,14 @@ function VideoFeed({ username, stream, isLocal, mirrored, label }: VideoFeedProp
           style={mirrored ? { transform: 'scaleX(-1)' } : undefined}
         />
       ) : (
-        // Placeholder si le stream n'est pas encore disponible
+        /* Placeholder avatar si le stream n'est pas encore disponible */
         <div className="w-12 h-12 rounded-full bg-[#3f4147] flex items-center justify-center">
           <span className="text-white text-lg font-bold">{username[0]?.toUpperCase()}</span>
         </div>
       )}
 
-      {/* Badge utilisateur */}
-      <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+      {/* Badge nom d'utilisateur */}
+      <div className="absolute bottom-2 left-2">
         <span className="text-xs text-white bg-black/60 px-2 py-0.5 rounded font-medium backdrop-blur-sm">
           {label ?? username}{isLocal ? ' (moi)' : ''}
         </span>
@@ -59,39 +62,32 @@ function VideoFeed({ username, stream, isLocal, mirrored, label }: VideoFeedProp
 }
 
 /**
- * Grille vidéo complète affichée au-dessus du chat quand quelqu'un a la vidéo active
+ * Grille vidéo complète — affichée quand au moins un participant a la vidéo active
  */
 export function VoiceVideoGrid(): React.ReactElement | null {
   const { isConnected, isVideoEnabled, isScreenSharing, connectedUsers } = useVoice();
   const client = getVoiceClient();
 
-  // Compteur pour forcer le re-render quand un stream WebRTC devient disponible
+  // Forcer le re-render quand un stream WebRTC distant devient disponible
   const [, setStreamVersion] = useState(0);
-
   useEffect(() => {
     const handler = () => setStreamVersion(v => v + 1);
     window.addEventListener('voice:video-stream-updated', handler);
     return () => window.removeEventListener('voice:video-stream-updated', handler);
   }, []);
 
-  // Utilisateurs distants ayant la vidéo ou le partage d'écran actif
+  // Utilisateurs distants avec vidéo ou partage d'écran actif
   const videoUsers = connectedUsers.filter(u => u.isVideoEnabled || u.isScreenSharing);
 
-  // Rien à afficher si personne n'utilise la vidéo
   const hasAnyVideo = isVideoEnabled || isScreenSharing || videoUsers.length > 0;
   if (!isConnected || !hasAnyVideo) return null;
 
-  // Nombre total de flux pour calculer la taille de la grille
-  const totalFeeds =
-    (isVideoEnabled ? 1 : 0) +
-    (isScreenSharing ? 1 : 0) +
-    videoUsers.length;
-
-  const gridCols = totalFeeds === 1 ? 'grid-cols-1' : totalFeeds <= 4 ? 'grid-cols-2' : 'grid-cols-3';
-
   return (
-    <div className={`p-3 grid ${gridCols} gap-3`}>
-      {/* Mon flux caméra — miroir activé */}
+    <div
+      className="p-3 grid gap-3"
+      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}
+    >
+      {/* Flux local caméra */}
       {isVideoEnabled && (
         <VideoFeed
           username="Moi"
@@ -101,7 +97,7 @@ export function VoiceVideoGrid(): React.ReactElement | null {
         />
       )}
 
-      {/* Mon flux partage d'écran — pas de miroir */}
+      {/* Flux local partage d'écran */}
       {isScreenSharing && (
         <VideoFeed
           username="Moi"
@@ -112,7 +108,7 @@ export function VoiceVideoGrid(): React.ReactElement | null {
         />
       )}
 
-      {/* Flux vidéo des autres utilisateurs */}
+      {/* Flux distants — un seul flux vidéo actif par utilisateur (exclusion mutuelle) */}
       {videoUsers.map(user => (
         <VideoFeed
           key={user.userId}

@@ -33,9 +33,12 @@ const ICE_SERVERS = [
 interface PeerConnection {
   userId: string;                  // ID de l'utilisateur distant
   connection: RTCPeerConnection;   // Connexion WebRTC
+  isInitiator: boolean;            // Vrai si on a initié la connexion
+  negotiationComplete: boolean;    // Vrai après le premier échange offer/answer
   stream?: MediaStream;            // Stream audio reçu
   audioElement?: HTMLAudioElement; // Élément audio
-  videoStream?: MediaStream;       // Stream vidéo distant
+  videoStream?: MediaStream;       // Stream caméra distant
+  screenStream?: MediaStream;      // Stream partage d'écran distant
   audioContext?: AudioContext;     // Analyse audio pour "speaker"
   analyser?: AnalyserNode;
   dataArray?: Uint8Array;
@@ -190,7 +193,8 @@ export class VoiceClient {
      * Track : On reçoit un track audio ou vidéo de l'autre utilisateur
      */
     peerConnection.ontrack = (event) => {
-      const [remoteStream] = event.streams;
+      // Utiliser event.streams[0] si disponible, sinon créer un stream depuis le track directement
+      const remoteStream = event.streams[0] ?? new MediaStream([event.track]);
       const peer = this.peers.get(userId);
       if (!peer) return;
 
@@ -205,18 +209,33 @@ export class VoiceClient {
           audioElement.muted = this.isDeafened;
           peer.audioElement = audioElement;
           peer.stream = remoteStream;
+          // Forcer la lecture — autoplay seul peut être bloqué par le navigateur
+          audioElement.play().catch(err => {
+            logger.warn('Audio autoplay bloqué, interaction utilisateur requise', { userId, err });
+          });
           this.startSpeakingMonitor(userId, remoteStream);
         }
       } else if (event.track.kind === 'video') {
         logger.info('📹 Received remote video track', { userId });
-        peer.videoStream = remoteStream;
+        // Premier track vidéo = caméra, second track vidéo = partage d'écran
+        if (peer.videoStream) {
+          peer.screenStream = remoteStream;
+        } else {
+          peer.videoStream = remoteStream;
+        }
 
         // Notifier les composants React qu'un stream vidéo est disponible
         window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
 
         // Nettoyer quand le track se termine
         event.track.onended = () => {
-          peer.videoStream = undefined;
+          if (peer.screenStream === remoteStream) {
+            peer.screenStream = undefined;
+          } else {
+            // Promouvoir screenStream en videoStream si caméra se coupe
+            peer.videoStream = peer.screenStream;
+            peer.screenStream = undefined;
+          }
           window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
         };
       }
@@ -225,10 +244,19 @@ export class VoiceClient {
     /**
      * Negotiation Needed : renégocier quand un track est ajouté/retiré après l'établissement
      * (ex: ajout de la caméra en cours d'appel)
+     *
+     * Supprimé pour le non-initiateur tant que le premier échange offer/answer n'est pas terminé,
+     * pour éviter le glare (les deux côtés envoient une offre simultanément).
      */
     peerConnection.onnegotiationneeded = async () => {
-      // Ignorer si la connexion est déjà en cours de négociation
       if (peerConnection.signalingState !== 'stable') return;
+
+      const peer = this.peers.get(userId);
+      if (!peer) return;
+
+      // Le non-initiateur attend l'offre de l'autre côté pour la connexion initiale
+      if (!peer.isInitiator && !peer.negotiationComplete) return;
+
       try {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
@@ -255,7 +283,7 @@ export class VoiceClient {
     };
 
     // Stocker la connexion
-    this.peers.set(userId, { userId, connection: peerConnection });
+    this.peers.set(userId, { userId, connection: peerConnection, isInitiator: initiator, negotiationComplete: false });
 
     // === SIGNALING : Échange de configuration ===
 
@@ -316,11 +344,17 @@ export class VoiceClient {
           type: 'answer',
           sdp: answer
         });
+
+        // Premier échange terminé — les renegociations sont désormais permises
+        const answeredPeer = this.peers.get(fromUserId);
+        if (answeredPeer) answeredPeer.negotiationComplete = true;
       }
 
       // Si on reçoit une answer, on l'applique
       else if (signal.type === 'answer' && peer) {
         await peer.connection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+        // Premier échange terminé — les renegociations (caméra, écran) sont désormais permises
+        peer.negotiationComplete = true;
         logger.info('Answer received and applied', { fromUserId });
       }
 
@@ -537,6 +571,10 @@ export class VoiceClient {
 
   getRemoteVideoStream(userId: string): MediaStream | undefined {
     return this.peers.get(userId)?.videoStream;
+  }
+
+  getRemoteScreenStream(userId: string): MediaStream | undefined {
+    return this.peers.get(userId)?.screenStream;
   }
 
   /**

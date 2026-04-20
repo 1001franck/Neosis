@@ -126,13 +126,13 @@ export function useVoice() {
   }, [isDeafened, isMuted, setDeafened]);
 
   /**
-   * Toggle caméra (mutuellement exclusif avec le screenshare)
+   * Toggle caméra — désactive le partage d'écran si actif
    */
   const toggleCamera = useCallback(async () => {
     const newVideoEnabled = !isVideoEnabled;
 
     if (newVideoEnabled) {
-      // Désactiver le screenshare si actif (règle métier : exclusion mutuelle)
+      // Couper le partage d'écran avant d'activer la caméra
       if (isScreenSharing) {
         getVoiceClient().disableScreenShare();
         setScreenSharing(false);
@@ -149,13 +149,13 @@ export function useVoice() {
   }, [isVideoEnabled, isScreenSharing, setVideoEnabled, setScreenSharing]);
 
   /**
-   * Toggle partage d'écran (mutuellement exclusif avec la caméra)
+   * Toggle partage d'écran — désactive la caméra si active
    */
   const toggleScreenShare = useCallback(async () => {
     const newScreenSharing = !isScreenSharing;
 
     if (newScreenSharing) {
-      // Désactiver la caméra si active (règle métier : exclusion mutuelle)
+      // Couper la caméra avant d'activer le partage d'écran
       if (isVideoEnabled) {
         getVoiceClient().disableCamera();
         setVideoEnabled(false);
@@ -181,32 +181,6 @@ export function useVoice() {
       logger.info('🖥️ Screen share stopped by browser');
     });
   }, [setScreenSharing]);
-
-  /**
-   * Créer une connexion WebRTC avec un pair
-   */
-  const connectToPeer = useCallback(async (userId: string) => {
-    if (isConnected) {
-      try {
-        logger.info('🔗 Connecting to peer', { userId });
-        await getVoiceClient().createPeerConnection(userId, true);
-      } catch (err) {
-        logger.error('Failed to connect to peer', err);
-      }
-    }
-  }, [isConnected]);
-
-  /**
-   * Connexion automatique aux pairs déjà présents dans le channel
-   */
-  useEffect(() => {
-    if (isConnected && connectedChannelId) {
-      const users = connectedUsers.get(connectedChannelId) || [];
-      users.forEach(user => {
-        connectToPeer(user.userId);
-      });
-    }
-  }, [isConnected, connectedChannelId, connectedUsers, connectToPeer]);
 
   return {
     isConnected,
