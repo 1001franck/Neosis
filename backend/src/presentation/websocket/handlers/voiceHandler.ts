@@ -251,8 +251,8 @@ export class VoiceHandler {
 
       const connection = await this.updateVideoStateUseCase.execute({
         userId,
-        isVideoEnabled,
-        isScreenSharing
+        ...(isVideoEnabled !== undefined ? { isVideoEnabled } : {}),
+        ...(isScreenSharing !== undefined ? { isScreenSharing } : {}),
       });
 
       if (channelId) {
