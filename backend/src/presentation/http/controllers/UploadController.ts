@@ -184,7 +184,7 @@ export class UploadController {
 
       const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/g;
       const links = messagesWithLinks.flatMap((msg) => {
-        const urls = msg.content.match(urlRegex) || [];
+        const urls = (msg.content ?? '').match(urlRegex) || [];
         return urls.map((url) => ({
           id: `${msg.id}-${url}`,
           url,

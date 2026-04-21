@@ -46,7 +46,7 @@ export class Message {
 
   constructor(
     public readonly id: string,
-    public content: string,
+    public content: string | null,
     public readonly memberId: string,
     public readonly channelId: string,
     public readonly createdAt: Date,
@@ -60,17 +60,16 @@ export class Message {
 
   /**
    * Supprime les balises HTML pour prévenir les attaques XSS
-   * On supprime les balises entières (ex: <b>texte</b> → texte, <img src="x" onerror="..."> → "")
    */
   static sanitize(content: string): string {
     return content.replace(/<[^>]*>/g, '');
   }
 
   /**
-   * Validation du contenu du message
+   * Validation du contenu. Un message sans texte est valide uniquement
+   * s'il contient des pièces jointes ; sinon le texte est obligatoire.
    */
-  private validateContent(content: string): void {
-    // Allow empty content when message has attachments
+  private validateContent(content: string | null): void {
     if (this.hasAttachments && (!content || content.trim().length === 0)) {
       return;
     }

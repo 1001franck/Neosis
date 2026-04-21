@@ -16,33 +16,13 @@ import { socketEmitters } from '@infrastructure/websocket/emitters';
 import { socket } from '@infrastructure/websocket/socket';
 import { logger } from '@shared/utils/logger';
 import { useVoiceStore } from '@application/voice/voiceStore';
+import { voiceApi } from '@infrastructure/api/voice.api';
 
-/**
- * Configuration ICE : STUN + TURN pour le NAT traversal
- *
- * STUN : découvre l'IP publique (NAT cone). Insuffisant pour NAT symétrique (4G/5G, certains FAI).
- * TURN : relai en cas d'échec P2P direct — indispensable pour la fiabilité en production.
- *
- * Serveurs TURN publics openrelay.metered.ca (gratuits, sans inscription).
- */
-const ICE_SERVERS: RTCIceServer[] = [
+// Serveurs STUN de secours utilisés avant que les credentials TURN soient chargés
+// ou si l'endpoint backend échoue
+const STUN_FALLBACK: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  {
-    urls: 'turn:openrelay.metered.ca:80',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
 ];
 
 /**
@@ -54,6 +34,16 @@ interface PeerConnection {
   isInitiator: boolean;            // true = on a initié (impolite peer dans perfect negotiation)
   negotiationComplete: boolean;    // true après le premier échange offer/answer
   makingOffer: boolean;            // true pendant la création d'une offre (guard re-entrée)
+  // Compte le nombre de fois que onnegotiationneeded a été déclenché.
+  // Le premier déclenchement (valeur 0→1) est toujours causé par addTrack() dans
+  // createPeerConnection() ; pour le non-initiateur ce n'est pas une vraie demande
+  // de renégociation — on l'absorbe sans envoyer d'offre.
+  negotiationNeededCount: number;
+  // File d'attente des candidats ICE reçus avant setRemoteDescription.
+  // Drainée juste après l'application de la description distante.
+  iceCandidateQueue: RTCIceCandidate[];
+  // true entre setRemoteDescription et la fin du drain de la queue
+  remoteDescriptionSet: boolean;
   stream?: MediaStream;            // Stream audio reçu
   audioElement?: HTMLAudioElement; // Élément audio
   videoStream?: MediaStream;       // Stream vidéo distant (caméra ou écran selon exclusion mutuelle)
@@ -81,6 +71,8 @@ export class VoiceClient {
   private peers: Map<string, PeerConnection> = new Map();
   private isMuted: boolean = false;
   private isDeafened: boolean = false;
+  // Serveurs ICE chargés dynamiquement depuis le backend (STUN + TURN Metered)
+  private iceServers: RTCIceServer[] = STUN_FALLBACK;
 
   // Callback déclenché quand le partage d'écran est arrêté via l'UI du navigateur
   private onScreenShareEnded: (() => void) | null = null;
@@ -90,12 +82,32 @@ export class VoiceClient {
   }
 
   /**
+   * Charge les serveurs ICE (STUN + TURN) depuis le backend.
+   * Appelée une fois avant la première connexion peer.
+   * En cas d'erreur, le fallback STUN reste actif.
+   */
+  async fetchIceServers(): Promise<void> {
+    try {
+      const servers = await voiceApi.getTurnCredentials();
+      if (Array.isArray(servers) && servers.length > 0) {
+        this.iceServers = servers;
+        logger.info('Serveurs ICE chargés depuis le backend', { count: servers.length });
+      }
+    } catch (err) {
+      logger.warn('Impossible de charger les serveurs TURN, STUN uniquement', { err });
+    }
+  }
+
+  /**
    * ÉTAPE 1 : Initialiser l'audio (demander accès au micro)
    *
    * Cette fonction demande la permission d'accéder au micro
    * via l'API navigator.mediaDevices.getUserMedia()
    */
   async initializeAudio(): Promise<void> {
+    // Charger les serveurs ICE avant de créer les connexions peer
+    await this.fetchIceServers();
+
     try {
       logger.info('🎤 Requesting microphone access...');
 
@@ -172,7 +184,7 @@ export class VoiceClient {
 
     // Créer la connexion WebRTC
     const peerConnection = new RTCPeerConnection({
-      iceServers: ICE_SERVERS
+      iceServers: this.iceServers
     });
 
     if (this.localStream && this.localStream.getTracks().length > 0) {
@@ -275,13 +287,22 @@ export class VoiceClient {
      *
      * Guard makingOffer : empêche deux offres concurrentes si l'événement
      * se déclenche pendant qu'on attend déjà la réponse à un createOffer().
+     *
+     * Guard negotiationNeededCount : le premier déclenchement sur le non-initiateur
+     * est toujours le bruit causé par addTrack() dans createPeerConnection().
+     * Ce déclenchement résiduel peut arriver APRÈS que negotiationComplete soit déjà
+     * true (si l'offre distante a été traitée avant que la macrotask ne s'exécute).
+     * On l'absorbe : le non-initiateur n'envoie jamais l'offre initiale.
      */
     peerConnection.onnegotiationneeded = async () => {
       const peer = this.peers.get(userId);
       if (!peer) return;
 
-      // Le non-initiateur ne crée jamais l'offre initiale — il attend celle du pair
-      if (!peer.isInitiator && !peer.negotiationComplete) return;
+      peer.negotiationNeededCount += 1;
+
+      // Le non-initiateur ignore son premier déclenchement (bruit de addTrack initial).
+      // Les suivants (renégociation caméra, écran) sont légitimes.
+      if (!peer.isInitiator && peer.negotiationNeededCount === 1) return;
 
       // Éviter la re-entrée : si on est déjà en train de créer une offre, on abandonne
       if (peer.makingOffer) return;
@@ -330,6 +351,9 @@ export class VoiceClient {
       isInitiator: initiator,
       negotiationComplete: false,
       makingOffer: false,
+      negotiationNeededCount: 0,
+      iceCandidateQueue: [],
+      remoteDescriptionSet: false,
     });
 
     // L'offre initiale est envoyée par onnegotiationneeded dès qu'il se déclenche.
@@ -383,6 +407,11 @@ export class VoiceClient {
         }
 
         await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+        currentPeer.remoteDescriptionSet = true;
+
+        // Drainer les candidats ICE mis en attente avant setRemoteDescription
+        await this.drainIceCandidateQueue(fromUserId);
+
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
@@ -396,15 +425,33 @@ export class VoiceClient {
       // === ANSWER reçue ===
       else if (signal.type === 'answer' && peer) {
         await peer.connection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+        peer.remoteDescriptionSet = true;
         // Premier échange terminé — renégociations autorisées désormais
         peer.negotiationComplete = true;
+
+        // Drainer les candidats ICE mis en attente avant setRemoteDescription
+        await this.drainIceCandidateQueue(fromUserId);
+
         logger.info('Answer received and applied', { fromUserId });
       }
 
-      // Si on reçoit un ICE candidate, on l'ajoute
-      else if (signal.type === 'ice-candidate' && peer) {
-        await peer.connection.addIceCandidate(new RTCIceCandidate(signal.candidate));
-        logger.debug('ICE candidate added', { fromUserId });
+      // === ICE CANDIDATE reçu ===
+      else if (signal.type === 'ice-candidate') {
+        const candidate = new RTCIceCandidate(signal.candidate);
+
+        if (!peer || !peer.remoteDescriptionSet) {
+          // Pas encore de peer ou setRemoteDescription pas encore appelé :
+          // on met en file d'attente pour appliquer après.
+          const targetPeer = peer ?? this.peers.get(fromUserId);
+          if (targetPeer) {
+            targetPeer.iceCandidateQueue.push(candidate);
+            logger.debug('ICE candidate queued (waiting for remote description)', { fromUserId });
+          } else {
+            logger.warn('ICE candidate dropped: peer unknown', { fromUserId });
+          }
+        } else {
+          await this.applyIceCandidate(peer, candidate, fromUserId);
+        }
       }
     });
   }
@@ -489,6 +536,34 @@ export class VoiceClient {
       peer.rafId = requestAnimationFrame(tick);
     } catch (error) {
       logger.warn('Failed to start speaking monitor', { userId, error });
+    }
+  }
+
+  /**
+   * Applique un candidat ICE en gérant les erreurs non fatales.
+   * addIceCandidate peut lever si appelé dans un mauvais état de signaling.
+   */
+  private async applyIceCandidate(peer: PeerConnection, candidate: RTCIceCandidate, userId: string): Promise<void> {
+    try {
+      await peer.connection.addIceCandidate(candidate);
+      logger.debug('ICE candidate added', { userId });
+    } catch (err) {
+      logger.warn('ICE candidate ignored (non-fatal)', { userId, err });
+    }
+  }
+
+  /**
+   * Draine la file d'attente des candidats ICE accumulés avant setRemoteDescription.
+   * À appeler immédiatement après avoir appliqué la description distante.
+   */
+  private async drainIceCandidateQueue(userId: string): Promise<void> {
+    const peer = this.peers.get(userId);
+    if (!peer || peer.iceCandidateQueue.length === 0) return;
+
+    logger.debug('Draining ICE candidate queue', { userId, count: peer.iceCandidateQueue.length });
+    const queued = peer.iceCandidateQueue.splice(0);
+    for (const candidate of queued) {
+      await this.applyIceCandidate(peer, candidate, userId);
     }
   }
 

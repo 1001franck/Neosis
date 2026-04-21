@@ -6,6 +6,18 @@
 import type { Request, Response } from 'express';
 import type { GetChannelVoiceUsersUseCase } from '../../../application/voice/usecases/GetChannelVoiceUsersUseCase.js';
 
+interface IceServer {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}
+
+// Serveurs STUN Google utilisés en fallback si la clé API TURN n'est pas configurée
+const STUN_FALLBACK: IceServer[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+];
+
 /**
  * VoiceController
  *
@@ -16,6 +28,38 @@ export class VoiceController {
   constructor(
     private getChannelVoiceUsersUseCase: GetChannelVoiceUsersUseCase
   ) {}
+
+  /**
+   * GET /voice/turn-credentials
+   * Retourne les serveurs ICE (STUN + TURN) pour WebRTC.
+   * La clé API Metered reste côté serveur — le frontend ne la voit jamais.
+   */
+  getTurnCredentials = async (_req: Request, res: Response): Promise<void> => {
+    const apiKey = process.env.METERED_TURN_API_KEY;
+
+    if (!apiKey) {
+      // Pas de clé configurée → retourner uniquement les serveurs STUN
+      res.json({ success: true, data: STUN_FALLBACK });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://neosis.metered.live/api/v1/turn/credentials?apiKey=${apiKey}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Metered API error: ${response.status}`);
+      }
+
+      const iceServers = await response.json() as IceServer[];
+      res.json({ success: true, data: iceServers });
+    } catch (error) {
+      console.error('Failed to fetch TURN credentials:', error);
+      // En cas d'erreur, fallback STUN pour ne pas bloquer l'appel
+      res.json({ success: true, data: STUN_FALLBACK });
+    }
+  };
 
   /**
    * GET /voice/channels/:channelId/users

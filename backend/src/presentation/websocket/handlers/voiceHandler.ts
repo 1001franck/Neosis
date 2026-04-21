@@ -292,17 +292,18 @@ export class VoiceHandler {
 
       console.log(`[Voice WebRTC] Relaying signal from ${fromUserId} to ${targetUserId}`);
 
-      // Trouver le socket du destinataire
+      // Récupérer TOUS les sockets du destinataire.
+      // Un utilisateur peut avoir plusieurs onglets ouverts : on émet sur chacun.
+      // Le bon onglet (celui connecté au voice channel) traitera le signal ;
+      // les autres l'ignoreront silencieusement (pas de peer WebRTC correspondant).
       const sockets = await this.io.fetchSockets();
-      const targetSocket = sockets.find(s => s.data.userId === targetUserId);
+      const targetSockets = sockets.filter(s => s.data.userId === targetUserId);
 
-      if (targetSocket) {
-        // Relayer le signal au destinataire
-        targetSocket.emit('voice:webrtc_signal', {
-          fromUserId,
-          fromUsername,
-          signal
-        });
+      if (targetSockets.length > 0) {
+        const payload = { fromUserId, fromUsername, signal };
+        for (const target of targetSockets) {
+          target.emit('voice:webrtc_signal', payload);
+        }
       } else {
         console.warn(`[Voice WebRTC] Target user ${targetUserId} not found`);
       }
@@ -313,34 +314,45 @@ export class VoiceHandler {
 
   /**
    * Handler : Déconnexion (quitter automatiquement le voice channel)
+   *
+   * Une seconde tentative est effectuée si la première échoue (transitoire DB).
+   * Le socket est déjà fermé ici : on ne peut pas notifier le client, mais on
+   * notifie les autres membres du channel de son départ.
    */
   private async handleDisconnect(socket: Socket): Promise<void> {
-    try {
-      const userId = socket.data.userId;
-      const channelId = socket.data.voiceChannelId;
+    const userId = socket.data.userId;
+    const channelId = socket.data.voiceChannelId;
 
-      if (userId && channelId) {
-        console.log(`[Voice] User ${userId} disconnected, leaving voice channel ${channelId}`);
+    if (!userId || !channelId) return;
 
-        const serverId = socket.data.voiceServerId;
+    console.log(`[Voice] User ${userId} disconnected, leaving voice channel ${channelId}`);
 
-        // Quitter automatiquement le voice channel
-        await this.leaveVoiceChannelUseCase.execute({ userId });
+    const serverId = socket.data.voiceServerId;
 
-        // Notifier les autres utilisateurs
-        this.io.to(`voice:${channelId}`).emit('voice:user_left', {
-          userId,
-          channelId
-        });
+    const attempt = async () => {
+      await this.leaveVoiceChannelUseCase.execute({ userId });
 
-        // Notifier tous les membres du serveur du nouveau compteur (pour la sidebar)
-        if (serverId) {
-          const users = await this.getChannelVoiceUsersUseCase.execute({ channelId });
-          this.io.to(`server:${serverId}`).emit('server:voice_update', { channelId, count: users.length });
-        }
+      this.io.to(`voice:${channelId}`).emit('voice:user_left', { userId, channelId });
+
+      if (serverId) {
+        const users = await this.getChannelVoiceUsersUseCase.execute({ channelId });
+        this.io.to(`server:${serverId}`).emit('server:voice_update', { channelId, count: users.length });
       }
-    } catch (error: unknown) {
-      console.error('[Voice] Disconnect cleanup error:', error);
+    };
+
+    try {
+      await attempt();
+    } catch (firstError: unknown) {
+      console.warn('[Voice] Disconnect cleanup failed (1re tentative), retry dans 2s :', firstError);
+      // Retry après 2 s — couvre les micro-coupures DB transitoires
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      try {
+        await attempt();
+      } catch (secondError: unknown) {
+        // Échec définitif : la VoiceConnection reste en base jusqu'au prochain démarrage
+        // (la purge au startup nettoiera ce zombie).
+        console.error('[Voice] Disconnect cleanup définitivement échoué pour', userId, secondError);
+      }
     }
   }
 }

@@ -17,6 +17,12 @@ export function createVoiceRouter(voiceController: VoiceController): Router {
   router.use(authMiddleware);
 
   /**
+   * GET /voice/turn-credentials
+   * Retourne les serveurs ICE (STUN + TURN Metered) pour WebRTC côté client
+   */
+  router.get('/turn-credentials', voiceController.getTurnCredentials);
+
+  /**
    * GET /voice/channels/:channelId/users
    * Récupère la liste des utilisateurs connectés à un voice channel
    */
