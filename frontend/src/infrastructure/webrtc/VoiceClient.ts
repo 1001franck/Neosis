@@ -16,43 +16,14 @@ import { socketEmitters } from '@infrastructure/websocket/emitters';
 import { socket } from '@infrastructure/websocket/socket';
 import { logger } from '@shared/utils/logger';
 import { useVoiceStore } from '@application/voice/voiceStore';
+import { voiceApi } from '@infrastructure/api/voice.api';
 
-/**
- * Configuration ICE : STUN + TURN pour le NAT traversal
- *
- * STUN : découvre l'IP publique (NAT cone). Insuffisant pour NAT symétrique (4G/5G, certains FAI).
- * TURN : relai en cas d'échec P2P direct — indispensable pour des réseaux différents en production.
- *
- *   Les serveurs TURN publics gratuits (openrelay, etc.) sont fréquemment hors-ligne ou saturés.
- *     Chrome avertit "ICE failed, your TURN server appears to be broken" quand ils ne répondent pas.
- *     Pour une fiabilité de production, configurer un vrai service TURN via les variables d'env :
- *       NEXT_PUBLIC_TURN_URL      ex: turn:my-turn.example.com:443?transport=tcp
- *       NEXT_PUBLIC_TURN_USERNAME ex: nom-utilisateur-généré
- *       NEXT_PUBLIC_TURN_CREDENTIAL ex: credential-généré
- *     Twilio Network Traversal, Metered.ca (payant) ou coturn self-hosted sont les options viables.
- *
- * Chrome déconseille 5+ serveurs ICE (ralentit la découverte) — on reste à 2 STUN maximum.
- */
-function buildIceServers(): RTCIceServer[] {
-  const servers: RTCIceServer[] = [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-  ];
-
-  const turnUrl        = process.env.NEXT_PUBLIC_TURN_URL;
-  const turnUsername   = process.env.NEXT_PUBLIC_TURN_USERNAME;
-  const turnCredential = process.env.NEXT_PUBLIC_TURN_CREDENTIAL;
-
-  if (turnUrl && turnUsername && turnCredential) {
-    servers.push({ urls: turnUrl, username: turnUsername, credential: turnCredential });
-  }
-  // Pas de TURN configuré → STUN only. Connexions sur le même réseau ou NAT ouvert fonctionneront ;
-  // NAT symétrique (4G/5G, certains FAI) sera en échec — c'est le comportement attendu sans TURN.
-
-  return servers;
-}
-
-const ICE_SERVERS: RTCIceServer[] = buildIceServers();
+// Serveurs STUN de secours utilisés avant que les credentials TURN soient chargés
+// ou si l'endpoint backend échoue
+const STUN_FALLBACK: RTCIceServer[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+];
 
 /**
  * Interface pour gérer une connexion peer-to-peer avec un autre utilisateur
@@ -100,6 +71,8 @@ export class VoiceClient {
   private peers: Map<string, PeerConnection> = new Map();
   private isMuted: boolean = false;
   private isDeafened: boolean = false;
+  // Serveurs ICE chargés dynamiquement depuis le backend (STUN + TURN Metered)
+  private iceServers: RTCIceServer[] = STUN_FALLBACK;
 
   // Callback déclenché quand le partage d'écran est arrêté via l'UI du navigateur
   private onScreenShareEnded: (() => void) | null = null;
@@ -109,12 +82,32 @@ export class VoiceClient {
   }
 
   /**
+   * Charge les serveurs ICE (STUN + TURN) depuis le backend.
+   * Appelée une fois avant la première connexion peer.
+   * En cas d'erreur, le fallback STUN reste actif.
+   */
+  async fetchIceServers(): Promise<void> {
+    try {
+      const servers = await voiceApi.getTurnCredentials();
+      if (Array.isArray(servers) && servers.length > 0) {
+        this.iceServers = servers;
+        logger.info('Serveurs ICE chargés depuis le backend', { count: servers.length });
+      }
+    } catch (err) {
+      logger.warn('Impossible de charger les serveurs TURN, STUN uniquement', { err });
+    }
+  }
+
+  /**
    * ÉTAPE 1 : Initialiser l'audio (demander accès au micro)
    *
    * Cette fonction demande la permission d'accéder au micro
    * via l'API navigator.mediaDevices.getUserMedia()
    */
   async initializeAudio(): Promise<void> {
+    // Charger les serveurs ICE avant de créer les connexions peer
+    await this.fetchIceServers();
+
     try {
       logger.info('🎤 Requesting microphone access...');
 
@@ -191,7 +184,7 @@ export class VoiceClient {
 
     // Créer la connexion WebRTC
     const peerConnection = new RTCPeerConnection({
-      iceServers: ICE_SERVERS
+      iceServers: this.iceServers
     });
 
     if (this.localStream && this.localStream.getTracks().length > 0) {
