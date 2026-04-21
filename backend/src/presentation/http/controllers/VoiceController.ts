@@ -53,7 +53,18 @@ export class VoiceController {
       }
 
       const iceServers = await response.json() as IceServer[];
-      res.json({ success: true, data: iceServers });
+
+      // Chrome ralentit la découverte ICE au-delà de 5 serveurs.
+      // On garde : 1 STUN + TURN UDP(443) + TURN TCP(443) + TURNS TLS = 4 max.
+      const filtered = iceServers.filter((s) => {
+        const url = Array.isArray(s.urls) ? s.urls[0] : s.urls;
+        if (!url) return false;
+        // Exclure les entrées TURN sur le port 80 (moins utiles que 443 pour passer les firewalls)
+        if (url.includes(':80') && !url.startsWith('stun:')) return false;
+        return true;
+      }).slice(0, 4);
+
+      res.json({ success: true, data: filtered.length > 0 ? filtered : iceServers.slice(0, 4) });
     } catch (error) {
       console.error('Failed to fetch TURN credentials:', error);
       // En cas d'erreur, fallback STUN pour ne pas bloquer l'appel

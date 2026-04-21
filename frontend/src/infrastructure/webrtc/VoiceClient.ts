@@ -332,13 +332,21 @@ export class VoiceClient {
      * Connection State Change : Surveiller l'état de la connexion
      */
     peerConnection.onconnectionstatechange = () => {
-      logger.info('Peer connection state changed', {
-        userId,
-        state: peerConnection.connectionState
-      });
+      const state = peerConnection.connectionState;
+      logger.info('Peer connection state changed', { userId, state });
 
-      // Si la connexion échoue ou se ferme, nettoyer
-      if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'closed') {
+      if (state === 'failed') {
+        const peer = this.peers.get(userId);
+        if (peer?.isInitiator) {
+          // ICE restart : relance la négociation sans recréer le peer.
+          // Recréer le peer causerait "fewer m-sections" côté distant si
+          // une renégociation vidéo avait déjà eu lieu (ex: caméra activée puis conn. perdue).
+          logger.info('ICE restart initiated', { userId });
+          peerConnection.restartIce();
+          // onnegotiationneeded va se déclencher et envoyer une offre avec iceRestart:true
+        }
+        // Non-initiateur : attend l'offre ICE restart de l'initiateur
+      } else if (state === 'closed') {
         this.removePeer(userId);
       }
     };
