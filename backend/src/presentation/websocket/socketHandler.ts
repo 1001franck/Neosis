@@ -82,13 +82,16 @@ export class SocketHandler {
   private setupMiddleware(): void {
     this.io.use(async (socket, next) => {
       try {
-        // Cookie httpOnly (web) ou Authorization header (app desktop Tauri)
-        const cookieHeader = socket.handshake.headers.cookie || '';
-        const tokenMatch = cookieHeader.split(';').map(c => c.trim()).find(c => c.startsWith('token='));
-        const cookieToken = tokenMatch ? tokenMatch.split('=')[1] : null;
+        // Priorité : bearer (header Authorization) > socket.auth.token > cookie httpOnly.
+        // Le cookie est en dernier : un cookie périmé d'une session précédente ne doit pas
+        // écraser un JWT valide transmis explicitement par le client.
         const authHeader = socket.handshake.headers.authorization as string | undefined;
         const bearerToken = authHeader?.replace('Bearer ', '') || null;
-        const token = cookieToken ?? bearerToken ?? (socket.handshake.auth?.token as string | undefined) ?? null;
+        const socketAuthToken = (socket.handshake.auth?.token as string | undefined) ?? null;
+        const cookieHeader = socket.handshake.headers.cookie || '';
+        const tokenMatch = cookieHeader.split(';').map(c => c.trim()).find(c => c.startsWith('token='));
+        const cookieToken = tokenMatch ? decodeURIComponent(tokenMatch.split('=').slice(1).join('=')) : null;
+        const token = bearerToken ?? socketAuthToken ?? cookieToken ?? null;
 
         if (!token) {
           return next(new Error('Authentication error: token missing'));

@@ -280,6 +280,15 @@ app.use('/dm/conversations/:id/messages', authMiddleware, createDirectMessageRou
 app.use(errorHandler);
 
 // ============ START SERVER ============
+
+// Purger les VoiceConnections résiduelles laissées par un crash ou un redémarrage.
+// Sans cette purge, les utilisateurs connectés lors du dernier cycle restent en base
+// et apparaissent comme "présents" pour tous les nouveaux arrivants.
+const voiceRepository = container.createVoiceConnectionRepository();
+voiceRepository.deleteAll()
+  .then(() => console.log(' VoiceConnections purgées au démarrage'))
+  .catch((err: unknown) => console.error(' Impossible de purger les VoiceConnections :', err));
+
 httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(` Frontend URL: ${FRONTEND_URL}`);

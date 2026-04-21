@@ -31,8 +31,14 @@ export class CreateMessageUseCase extends BaseUseCase<CreateMessageDTO, Message>
   }
 
   async execute(data: CreateMessageDTO): Promise<Message> {
-    // Sanitize le contenu pour prévenir les attaques XSS
-    const sanitizedContent = Message.sanitize(data.content);
+    const rawContent = data.content ?? '';
+    // Sanitizer le contenu (supprime les balises HTML)
+    const cleaned = Message.sanitize(rawContent);
+    // Normaliser : contenu vide → null pour les messages avec pièces jointes uniquement
+    const hasAttachments = !!(data.attachmentIds && data.attachmentIds.length > 0);
+    const sanitizedContent: string | null = cleaned.trim().length === 0 && hasAttachments
+      ? null
+      : cleaned;
 
     // Récupère le channel pour connaître le serverId
     const channel = await this.channelRepository.findById(data.channelId);
@@ -58,8 +64,6 @@ export class CreateMessageUseCase extends BaseUseCase<CreateMessageDTO, Message>
     }
 
     const id = crypto.randomUUID();
-
-    const hasAttachments = !!(data.attachmentIds && data.attachmentIds.length > 0);
 
     const message = new Message(
       id,

@@ -47,4 +47,10 @@ export interface VoiceConnectionRepository {
    * Compter le nombre d'utilisateurs connectés dans un channel
    */
   countByChannelId(channelId: string): Promise<number>;
+
+  /**
+   * Supprimer toutes les connexions vocales.
+   * Appelé au démarrage du serveur pour purger les zombies laissés par un crash.
+   */
+  deleteAll(): Promise<void>;
 }

@@ -13,6 +13,7 @@ import { useCallback, useEffect } from 'react';
 import { useVoiceStore } from './voiceStore';
 import { getVoiceClient, destroyVoiceClient } from '@infrastructure/webrtc/VoiceClient';
 import { socketEmitters } from '@infrastructure/websocket/emitters';
+import { socket } from '@infrastructure/websocket/socket';
 import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
 
@@ -39,6 +40,10 @@ export function useVoice() {
 
   /**
    * Rejoindre un voice channel
+   *
+   * On attend la confirmation du serveur (voice:channel_users) avant d'appeler
+   * setConnected(). Si le serveur répond voice:error, on rollback proprement.
+   * Timeout de 10 s pour ne pas rester bloqué si le serveur ne répond pas.
    */
   const joinVoiceChannel = useCallback(async (channelId: string) => {
     try {
@@ -47,19 +52,51 @@ export function useVoice() {
 
       logger.info('🎤 Joining voice channel', { channelId });
 
-      // Initialiser l'audio via le singleton partagé
+      // Initialiser le micro avant d'envoyer la demande
       await getVoiceClient().initializeAudio();
 
-      // Informer le backend via Socket.IO
-      socketEmitters.joinVoiceChannel(channelId);
+      // Attendre la confirmation serveur avant de mettre à jour le store
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('Timeout : le serveur n\'a pas confirmé le join dans les 10 s'));
+        }, 10_000);
 
-      // Mettre à jour le store
+        const cleanup = () => {
+          clearTimeout(timeout);
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          socket.off('voice:channel_users', onSuccess);
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          socket.off('voice:error', onError);
+        };
+
+        const onSuccess = ({ channelId: confirmedId }: { channelId: string }) => {
+          if (confirmedId !== channelId) return;
+          cleanup();
+          resolve();
+        };
+
+        const onError = ({ message: errMsg }: { message: string }) => {
+          cleanup();
+          reject(new Error(errMsg));
+        };
+
+        socket.once('voice:channel_users', onSuccess);
+        socket.once('voice:error', onError);
+
+        // Envoyer la demande après avoir posé les listeners
+        socketEmitters.joinVoiceChannel(channelId);
+      });
+
+      // Le serveur a confirmé — on met à jour le store
       setConnected(channelId);
 
       logger.info('✅ Joined voice channel successfully', { channelId });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to join voice channel';
       logger.error('❌ Failed to join voice channel', err);
+      // S'assurer que le micro est libéré si le join a échoué
+      destroyVoiceClient();
       setError(message);
       setConnecting(false);
       throw err;

@@ -111,6 +111,14 @@ export class PrismaVoiceConnectionRepository implements VoiceConnectionRepositor
   }
 
   /**
+   * Supprimer toutes les connexions vocales.
+   * Utilisé au démarrage pour purger les zombies laissés par un crash ou redémarrage.
+   */
+  async deleteAll(): Promise<void> {
+    await this.prisma.voiceConnection.deleteMany({});
+  }
+
+  /**
    * Convertir du format Prisma vers l'entité Domain
    */
   private toDomain(raw: {
