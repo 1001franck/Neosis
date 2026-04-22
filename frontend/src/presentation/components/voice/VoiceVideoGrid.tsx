@@ -80,9 +80,16 @@ export function VoiceVideoGrid(): React.ReactElement | null {
   // Utilisateurs distants avec vidéo ou partage d'écran actif
   // On exclut l'utilisateur courant (déjà affiché en local)
   const currentUserId = useAuthStore.getState().user?.id;
-  const videoUsers = connectedUsers.filter(u =>
-    (u.isVideoEnabled || u.isScreenSharing) && u.userId !== currentUserId
-  );
+  const connectedPeerIds = client.getConnectedPeerIds();
+  const videoUsers = connectedUsers.filter((u) => {
+    if (u.userId === currentUserId) return false;
+
+    const hasStateVideo = Boolean(u.isVideoEnabled || u.isScreenSharing);
+    const hasRemoteStream = Boolean(client.getRemoteVideoStream(u.userId));
+    const isConnectedPeer = connectedPeerIds.includes(u.userId);
+
+    return hasStateVideo || (isConnectedPeer && hasRemoteStream);
+  });
 
   const hasAnyVideo = isVideoEnabled || isScreenSharing || videoUsers.length > 0;
   if (!isConnected || !hasAnyVideo) return null;

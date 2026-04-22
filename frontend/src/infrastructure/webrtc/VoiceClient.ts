@@ -271,20 +271,41 @@ export class VoiceClient {
         }
       } else if (event.track.kind === 'video') {
         logger.info('📹 Received remote video track', { userId });
-        // Caméra et partage d'écran sont mutuellement exclusifs côté produit :
-        // on garde une unique piste vidéo distante et l'UI s'appuie sur l'état
-        // métier isScreenSharing / isVideoEnabled pour l'étiquetage.
-        peer.videoStream = remoteStream;
-        peer.screenStream = undefined;
-
-        // Notifier les composants React qu'un stream vidéo est disponible
-        window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
-
-        // Nettoyer quand le track se termine
-        event.track.onended = () => {
-          if (peer.videoStream === remoteStream) peer.videoStream = undefined;
-          peer.screenStream = undefined;
+        const notifyRemoteVideoUpdate = () => {
           window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
+        };
+
+        const attachRemoteVideoStream = () => {
+          // Caméra et partage d'écran sont mutuellement exclusifs côté produit :
+          // on garde une unique piste vidéo distante et l'UI s'appuie sur l'état
+          // métier isScreenSharing / isVideoEnabled pour l'étiquetage.
+          peer.videoStream = remoteStream;
+          peer.screenStream = undefined;
+          notifyRemoteVideoUpdate();
+        };
+
+        const detachRemoteVideoStream = () => {
+          if (peer.videoStream === remoteStream) {
+            peer.videoStream = undefined;
+          }
+          peer.screenStream = undefined;
+          notifyRemoteVideoUpdate();
+        };
+
+        // Le track peut être créé avant que les premiers paquets vidéo n'arrivent.
+        // onunmute nous permet de refléter correctement le moment où le flux devient visible.
+        attachRemoteVideoStream();
+        event.track.onunmute = () => {
+          logger.debug('Remote video track unmuted', { userId });
+          attachRemoteVideoStream();
+        };
+        event.track.onmute = () => {
+          logger.debug('Remote video track muted', { userId });
+          detachRemoteVideoStream();
+        };
+        event.track.onended = () => {
+          logger.debug('Remote video track ended', { userId });
+          detachRemoteVideoStream();
         };
       }
     };
