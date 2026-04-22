@@ -171,13 +171,13 @@ export function useVoice() {
     if (newVideoEnabled) {
       // Couper le partage d'écran avant d'activer la caméra
       if (isScreenSharing) {
-        getVoiceClient().disableScreenShare();
+        await getVoiceClient().disableScreenShare();
         setScreenSharing(false);
         socketEmitters.updateScreenShare(false);
       }
       await getVoiceClient().enableCamera();
     } else {
-      getVoiceClient().disableCamera();
+      await getVoiceClient().disableCamera();
     }
 
     setVideoEnabled(newVideoEnabled);
@@ -194,13 +194,13 @@ export function useVoice() {
     if (newScreenSharing) {
       // Couper la caméra avant d'activer le partage d'écran
       if (isVideoEnabled) {
-        getVoiceClient().disableCamera();
+        await getVoiceClient().disableCamera();
         setVideoEnabled(false);
         socketEmitters.updateVideoState(false);
       }
       await getVoiceClient().enableScreenShare();
     } else {
-      getVoiceClient().disableScreenShare();
+      await getVoiceClient().disableScreenShare();
     }
 
     setScreenSharing(newScreenSharing);

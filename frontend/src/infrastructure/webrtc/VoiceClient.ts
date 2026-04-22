@@ -31,6 +31,7 @@ const STUN_FALLBACK: RTCIceServer[] = [
 interface PeerConnection {
   userId: string;                  // ID de l'utilisateur distant
   connection: RTCPeerConnection;   // Connexion WebRTC
+  videoSender?: RTCRtpSender;      // Sender vidéo unique (caméra OU écran)
   isInitiator: boolean;            // true = on a initié (impolite peer dans perfect negotiation)
   negotiationComplete: boolean;    // true après le premier échange offer/answer
   makingOffer: boolean;            // true pendant la création d'une offre (guard re-entrée)
@@ -76,6 +77,12 @@ export class VoiceClient {
 
   // Callback déclenché quand le partage d'écran est arrêté via l'UI du navigateur
   private onScreenShareEnded: (() => void) | null = null;
+
+  private getActiveLocalVideoTrack(): MediaStreamTrack | null {
+    return this.localScreenStream?.getVideoTracks()[0]
+      ?? this.localVideoStream?.getVideoTracks()[0]
+      ?? null;
+  }
 
   constructor() {
     this.setupSignalingListener();
@@ -203,6 +210,16 @@ export class VoiceClient {
       }
     }
 
+    // Réserver une unique m-section vidéo dès la connexion initiale.
+    // On remplace ensuite la track caméra/écran via replaceTrack() au lieu
+    // d'ajouter/supprimer des tracks, ce qui évite les crashs SDP/m-sections.
+    const videoTransceiver = peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+    const initialVideoTrack = this.getActiveLocalVideoTrack();
+    if (initialVideoTrack) {
+      await videoTransceiver.sender.replaceTrack(initialVideoTrack);
+      logger.debug('Attached initial local video track to peer connection', { userId });
+    }
+
     // === ÉVÉNEMENTS WEBRTC ===
 
     /**
@@ -254,25 +271,19 @@ export class VoiceClient {
         }
       } else if (event.track.kind === 'video') {
         logger.info('📹 Received remote video track', { userId });
-        // Premier track vidéo = caméra, second track vidéo = partage d'écran
-        if (peer.videoStream) {
-          peer.screenStream = remoteStream;
-        } else {
-          peer.videoStream = remoteStream;
-        }
+        // Caméra et partage d'écran sont mutuellement exclusifs côté produit :
+        // on garde une unique piste vidéo distante et l'UI s'appuie sur l'état
+        // métier isScreenSharing / isVideoEnabled pour l'étiquetage.
+        peer.videoStream = remoteStream;
+        peer.screenStream = undefined;
 
         // Notifier les composants React qu'un stream vidéo est disponible
         window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
 
         // Nettoyer quand le track se termine
         event.track.onended = () => {
-          if (peer.screenStream === remoteStream) {
-            peer.screenStream = undefined;
-          } else {
-            // Promouvoir screenStream en videoStream si caméra se coupe
-            peer.videoStream = peer.screenStream;
-            peer.screenStream = undefined;
-          }
+          if (peer.videoStream === remoteStream) peer.videoStream = undefined;
+          peer.screenStream = undefined;
           window.dispatchEvent(new CustomEvent('voice:video-stream-updated', { detail: { userId } }));
         };
       }
@@ -356,6 +367,7 @@ export class VoiceClient {
     this.peers.set(userId, {
       userId,
       connection: peerConnection,
+      videoSender: videoTransceiver.sender,
       isInitiator: initiator,
       negotiationComplete: false,
       makingOffer: false,
@@ -575,6 +587,20 @@ export class VoiceClient {
     }
   }
 
+  private async replaceOutgoingVideoTrack(track: MediaStreamTrack | null): Promise<void> {
+    const replacements = Array.from(this.peers.values()).map(async (peer) => {
+      if (!peer.videoSender) return;
+      try {
+        await peer.videoSender.replaceTrack(track);
+      } catch (error) {
+        logger.error('Failed to replace outgoing video track', { userId: peer.userId, error });
+        throw error;
+      }
+    });
+
+    await Promise.all(replacements);
+  }
+
   /**
    * Fermer une connexion peer
    */
@@ -608,10 +634,9 @@ export class VoiceClient {
     this.localVideoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     const videoTrack = this.localVideoStream.getVideoTracks()[0];
 
-    // Ajouter la track vidéo à toutes les connexions existantes (déclenche onnegotiationneeded)
-    this.peers.forEach((peer) => {
-      peer.connection.addTrack(videoTrack, this.localVideoStream!);
-    });
+    // Utiliser la même piste vidéo WebRTC que pour le partage d'écran afin de
+    // ne pas modifier la structure SDP en cours d'appel.
+    await this.replaceOutgoingVideoTrack(videoTrack);
 
     logger.info('📹 Camera enabled');
   }
@@ -619,19 +644,12 @@ export class VoiceClient {
   /**
    * Désactiver la caméra
    */
-  disableCamera(): void {
+  async disableCamera(): Promise<void> {
     if (!this.localVideoStream) return;
-
-    const videoTrack = this.localVideoStream.getVideoTracks()[0];
-
-    // Retirer la track de toutes les connexions (déclenche onnegotiationneeded)
-    this.peers.forEach((peer) => {
-      const sender = peer.connection.getSenders().find(s => s.track === videoTrack);
-      if (sender) peer.connection.removeTrack(sender);
-    });
 
     this.localVideoStream.getTracks().forEach(t => t.stop());
     this.localVideoStream = null;
+    await this.replaceOutgoingVideoTrack(this.getActiveLocalVideoTrack());
 
     logger.info('📹 Camera disabled');
   }
@@ -647,14 +665,11 @@ export class VoiceClient {
 
     // Arrêt depuis l'UI du navigateur (bouton "Stop sharing")
     screenTrack.onended = () => {
-      this.localScreenStream = null;
-      if (this.onScreenShareEnded) this.onScreenShareEnded();
+      void this.handleScreenShareEndedByBrowser();
     };
 
-    // Ajouter la track à toutes les connexions existantes
-    this.peers.forEach((peer) => {
-      peer.connection.addTrack(screenTrack, this.localScreenStream!);
-    });
+    // Même sender vidéo que la caméra → replaceTrack() stable
+    await this.replaceOutgoingVideoTrack(screenTrack);
 
     logger.info('🖥️ Screen share enabled');
   }
@@ -662,20 +677,27 @@ export class VoiceClient {
   /**
    * Désactiver le partage d'écran
    */
-  disableScreenShare(): void {
+  async disableScreenShare(): Promise<void> {
     if (!this.localScreenStream) return;
-
-    const screenTrack = this.localScreenStream.getVideoTracks()[0];
-
-    this.peers.forEach((peer) => {
-      const sender = peer.connection.getSenders().find(s => s.track === screenTrack);
-      if (sender) peer.connection.removeTrack(sender);
-    });
 
     this.localScreenStream.getTracks().forEach(t => t.stop());
     this.localScreenStream = null;
+    await this.replaceOutgoingVideoTrack(this.getActiveLocalVideoTrack());
 
     logger.info('🖥️ Screen share disabled');
+  }
+
+  private async handleScreenShareEndedByBrowser(): Promise<void> {
+    if (this.localScreenStream) {
+      this.localScreenStream.getTracks().forEach(t => t.stop());
+      this.localScreenStream = null;
+    }
+
+    await this.replaceOutgoingVideoTrack(this.getActiveLocalVideoTrack());
+
+    if (this.onScreenShareEnded) {
+      this.onScreenShareEnded();
+    }
   }
 
   /**
