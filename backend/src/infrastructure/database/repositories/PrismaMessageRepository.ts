@@ -261,6 +261,8 @@ export class PrismaMessageRepository implements MessageRepository {
    * Attache les données auteur si member.user est inclus
    */
   private toDomain(prismaMessage: any, userId?: string): Message {
+    const hasAttachments = Array.isArray(prismaMessage.attachments) && prismaMessage.attachments.length > 0;
+
     const message = new Message(
       prismaMessage.id,
       prismaMessage.content,
@@ -269,7 +271,8 @@ export class PrismaMessageRepository implements MessageRepository {
       prismaMessage.createdAt,
       prismaMessage.updatedAt,
       prismaMessage.deletedAt,
-      prismaMessage.deliveredAt
+      prismaMessage.deliveredAt,
+      hasAttachments
     );
 
     // Attacher les informations auteur (user) au message
