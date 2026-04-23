@@ -117,7 +117,7 @@ export class MessageController {
         serverId,
         userId,
         query,
-        limit,
+        ...(limit !== undefined && { limit }),
       });
 
       res.status(200).json({

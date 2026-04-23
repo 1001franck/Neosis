@@ -80,6 +80,17 @@ function renderStatusIcon(status?: Message['status']): React.ReactNode {
   }
 }
 
+function isMediaOnlyMessageContent(content: string): boolean {
+  const trimmed = content.trim();
+  if (!trimmed) return false;
+
+  return (
+    /^https?:\/\/media\d*\.giphy\.com\/.+\.gif(\?.*)?$/i.test(trimmed) ||
+    /^https?:\/\/i\.giphy\.com\/.+\.gif(\?.*)?$/i.test(trimmed) ||
+    /^https?:\/\/media\d*\.tenor\.com\/.+\.(gif|mp4|webm)(\?.*)?$/i.test(trimmed)
+  );
+}
+
 interface MessageListProps {
   messages: Message[];
   currentUserId?: string;
@@ -192,7 +203,9 @@ export function MessageList({
           const showDate = shouldShowDateSeparator(message, prevMessage, index);
           const displayName = message.isCurrentUser ? 'Vous' : message.username;
           const hasTextContent = message.content.trim().length > 0;
-          const shouldUseOwnBubble = !!message.isCurrentUser && (editingMessageId === message.id || hasTextContent);
+          const hasMediaOnlyContent = isMediaOnlyMessageContent(message.content);
+          const hasPlainTextContent = hasTextContent && !hasMediaOnlyContent;
+          const shouldUseOwnBubble = !!message.isCurrentUser && (editingMessageId === message.id || hasPlainTextContent);
           const displayInitialSource = message.username || displayName;
           const displayInitial = displayInitialSource.substring(0, 1).toUpperCase();
 
@@ -348,10 +361,10 @@ export function MessageList({
                           </div>
                         </div>
                       ) : hasTextContent ? (
-                        <div className={`text-sm leading-relaxed ${message.isCurrentUser ? 'text-primary-foreground' : 'text-foreground'}`}>
+                        <div className={`text-sm leading-relaxed ${message.isCurrentUser ? (shouldUseOwnBubble ? 'text-primary-foreground' : 'text-foreground') : 'text-foreground'}`}>
                           <MarkdownText content={message.content} />
                           {message.isEdited && (
-                            <span className={`text-[10px] ml-1 ${message.isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} title="This message has been edited">(edited)</span>
+                            <span className={`text-[10px] ml-1 ${message.isCurrentUser ? (shouldUseOwnBubble ? 'text-primary-foreground/70' : 'text-muted-foreground') : 'text-muted-foreground'}`} title="This message has been edited">(edited)</span>
                           )}
                         </div>
                       ) : null}
@@ -448,7 +461,9 @@ export function MessageList({
                   {/* Message Card */}
                   <div
                     className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-3 sm:px-4 py-2 shadow-sm ${message.isCurrentUser
-                        ? 'bg-primary text-primary-foreground rounded-br-sm'
+                        ? (hasMediaOnlyContent && editingMessageId !== message.id
+                          ? 'bg-transparent text-foreground rounded-br-sm px-0 py-0 shadow-none'
+                          : 'bg-primary text-primary-foreground rounded-br-sm')
                         : 'bg-card text-foreground rounded-bl-sm border border-border'
                       }`}
                   >
