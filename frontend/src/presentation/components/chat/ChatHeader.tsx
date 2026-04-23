@@ -41,10 +41,8 @@ export function ChatHeader({
   isChannel = false,
   showChannelInfo = false,
   showMembers = false,
-  showFriends = false,
   onToggleChannelInfo,
   onToggleMembers,
-  onToggleFriends,
   onSearchClick,
 }: ChatHeaderProps): React.ReactElement {
   const { toggleChannelSidebar, isChannelSidebarOpen, isMobile, toggleSidebar, isSidebarOpen } = useResponsiveLayout();
@@ -177,26 +175,9 @@ export function ChatHeader({
             aria-label={t('chat.showMembers')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M14 8.00598C14 10.211 12.206 12.006 10 12.006C7.794 12.006 6 10.211 6 8.00598C6 5.80098 7.794 4.00598 10 4.00598C12.206 4.00598 14 5.80098 14 8.00598ZM2 19C2 15.14 5.141 12 9 12H11C14.859 12 18 15.14 18 19V20H2V19Z" />
-              <path d="M20.0001 20.006H22.0001V19.006C22.0001 16.6616 20.8185 14.5618 19.0001 13.3062V14.0001C19.0001 14.8891 18.8001 15.7321 18.4511 16.4961C19.4371 17.4521 20.0001 18.7701 20.0001 20.006Z" />
-              <path d="M15.3801 12.0001C16.3241 11.1691 16.9551 9.98306 16.9551 8.64106C16.9551 7.30006 16.3241 6.11406 15.3801 5.28306C15.7851 4.92106 16.3001 4.70606 16.8611 4.70606C18.3531 4.70606 19.5611 5.91406 19.5611 7.40606C19.5611 8.89806 18.3531 10.1061 16.8611 10.1061C16.3001 10.1061 15.7851 9.89106 15.3801 9.52906V12.0001Z" />
-            </svg>
-          </button>
-        )}
-
-        {isChannel && onToggleFriends && (
-          <button
-            onClick={onToggleFriends}
-            className={`hidden sm:inline-flex transition-colors ${
-              showFriends
-                ? 'text-foreground bg-muted'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-            aria-label={t('chat.showFriends')}
-            title={t('chat.friends')}
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M15 12C17.21 12 19 10.21 19 8C19 5.79 17.21 4 15 4C12.79 4 11 5.79 11 8C11 10.21 12.79 12 15 12ZM7 10C8.66 10 10 8.66 10 7C10 5.34 8.66 4 7 4C5.34 4 4 5.34 4 7C4 8.66 5.34 10 7 10ZM7 12C4.33 12 0 13.34 0 16V18H10V16C10 13.34 5.67 12 7 12ZM15 14C12.33 14 8 15.34 8 18V20H22V18C22 15.34 17.67 14 15 14Z"/>
+              <path d="M17 20V18C17 16.3431 15.6569 15 14 15H10C8.34315 15 7 16.3431 7 18V20H17Z" />
+              <circle cx="12" cy="10" r="3" />
+              <path d="M3 7H5V9H3V7ZM3 11H5V13H3V11ZM3 15H5V17H3V15ZM19 7H21V9H19V7ZM19 11H21V13H19V11ZM19 15H21V17H19V15Z" />
             </svg>
           </button>
         )}
