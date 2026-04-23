@@ -150,7 +150,7 @@ const ChannelSearchModalComponent = ({
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-white">
-              Rechercher dans la chaîne "{channelName}"
+              Rechercher dans la chaîne &ldquo;{channelName}&rdquo;
             </h2>
             <button
               onClick={onClose}
