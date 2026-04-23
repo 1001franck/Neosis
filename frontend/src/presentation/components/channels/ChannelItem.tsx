@@ -13,12 +13,14 @@
 import React from 'react';
 import { ChannelType } from '@domain/channels/types';
 import { logger } from '@shared/utils/logger';
+import { Icon } from '@presentation/components/common/Icon';
 
 interface ChannelItemProps {
   id: string;
   name: string;
   type: ChannelType;
   isActive?: boolean;
+  isPinned?: boolean;
   unreadCount?: number;
   mentionCount?: number;
   connectedUsers?: number;
@@ -59,6 +61,7 @@ export function ChannelItem({
   name,
   type,
   isActive = false,
+  isPinned = false,
   unreadCount = 0,
   mentionCount = 0,
   connectedUsers,
@@ -102,9 +105,20 @@ export function ChannelItem({
       </div>
 
       {/* Name */}
-      <span className="flex-1 text-left text-base font-medium truncate">
-        {name}
-      </span>
+      <div className="flex min-w-0 flex-1 items-center gap-1">
+        <span className="text-left text-base font-medium truncate">
+          {name}
+        </span>
+        {isPinned && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary shrink-0"
+            title="Épinglé"
+            aria-label="Épinglé"
+          >
+            <Icon name="pin" size={10} className="text-primary" />
+          </span>
+        )}
+      </div>
 
       {/* Indicators */}
       <div className="flex items-center gap-1.5">

@@ -126,6 +126,22 @@ function ServerChannelsSidebarInternal({
         'voice-channels': channels.filter(c => c.type === ChannelType.VOICE || (c.type as string) === 'VOICE'),
       };
 
+  const pinnedChannelId = (() => {
+    if (categories.length > 0) {
+      for (const category of syntheticCategories) {
+        const firstChannel = [...(effectiveChannelsByCategory[category.id] || [])]
+          .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.name.localeCompare(b.name))[0];
+        if (firstChannel) {
+          return firstChannel.id;
+        }
+      }
+      return undefined;
+    }
+
+    return [...channels]
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.name.localeCompare(b.name))[0]?.id;
+  })();
+
   // Mode collapsed : afficher seulement les icônes
   if (isCollapsed) {
     return (
@@ -325,6 +341,7 @@ function ServerChannelsSidebarInternal({
                         name={channel.name}
                         type={channel.type}
                         isActive={channel.id === activeChannelId}
+                        isPinned={channel.id === pinnedChannelId}
                         mentionCount={getMentionCount(channel.id)}
                         connectedUsers={voiceCountByChannel.get(channel.id) ?? voiceUsersByChannel.get(channel.id)?.length ?? 0}
                         onClick={onChannelClick}

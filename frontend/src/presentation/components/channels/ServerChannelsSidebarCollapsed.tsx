@@ -15,6 +15,7 @@
 import { Channel, ChannelType } from '@domain/channels/types';
 import { Server } from '@domain/servers/types';
 import { useMessageStore } from '@application/messages/messageStore';
+import { Icon } from '@presentation/components/common/Icon';
 
 interface ServerChannelsSidebarCollapsedProps {
   server: Server;
@@ -103,9 +104,10 @@ export function ServerChannelsSidebarCollapsed({
       {/* Channels List - Icons only */}
       <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
         <div className="flex flex-col gap-1 px-2">
-          {sortedChannels.map((channel) => {
+          {sortedChannels.map((channel, index) => {
             const isActive = channel.id === activeChannelId;
             const mentionCount = getMentionCount(channel.id);
+            const isPinned = index === 0;
             
             return (
               <div 
@@ -132,6 +134,11 @@ export function ServerChannelsSidebarCollapsed({
                 >
                   {getChannelIcon(channel.type)}
                 </button>
+                  {isPinned && (
+                    <div className="absolute -top-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm border border-background">
+                      <Icon name="pin" size={9} className="text-primary-foreground" />
+                    </div>
+                  )}
                 {mentionCount > 0 && (
                   <span
                     className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm"
