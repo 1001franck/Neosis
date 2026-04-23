@@ -79,7 +79,7 @@ export default function DirectConversationPage(): React.ReactNode {
   return (
     <ProtectedRoute>
       <MainLayout showDirectMessages servers={servers} user={user ? { username: user.username, avatar: user.avatar ?? undefined } : undefined}>
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col h-full">
           {conversationError && (
             <div className="p-4 text-sm text-red-500">{conversationError}</div>
           )}
