@@ -156,7 +156,7 @@ function ServerChannelsSidebarInternal({
             <button
               onClick={closeAllSidebars}
               className="flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors md:hidden"
-              aria-label="Fermer la barre latÃ©rale"
+              aria-label="Fermer la barre latérale"
             >
               <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -168,8 +168,8 @@ function ServerChannelsSidebarInternal({
           <button
             onClick={toggleCollapsed}
             className="hidden md:flex flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="RÃ©duire la barre latÃ©rale"
-            title="RÃ©duire la barre latÃ©rale"
+            aria-label="Réduire la barre latérale"
+            title="Réduire la barre latérale"
           >
             <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
               <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z"/>
