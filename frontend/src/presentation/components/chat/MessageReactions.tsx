@@ -12,6 +12,7 @@ export interface MessageReactionsProps {
   currentUserId: string;
   onAddReaction: (emoji: string) => void;
   onRemoveReaction: (emoji: string) => void;
+  canReact?: boolean;
 }
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
@@ -21,10 +22,13 @@ export function MessageReactions({
   currentUserId,
   onAddReaction,
   onRemoveReaction,
+  canReact = true,
 }: MessageReactionsProps) {
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
 
   const handleReactionClick = (emoji: string, userIds: string[]) => {
+    if (!canReact) return;
+
     if (userIds.includes(currentUserId)) {
       onRemoveReaction(emoji);
     } else {
@@ -69,7 +73,7 @@ export function MessageReactions({
         );
       })}
 
-      {showEmojiPicker ? (
+      {canReact && showEmojiPicker ? (
         <div className="relative">
           <div className="absolute bottom-full mb-2 bg-card border border-border shadow-lg rounded-lg p-2 flex gap-1 z-10">
             {QUICK_EMOJIS.map((emoji) => (
@@ -92,7 +96,7 @@ export function MessageReactions({
             </button>
           </div>
         </div>
-      ) : (
+      ) : canReact ? (
         <button
           onClick={() => setShowEmojiPicker(true)}
           className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-secondary hover:bg-secondary/80 text-muted-foreground transition-colors"
@@ -100,7 +104,7 @@ export function MessageReactions({
         >
           <span className="text-sm">+</span>
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

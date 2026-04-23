@@ -291,6 +291,7 @@ export function MessageList({
                   {hoveredMessageId === message.id && editingMessageId !== message.id && (
                     <MessageActions
                       isOwnMessage={message.isCurrentUser}
+                      canReact={!message.isCurrentUser}
                       canEdit={!!message.createdAt && (Date.now() - new Date(message.createdAt).getTime()) < 25 * 60 * 1000}
                       canModerate={canModerate}
                       positionClassName={message.isCurrentUser ? 'top-1 left-2' : '-top-4 right-2'}
@@ -326,7 +327,7 @@ export function MessageList({
 
                   {/* Message Content */}
                   <div className={`min-w-0 ${message.isCurrentUser ? 'max-w-[85%] sm:max-w-[72%]' : 'flex-1'}`}>
-                    <div className={shouldUseOwnBubble ? 'rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-3 py-2 shadow-sm' : ''}>
+                    <div className={shouldUseOwnBubble ? 'rounded-xl rounded-br-md bg-primary text-primary-foreground px-3 py-2 shadow-sm' : ''}>
                       {!isGrouped && (
                         <div className={`flex items-baseline gap-2 mb-0.5 ${message.isCurrentUser ? 'justify-end' : ''}`}>
                           {!message.isCurrentUser && (
@@ -387,6 +388,7 @@ export function MessageList({
                         <MessageReactions
                           reactions={message.reactions ?? []}
                           currentUserId={currentUserId}
+                          canReact={!message.isCurrentUser}
                           onAddReaction={(emoji) => onAddReaction?.(message.id, emoji)}
                           onRemoveReaction={(emoji) => onRemoveReaction?.(message.id, emoji)}
                         />
@@ -425,6 +427,7 @@ export function MessageList({
                   {hoveredMessageId === message.id && editingMessageId !== message.id && (
                     <MessageActions
                       isOwnMessage={message.isCurrentUser}
+                      canReact={!message.isCurrentUser}
                       canEdit={!!message.createdAt && (Date.now() - new Date(message.createdAt).getTime()) < 25 * 60 * 1000}
                       canModerate={canModerate}
                       positionClassName={message.isCurrentUser ? 'top-1 right-12' : 'top-1 right-2'}
@@ -460,11 +463,11 @@ export function MessageList({
 
                   {/* Message Card */}
                   <div
-                    className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-3 sm:px-4 py-2 shadow-sm ${message.isCurrentUser
+                    className={`max-w-[85%] sm:max-w-[70%] rounded-xl px-3 sm:px-4 py-2 shadow-sm ${message.isCurrentUser
                         ? (hasMediaOnlyContent && editingMessageId !== message.id
-                          ? 'bg-transparent text-foreground rounded-br-sm px-0 py-0 shadow-none'
-                          : 'bg-primary text-primary-foreground rounded-br-sm')
-                        : 'bg-card text-foreground rounded-bl-sm border border-border'
+                          ? 'bg-transparent text-foreground rounded-br-md px-0 py-0 shadow-none'
+                          : 'bg-primary text-primary-foreground rounded-br-md')
+                        : 'bg-card text-foreground rounded-bl-md border border-border'
                       }`}
                   >
                     {/* Content */}
@@ -511,6 +514,7 @@ export function MessageList({
                         <MessageReactions
                           reactions={message.reactions ?? []}
                           currentUserId={currentUserId}
+                          canReact={!message.isCurrentUser}
                           onAddReaction={(emoji) => onAddReaction?.(message.id, emoji)}
                           onRemoveReaction={(emoji) => onRemoveReaction?.(message.id, emoji)}
                         />

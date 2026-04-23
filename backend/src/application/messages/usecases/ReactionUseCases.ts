@@ -33,6 +33,11 @@ export class AddReactionUseCase {
     const member = await this.memberRepository.findByUserAndServer(data.userId, channel.serverId);
     if (!member) throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Vous n\'êtes pas membre de ce serveur', 403);
 
+    // Un utilisateur ne peut pas réagir à son propre message
+    if (message.belongsTo(member.id)) {
+      throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Vous ne pouvez pas réagir à votre propre message', 403);
+    }
+
     await this.reactionRepository.add(data.messageId, data.userId, data.emoji);
     return this.reactionRepository.findByMessageId(data.messageId);
   }
