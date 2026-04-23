@@ -32,6 +32,16 @@ import { useChannelSettings } from '@application/channels/useChannelSettings';
 const ICON_SIZE = 'w-4 h-4';
 const ICON_SIZE_MEDIUM = 'w-5 h-5';
 
+function compareChannelsForDisplay(a: Channel, b: Channel): number {
+  const aIsGeneral = a.name.toLowerCase() === 'general';
+  const bIsGeneral = b.name.toLowerCase() === 'general';
+
+  if (aIsGeneral && !bIsGeneral) return -1;
+  if (!aIsGeneral && bIsGeneral) return 1;
+
+  return (a.position ?? 0) - (b.position ?? 0) || a.name.localeCompare(b.name);
+}
+
 interface ServerChannelsSidebarProps {
   server: Server;
   channels: Channel[];
@@ -319,7 +329,7 @@ function ServerChannelsSidebarInternal({
               {!isCategoryCollapsed && (
                 <div className="mt-1 space-y-0.5">
                   {[...categoryChannels]
-                    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.name.localeCompare(b.name))
+                    .sort(compareChannelsForDisplay)
                     .map((channel) => (
                       <ChannelItem
                         key={channel.id}

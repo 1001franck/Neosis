@@ -17,6 +17,16 @@ import { Server } from '@domain/servers/types';
 import { useMessageStore } from '@application/messages/messageStore';
 import { Icon } from '@presentation/components/common/Icon';
 
+function compareChannelsForDisplay(a: Channel, b: Channel): number {
+  const aIsGeneral = a.name.toLowerCase() === 'general';
+  const bIsGeneral = b.name.toLowerCase() === 'general';
+
+  if (aIsGeneral && !bIsGeneral) return -1;
+  if (!aIsGeneral && bIsGeneral) return 1;
+
+  return (a.position ?? 0) - (b.position ?? 0) || a.name.localeCompare(b.name);
+}
+
 interface ServerChannelsSidebarCollapsedProps {
   server: Server;
   channels: Channel[];
@@ -66,7 +76,7 @@ export function ServerChannelsSidebarCollapsed({
   const getMentionCount = useMessageStore((state) => state.getMentionCount);
   
   // Trier les channels par position
-  const sortedChannels = [...channels].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  const sortedChannels = [...channels].sort(compareChannelsForDisplay);
   const pinnedChannelId = channels.find((channel) => channel.name.toLowerCase() === 'general')?.id;
 
   return (
