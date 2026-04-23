@@ -126,21 +126,7 @@ function ServerChannelsSidebarInternal({
         'voice-channels': channels.filter(c => c.type === ChannelType.VOICE || (c.type as string) === 'VOICE'),
       };
 
-  const pinnedChannelId = (() => {
-    if (categories.length > 0) {
-      for (const category of syntheticCategories) {
-        const firstChannel = [...(effectiveChannelsByCategory[category.id] || [])]
-          .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.name.localeCompare(b.name))[0];
-        if (firstChannel) {
-          return firstChannel.id;
-        }
-      }
-      return undefined;
-    }
-
-    return [...channels]
-      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.name.localeCompare(b.name))[0]?.id;
-  })();
+  const pinnedChannelId = channels.find((channel) => channel.name.toLowerCase() === 'general')?.id;
 
   // Mode collapsed : afficher seulement les icônes
   if (isCollapsed) {

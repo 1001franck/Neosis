@@ -67,6 +67,7 @@ export function ServerChannelsSidebarCollapsed({
   
   // Trier les channels par position
   const sortedChannels = [...channels].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  const pinnedChannelId = channels.find((channel) => channel.name.toLowerCase() === 'general')?.id;
 
   return (
     <div className="w-[72px] h-full bg-card flex flex-col border-r border-border">
@@ -104,10 +105,10 @@ export function ServerChannelsSidebarCollapsed({
       {/* Channels List - Icons only */}
       <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
         <div className="flex flex-col gap-1 px-2">
-          {sortedChannels.map((channel, index) => {
+          {sortedChannels.map((channel) => {
             const isActive = channel.id === activeChannelId;
             const mentionCount = getMentionCount(channel.id);
-            const isPinned = index === 0;
+            const isPinned = channel.id === pinnedChannelId;
             
             return (
               <div 
