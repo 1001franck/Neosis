@@ -268,7 +268,7 @@ export function MessageList({
               ) : isChannel ? (
                 // STYLE CHANNEL - Tous les messages à gauche, style linéaire
                 <div
-                  className="group relative flex gap-2 sm:gap-3 hover:bg-secondary/30 px-2 py-1.5 -mx-2 rounded transition-colors"
+                  className={`group relative flex gap-2 sm:gap-3 hover:bg-secondary/30 px-2 py-1.5 -mx-2 rounded transition-colors ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
                   onMouseEnter={() => onHoverMessage(message.id)}
                   onMouseLeave={() => onHoverMessage(null)}
                 >
@@ -278,12 +278,14 @@ export function MessageList({
                       isOwnMessage={message.isCurrentUser}
                       canEdit={!!message.createdAt && (Date.now() - new Date(message.createdAt).getTime()) < 25 * 60 * 1000}
                       canModerate={canModerate}
+                      positionClassName={message.isCurrentUser ? 'top-1 left-2' : '-top-4 right-2'}
                       onReact={() => onAddReaction?.(message.id, '👍')}
                       onEdit={() => handleStartEdit(message.id, message.content)}
                       onDelete={() => setDeletingMessage({ id: message.id, isOwn: !!message.isCurrentUser })}
                     />
                   )}
-                  {!isGrouped ? (
+
+                  {!message.isCurrentUser && !isGrouped ? (
                     <div className="flex-shrink-0">
                       {message.avatar ? (
                         <img
@@ -299,61 +301,64 @@ export function MessageList({
                         </div>
                       )}
                     </div>
-                  ) : (
+                  ) : !message.isCurrentUser ? (
                     <div className="flex-shrink-0 w-10 flex items-start pt-0.5">
                       <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                         {formatTimestamp(message.timestamp, message.createdAt)}
                       </span>
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Message Content */}
-                  <div className="flex-1 min-w-0">
-                    {!isGrouped && (
-                      <div className="flex items-baseline gap-2 mb-0.5">
-                        <span className="text-sm font-semibold text-foreground">
-                          {displayName}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatTimestamp(message.timestamp, message.createdAt)}
-                        </span>
-                        {message.isCurrentUser && message.status && (
-                          <span className="flex items-center" title={message.status}>
-                            {renderStatusIcon(message.status)}
+                  <div className={`min-w-0 ${message.isCurrentUser ? 'max-w-[85%] sm:max-w-[72%]' : 'flex-1'}`}>
+                    <div className={message.isCurrentUser ? 'rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-3 py-2 shadow-sm' : ''}>
+                      {!isGrouped && (
+                        <div className={`flex items-baseline gap-2 mb-0.5 ${message.isCurrentUser ? 'justify-end' : ''}`}>
+                          <span className={`text-sm font-semibold ${message.isCurrentUser ? 'text-primary-foreground' : 'text-foreground'}`}>
+                            {displayName}
                           </span>
-                        )}
-                      </div>
-                    )}
-                    {editingMessageId === message.id ? (
-                      <div className="space-y-1">
-                        <textarea
-                          ref={editInputRef}
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          onKeyDown={handleEditKeyDown}
-                          className="w-full px-2 py-1 text-sm bg-background border border-primary rounded resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-                          rows={Math.min(editContent.split('\n').length + 1, 6)}
-                        />
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>Échap pour <button onClick={handleCancelEdit} className="text-blue-400 hover:underline">annuler</button></span>
-                          <span>•</span>
-                          <span>Entrée pour <button onClick={handleSaveEdit} className="text-blue-400 hover:underline">sauvegarder</button></span>
+                          <span className={`text-xs ${message.isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                            {formatTimestamp(message.timestamp, message.createdAt)}
+                          </span>
+                          {message.isCurrentUser && message.status && (
+                            <span className="flex items-center" title={message.status}>
+                              {renderStatusIcon(message.status)}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-foreground leading-relaxed">
-                        <MarkdownText content={message.content} />
-                        {message.isEdited && (
-                          <span className="text-[10px] text-muted-foreground ml-1" title="This message has been edited">(edited)</span>
-                        )}
-                      </div>
-                    )}
-                    {/* Attachments */}
-                    {message.attachments && message.attachments.length > 0 && (
-                      <MessageAttachments attachments={message.attachments} />
-                    )}
+                      )}
+                      {editingMessageId === message.id ? (
+                        <div className="space-y-1">
+                          <textarea
+                            ref={editInputRef}
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            onKeyDown={handleEditKeyDown}
+                            className="w-full px-2 py-1 text-sm bg-background border border-primary rounded resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                            rows={Math.min(editContent.split('\n').length + 1, 6)}
+                          />
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>Échap pour <button onClick={handleCancelEdit} className="text-blue-400 hover:underline">annuler</button></span>
+                            <span>•</span>
+                            <span>Entrée pour <button onClick={handleSaveEdit} className="text-blue-400 hover:underline">sauvegarder</button></span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`text-sm leading-relaxed ${message.isCurrentUser ? 'text-primary-foreground' : 'text-foreground'}`}>
+                          <MarkdownText content={message.content} />
+                          {message.isEdited && (
+                            <span className={`text-[10px] ml-1 ${message.isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} title="This message has been edited">(edited)</span>
+                          )}
+                        </div>
+                      )}
+                      {/* Attachments */}
+                      {message.attachments && message.attachments.length > 0 && (
+                        <MessageAttachments attachments={message.attachments} />
+                      )}
+                    </div>
+
                     {currentUserId && ((message.reactions?.length ?? 0) > 0 || hoveredMessageId === message.id) && (
-                      <div className="mt-1">
+                      <div className={`mt-1 ${message.isCurrentUser ? 'flex justify-end' : ''}`}>
                         <MessageReactions
                           reactions={message.reactions ?? []}
                           currentUserId={currentUserId}
@@ -363,11 +368,31 @@ export function MessageList({
                       </div>
                     )}
                   </div>
+
+                  {message.isCurrentUser && !isGrouped && (
+                    <div className="flex-shrink-0">
+                      {message.avatar ? (
+                        <img
+                          src={message.avatar}
+                          alt={message.username}
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center">
+                          <span className="text-xs sm:text-sm font-semibold text-primary-foreground">
+                            {displayInitial}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {message.isCurrentUser && isGrouped && <div className="flex-shrink-0 w-10" />}
                 </div>
               ) : (
                 // STYLE DM - Bulles WhatsApp alignées gauche/droite
                 <div
-                  className={`group flex gap-2 sm:gap-3 mb-2 ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                  className={`group relative flex gap-2 sm:gap-3 mb-2 ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
                   onMouseEnter={() => onHoverMessage(message.id)}
                   onMouseLeave={() => onHoverMessage(null)}
                 >
@@ -377,6 +402,7 @@ export function MessageList({
                       isOwnMessage={message.isCurrentUser}
                       canEdit={!!message.createdAt && (Date.now() - new Date(message.createdAt).getTime()) < 25 * 60 * 1000}
                       canModerate={canModerate}
+                      positionClassName={message.isCurrentUser ? 'top-1 right-12' : 'top-1 right-2'}
                       onReact={() => onAddReaction?.(message.id, '👍')}
                       onEdit={() => handleStartEdit(message.id, message.content)}
                       onDelete={() => setDeletingMessage({ id: message.id, isOwn: !!message.isCurrentUser })}

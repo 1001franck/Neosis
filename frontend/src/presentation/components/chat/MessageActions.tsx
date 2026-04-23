@@ -18,6 +18,7 @@ interface MessageActionsProps {
   isOwnMessage?: boolean;
   canEdit?: boolean;
   canModerate?: boolean;
+  positionClassName?: string;
 }
 
 export function MessageActions({
@@ -26,10 +27,13 @@ export function MessageActions({
   onDelete,
   isOwnMessage,
   canEdit = true,
-  canModerate
+  canModerate,
+  positionClassName,
 }: MessageActionsProps): React.ReactNode {
+  const positionClasses = positionClassName ?? '-top-4 right-2';
+
   return (
-    <div className="absolute -top-4 right-2 flex items-center gap-1 bg-card border border-border rounded shadow-lg p-1">
+    <div className={`absolute ${positionClasses} flex items-center gap-1 bg-card border border-border rounded shadow-lg p-1`}>
       {/* Réaction rapide 👍 */}
       <button
         onClick={onReact}
