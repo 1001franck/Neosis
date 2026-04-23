@@ -80,8 +80,8 @@ export const ResponsiveSidebar = React.memo(function ResponsiveSidebar({
         className={`
           ${isOpen || showOnDesktop ? 'flex' : 'hidden'}
           ${positionClasses}
-          h-full bg-card flex flex-col
-          ${borderClass} border-border
+          h-full bg-background/80 backdrop-blur-sm flex flex-col
+          ${borderClass} border-border/40
           ${className}
         `.trim().replace(/\s+/g, ' ')}
       >
@@ -134,8 +134,8 @@ export const ResponsiveSidebar = React.memo(function ResponsiveSidebar({
             }}
             className={`
               ${positionClasses}
-              h-full bg-card flex flex-col
-              ${borderClass} border-border
+              h-full bg-background/85 backdrop-blur-sm flex flex-col
+              ${borderClass} border-border/40
               ${className}
               touch-none
             `.trim().replace(/\s+/g, ' ')}

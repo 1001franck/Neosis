@@ -213,7 +213,7 @@ export function ChannelView({
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
+    <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-background via-background to-secondary/20">
       {/* Server Sidebar - 72px, always visible on desktop */}
       <ResponsiveSidebar id="server" position="left" width="w-[72px]" showOnDesktop={true} className="bg-secondary py-3 gap-2">
         <ServerSidebar 
@@ -251,7 +251,7 @@ export function ChannelView({
       </ResponsiveSidebar>
 
       {/* Chat Area - Flex-1 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-background/35 backdrop-blur-[1px]">
         <ChatArea
           messages={messages || []}
           typingUsernames={typingUsernames}
