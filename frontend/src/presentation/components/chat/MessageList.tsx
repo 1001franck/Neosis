@@ -19,7 +19,7 @@ import { MessageAttachments } from './MessageAttachments';
 import { MessageReactions } from './MessageReactions';
 import type { MessageReaction } from '@domain/messages/types';
 import type { Attachment } from '@domain/messages/types';
-import { formatTimestamp, formatDateSeparator } from '@shared/utils/date';
+import { formatTimestamp, formatDateSeparator, formatTimeOnly } from '@shared/utils/date';
 import { shouldGroupMessages, shouldShowDateSeparator } from '@domain/messages/utils';
 
 export interface Message {
