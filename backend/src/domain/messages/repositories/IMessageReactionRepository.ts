@@ -4,7 +4,7 @@ import type { MessageReactionData } from '../entities/message.js';
  * Interface du repository des réactions de messages
  */
 export interface IMessageReactionRepository {
-  /** Ajoute une réaction (upsert — ignore le doublon) */
+  /** Ajoute/remplace la réaction d'un utilisateur sur un message */
   add(messageId: string, userId: string, emoji: string): Promise<void>;
 
   /** Supprime une réaction d'un utilisateur */

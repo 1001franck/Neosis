@@ -191,6 +191,8 @@ export function MessageList({
           const isGrouped = shouldGroupMessages(message, prevMessage);
           const showDate = shouldShowDateSeparator(message, prevMessage, index);
           const displayName = message.isCurrentUser ? 'Vous' : message.username;
+          const hasTextContent = message.content.trim().length > 0;
+          const shouldUseOwnBubble = !!message.isCurrentUser && (editingMessageId === message.id || hasTextContent);
           const displayInitialSource = message.username || displayName;
           const displayInitial = displayInitialSource.substring(0, 1).toUpperCase();
 
@@ -304,21 +306,23 @@ export function MessageList({
                   ) : !message.isCurrentUser ? (
                     <div className="flex-shrink-0 w-10 flex items-start pt-0.5">
                       <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                        {formatTimestamp(message.timestamp, message.createdAt)}
+                        {formatTimeOnly(message.timestamp, message.createdAt)}
                       </span>
                     </div>
                   ) : null}
 
                   {/* Message Content */}
                   <div className={`min-w-0 ${message.isCurrentUser ? 'max-w-[85%] sm:max-w-[72%]' : 'flex-1'}`}>
-                    <div className={message.isCurrentUser ? 'rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-3 py-2 shadow-sm' : ''}>
+                    <div className={shouldUseOwnBubble ? 'rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-3 py-2 shadow-sm' : ''}>
                       {!isGrouped && (
                         <div className={`flex items-baseline gap-2 mb-0.5 ${message.isCurrentUser ? 'justify-end' : ''}`}>
-                          <span className={`text-sm font-semibold ${message.isCurrentUser ? 'text-primary-foreground' : 'text-foreground'}`}>
-                            {displayName}
-                          </span>
-                          <span className={`text-xs ${message.isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                            {formatTimestamp(message.timestamp, message.createdAt)}
+                          {!message.isCurrentUser && (
+                            <span className="text-sm font-semibold text-foreground">
+                              {displayName}
+                            </span>
+                          )}
+                          <span className={`text-xs ${message.isCurrentUser ? (shouldUseOwnBubble ? 'text-primary-foreground/70' : 'text-muted-foreground') : 'text-muted-foreground'}`}>
+                            {formatTimeOnly(message.timestamp, message.createdAt)}
                           </span>
                           {message.isCurrentUser && message.status && (
                             <span className="flex items-center" title={message.status}>
@@ -343,19 +347,27 @@ export function MessageList({
                             <span>Entrée pour <button onClick={handleSaveEdit} className="text-blue-400 hover:underline">sauvegarder</button></span>
                           </div>
                         </div>
-                      ) : (
+                      ) : hasTextContent ? (
                         <div className={`text-sm leading-relaxed ${message.isCurrentUser ? 'text-primary-foreground' : 'text-foreground'}`}>
                           <MarkdownText content={message.content} />
                           {message.isEdited && (
                             <span className={`text-[10px] ml-1 ${message.isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} title="This message has been edited">(edited)</span>
                           )}
                         </div>
-                      )}
-                      {/* Attachments */}
-                      {message.attachments && message.attachments.length > 0 && (
+                      ) : null}
+
+                      {/* Attachments (autres utilisateurs restent dans le bloc) */}
+                      {!message.isCurrentUser && message.attachments && message.attachments.length > 0 && (
                         <MessageAttachments attachments={message.attachments} />
                       )}
                     </div>
+
+                    {/* Attachments (utilisateur courant en dehors de la bulle bleue) */}
+                    {message.isCurrentUser && message.attachments && message.attachments.length > 0 && (
+                      <div className="mt-1">
+                        <MessageAttachments attachments={message.attachments} />
+                      </div>
+                    )}
 
                     {currentUserId && ((message.reactions?.length ?? 0) > 0 || hoveredMessageId === message.id) && (
                       <div className={`mt-1 ${message.isCurrentUser ? 'flex justify-end' : ''}`}>

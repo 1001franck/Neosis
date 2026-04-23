@@ -10,13 +10,26 @@ export class PrismaMessageReactionRepository implements IMessageReactionReposito
   constructor(private prisma: PrismaClient) {}
 
   /**
-   * Ajoute une réaction (ignore le doublon grâce à l'index unique)
+   * Ajoute/remplace une réaction pour un utilisateur sur un message.
+   * Règle métier: un utilisateur ne peut avoir qu'une seule réaction par message.
    */
   async add(messageId: string, userId: string, emoji: string): Promise<void> {
-    await this.prisma.messageReaction.upsert({
-      where: { messageId_userId_emoji: { messageId, userId, emoji } },
-      update: {},
-      create: { id: crypto.randomUUID(), messageId, userId, emoji },
+    await this.prisma.$transaction(async (tx) => {
+      // Supprimer toute autre réaction existante de cet utilisateur sur le même message
+      await tx.messageReaction.deleteMany({
+        where: {
+          messageId,
+          userId,
+          emoji: { not: emoji },
+        },
+      });
+
+      // Conserver ou créer la réaction cible
+      await tx.messageReaction.upsert({
+        where: { messageId_userId_emoji: { messageId, userId, emoji } },
+        update: {},
+        create: { id: crypto.randomUUID(), messageId, userId, emoji },
+      });
     });
   }
 
