@@ -1,6 +1,7 @@
 node_modules
 dist
 .claude
+.gitignore
 
 # Keep environment variables out of version control
 .env
@@ -12,3 +13,6 @@ dist
 # Dossiers de documentation apprentissage
 docs/apprentissage/
 docs/apprentissage-frontend/
+
+# Document de suivi local
+docs/FOLLOW_UP_v1.1.1.md

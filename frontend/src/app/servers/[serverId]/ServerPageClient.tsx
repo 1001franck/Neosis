@@ -63,7 +63,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   }, [loadMessages]);
 
   // === SOCKET ROOM MANAGEMENT ===
-  // Join server room on mount, leave on unmount
+  // Rejoindre la room du serveur à l'entrée, et la quitter à la sortie
   useEffect(() => {
     if (serverId) {
       socketEmitters.joinServer(serverId);
@@ -77,9 +77,9 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     };
   }, [serverId]);
 
-  // Join/leave channel rooms when activeChannelId changes
+  // Rejoindre la room du channel actif, et quitter l'ancienne room
   useEffect(() => {
-    const prevChannelId = prevChannelIdRef.current;
+    const  prevChannelId = prevChannelIdRef.current;
 
     if (prevChannelId && prevChannelId !== activeChannelId) {
       socketEmitters.leaveChannel(prevChannelId);
@@ -94,9 +94,9 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     }
 
     prevChannelIdRef.current = activeChannelId;
-
+                                                                                                                                                                                                                           
     return () => {
-      // Cleanup on unmount: leave current channel
+      // Nettoyage au cas où le composant serait démonté avant que le channelId ne soit mis à jour
       if (activeChannelId) {
         socketEmitters.leaveChannel(activeChannelId);
         if (user?.id) removeChannelUser(activeChannelId, user.id);

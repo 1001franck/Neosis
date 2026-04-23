@@ -1,38 +1,41 @@
 /**
  * INFRASTRUCTURE - AUTH API
  * Appels API pour l'authentification
- *
- * Le token JWT est géré exclusivement via cookie httpOnly.
- * Le backend ne renvoie plus le token dans le body.
  */
 
 import { apiClient } from './client';
+import { storage } from '@infrastructure/storage/localStorage';
+import { STORAGE_KEYS } from '@shared/constants/app';
 import type { LoginRequest, RegisterRequest, AuthUser, UpdateProfileRequest } from '@domain/auth/types';
 
 const ENDPOINT = '/auth';
 
+interface AuthApiResponse {
+  user: AuthUser;
+  token?: string;
+}
+
 export const authApi = {
   /**
    * Se connecter
-   * Backend: POST /auth/login → { success, data: { user } } + cookie httpOnly
+   * Backend: POST /auth/login → { success, data: { user, token? } }
    */
   login: async (request: LoginRequest): Promise<{ user: AuthUser }> => {
-    const response = await apiClient.post(`${ENDPOINT}/login`, request);
-    // Stocker le token pour les environnements sans cookies (app desktop Tauri)
+    const response = await apiClient.post<AuthApiResponse>(`${ENDPOINT}/login`, request);
     if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
+      storage.setItem(STORAGE_KEYS.TOKEN, response.data.token);
     }
     return { user: response.data.user };
   },
 
   /**
    * S'enregistrer
-   * Backend: POST /auth/signup → { success, data: { user } } + cookie httpOnly
+   * Backend: POST /auth/signup → { success, data: { user, token? } }
    */
   register: async (request: RegisterRequest): Promise<{ user: AuthUser }> => {
-    const response = await apiClient.post(`${ENDPOINT}/signup`, request);
+    const response = await apiClient.post<AuthApiResponse>(`${ENDPOINT}/signup`, request);
     if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
+      storage.setItem(STORAGE_KEYS.TOKEN, response.data.token);
     }
     return { user: response.data.user };
   },
@@ -43,7 +46,7 @@ export const authApi = {
    */
   logout: async (): Promise<void> => {
     await apiClient.post(`${ENDPOINT}/logout`);
-    localStorage.removeItem('auth_token');
+    storage.removeItem(STORAGE_KEYS.TOKEN);
   },
 
   /**

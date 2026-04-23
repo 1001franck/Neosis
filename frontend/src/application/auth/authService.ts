@@ -1,9 +1,6 @@
 /**
  * APPLICATION - AUTH SERVICE
  * Logique métier pour l'authentification
- *
- * Le token JWT est géré exclusivement via cookie httpOnly par le navigateur.
- * Seules les données utilisateur sont stockées côté client.
  */
 
 import { authApi } from '@infrastructure/api/auth.api';
@@ -11,6 +8,7 @@ import { storage } from '@infrastructure/storage/localStorage';
 import type { LoginRequest, RegisterRequest, AuthUser, UpdateProfileRequest } from '@domain/auth/types';
 import { InvalidCredentialsError, UserAlreadyExistsError } from '@domain/auth/errors';
 import { logger } from '@shared/utils/logger';
+import { STORAGE_KEYS } from '@shared/constants/app';
 
 const USER_KEY = 'auth_user';
 
@@ -53,9 +51,11 @@ export class AuthService {
     try {
       await authApi.logout();
       storage.removeItem(USER_KEY);
+      storage.removeItem(STORAGE_KEYS.TOKEN);
     } catch (error) {
       logger.error('Logout failed', error);
       storage.removeItem(USER_KEY);
+      storage.removeItem(STORAGE_KEYS.TOKEN);
     }
   }
 
@@ -107,6 +107,7 @@ export class AuthService {
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
         storage.removeItem(USER_KEY);
+        storage.removeItem(STORAGE_KEYS.TOKEN);
         return null;
       }
       // Network error / timeout — don't touch storage, re-throw so caller can decide

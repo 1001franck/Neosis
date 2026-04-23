@@ -12,8 +12,7 @@ export const apiClient = axios.create({
   baseURL: env.API_URL,
   // 15s pour absorber le cold start de Render (backend en veille)
   timeout: 15000,
-  // withCredentials: false — le backend retourne le token dans le body (pas seulement cookie)
-  // Le Bearer token via localStorage est utilisé pour toutes les requêtes (web + Tauri)
+  // Le Bearer token est utilisé pour toutes les requêtes (web + Tauri)
   // withCredentials: true causait un preflight CORS crédentiel bloqué dans WebView2 Tauri
   withCredentials: false,
   headers: {
@@ -29,7 +28,7 @@ apiClient.interceptors.request.use((config) => {
 
     // En environnement Tauri les cookies cross-origin ne fonctionnent pas
     // On envoie le token en Authorization header si disponible
-    const token = localStorage.getItem('auth_token');
+    const token = storage.getItem<string>(STORAGE_KEYS.TOKEN);
     if (token && !config.headers['Authorization']) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -61,6 +60,7 @@ apiClient.interceptors.response.use(
 
       // Nettoyer le storage
       storage.removeItem('auth_user');
+      storage.removeItem(STORAGE_KEYS.TOKEN);
 
       // Rediriger vers login (si pas déjà sur une page auth)
       if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {

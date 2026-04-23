@@ -661,6 +661,18 @@ Le plus important maintenant n'est plus d'ajouter énormément de features, mais
 Dire:
 "Notre objectif n'est plus d'accumuler des fonctionnalités. Nous sommes dans une phase de consolidation pour garantir une démonstration fluide, des builds reproductibles et une qualité plus homogène."
 
+### Lecture "PowerPoint follow-up"
+Pour que le discours colle bien au support de présentation, on peut regrouper les blocages actuels en 4 zones très lisibles:
+- `authentification desktop`
+- `voix / vidéo / WebRTC`
+- `cohérence backend / données`
+- `robustesse finale / démonstration`
+
+L'idée n'est pas de dire que le projet ne fonctionne pas. Au contraire, il faut montrer que:
+- le socle fonctionnel est déjà en place
+- les difficultés restantes sont concentrées sur des zones techniques avancées
+- chaque blocage est identifié, compris et associé à un plan d'action clair
+
 ## 14. Difficultés Rencontrées
 
 ### 1. Complexité du temps réel
@@ -744,6 +756,109 @@ Comment on y a répondu:
 - le backend compile
 - le frontend passe le lint sans erreurs bloquantes
 - certaines validations automatiques dépendent encore de l'environnement d'exécution
+
+### Blocages actuels à mettre en avant dans le PowerPoint
+
+#### 1. Authentification desktop
+Ce qui bloque encore réellement:
+- sur le web, la session repose surtout sur les cookies HTTP, alors que sur desktop Tauri / WebView2 ce comportement est moins prévisible
+- il faut garder une session cohérente à la fois pour les appels HTTP, pour Socket.IO et pour la persistance locale
+- un ancien cookie ou un mauvais ordre de priorité des tokens peut provoquer des sessions incohérentes
+
+Pourquoi c'est un vrai sujet:
+- ce n'est pas un simple problème d'écran de login
+- c'est un problème de fiabilité de session multi-plateforme
+- c'est critique, car toute l'expérience desktop dépend d'une authentification stable
+
+Ce qu'on a déjà fait:
+- mise en place d'un fallback `Bearer token` pour le client desktop
+- transmission du token côté API via `Authorization`
+- transmission du token au socket via `socket.auth`
+- correction de la priorité serveur pour éviter qu'un ancien cookie prenne le dessus sur un token plus fiable
+
+Ce qu'il reste à sécuriser:
+- valider la stabilité sur plusieurs reconnexions desktop
+- vérifier les scénarios de refresh / relance de l'application
+- s'assurer que le comportement reste cohérent entre web, desktop et WebSocket
+
+Formulation simple à l'oral:
+"Le point sensible côté desktop, ce n'est pas l'interface de connexion. C'est la stabilité de la session entre plusieurs couches techniques qui ne se comportent pas exactement comme dans un navigateur classique."
+
+#### 2. Voix / vidéo / WebRTC
+Ce qui bloque encore réellement:
+- le signaling Socket.IO fonctionne, donc le serveur relaie bien les événements
+- en revanche, la connexion média WebRTC ne monte pas toujours correctement entre deux machines réelles
+- les problèmes apparaissent surtout dans la phase `ICE / TURN / négociation peer-to-peer`
+
+Pourquoi c'est un vrai sujet:
+- ce n'est pas un bug d'interface
+- ce n'est pas juste un message socket qui ne passe pas
+- c'est la couche réseau la plus difficile du produit, car elle dépend du navigateur, du réseau, des permissions micro/caméra et de l'infrastructure TURN
+
+Ce qu'on a déjà fait:
+- séparation claire entre signaling Socket.IO et transport média WebRTC
+- centralisation de la logique dans `VoiceClient.ts`, `useVoice.ts` et `voiceHandler.ts`
+- ajout d'un endpoint backend pour récupérer dynamiquement les credentials TURN
+- premiers correctifs sur la négociation, la gestion des ICE candidates et le nettoyage des connexions
+- purge des `VoiceConnections` au démarrage pour éviter des états fantômes après crash
+
+Ce qu'il reste à sécuriser:
+- valider TURN en environnement réellement déployé
+- continuer les tests entre réseaux différents
+- stabiliser complètement la vidéo et le partage d'écran
+- réduire les cas où le signaling passe mais où l'audio/vidéo ne s'établit pas
+
+Formulation simple à l'oral:
+"Le serveur sait que deux utilisateurs veulent communiquer. Le vrai défi, c'est de construire de manière fiable le canal audio/vidéo direct entre leurs machines."
+
+#### 3. Cohérence backend / données
+Ce qui bloque encore réellement:
+- certains bugs n'apparaissent pas au moment de l'envoi, mais au moment de la relecture ou de la reconstruction métier des données
+- on l'a vu récemment avec les messages dont le contenu était vide ou `null`
+- un seul enregistrement incohérent peut faire tomber toute une lecture de salon en `500`
+
+Pourquoi c'est important:
+- cela montre que la difficulté n'est pas seulement dans la feature visible
+- il faut aussi garder une cohérence stricte entre domaine métier, base de données, Prisma et API
+- c'est un vrai sujet de produit, pas un détail cosmétique
+
+Ce qu'on a déjà fait:
+- correction de la logique métier autour des messages avec pièces jointes
+- migration Prisma pour autoriser `content = null` dans le bon cas
+- correction du repository pour reconstruire correctement les messages avec attachements
+- identification en base des lignes réellement incohérentes lors des tests Render / Supabase
+
+Ce qu'il reste à sécuriser:
+- nettoyer les anciennes données invalides déjà présentes en base
+- consolider les cas limites autour des attachments et de la lecture des messages
+- renforcer les tests d'intégration entre Prisma, domaine métier et controllers
+
+Formulation simple à l'oral:
+"On ne travaille pas seulement sur l'ajout de fonctionnalités. On sécurise aussi la cohérence entre la logique métier et les données réelles stockées en base."
+
+#### 4. Robustesse finale / démonstration
+Ce qui bloque encore réellement:
+- certaines validations automatiques restent dépendantes de l'environnement
+- la démo finale ne doit pas dépendre d'un scénario fragile ou d'un cas réseau trop optimiste
+- il faut choisir les parcours les plus fiables pour montrer le produit sans risque inutile
+
+Pourquoi c'est important:
+- en follow-up, le jury attend de voir qu'on sait prioriser
+- mieux vaut une démo plus courte mais parfaitement maîtrisée qu'une démonstration ambitieuse mais instable
+
+Ce qu'on a déjà fait:
+- CI/CD déjà en place
+- build backend validé
+- lint frontend sans erreur bloquante
+- identification claire des zones les plus sensibles avant la soutenance finale
+
+Ce qu'il reste à sécuriser:
+- figer un scénario de démonstration robuste
+- décider quelles fonctionnalités montrer en live et lesquelles expliquer techniquement
+- continuer la consolidation qualité sur les zones critiques au lieu d'ouvrir de nouveaux chantiers
+
+Formulation simple à l'oral:
+"Notre enjeu actuel n'est plus de prouver qu'on sait ajouter des features. C'est de garantir un comportement stable et crédible sur les parties qui ont le plus de valeur."
 
 ### Difficultés observées en tests réels
 - sur desktop, la gestion de session est plus fragile que sur le web

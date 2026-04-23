@@ -2,12 +2,14 @@
 import io from 'socket.io-client';
 import { env } from '@shared/config/env';
 import { logger } from '@shared/utils/logger';
+import { storage } from '@infrastructure/storage/localStorage';
+import { STORAGE_KEYS } from '@shared/constants/app';
 
 export const socket = io(env.SOCKET_URL, {
   reconnection: true,
   reconnectionDelay: 5000,
   autoConnect: false,
-  withCredentials: true,
+  withCredentials: false,
 });
 
 socket.on('connect', () => {
@@ -20,8 +22,7 @@ socket.on('disconnect', () => {
 
 export function connectSocket() {
   if (!socket.connected) {
-    // Transmettre le token JWT en auth pour les environnements sans cookies (Tauri)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = storage.getItem<string>(STORAGE_KEYS.TOKEN);
     if (token) {
       socket.auth = { token };
     }
