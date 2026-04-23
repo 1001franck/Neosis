@@ -112,3 +112,18 @@ export function formatDate(date: Date): string {
 export function isSameDay(date1: Date, date2: Date): boolean {
   return date1.toDateString() === date2.toDateString();
 }
+
+/**
+ * Format time only (for DM messages)
+ * Always returns just the time: "14:30"
+ */
+export function formatTimeOnly(timestamp: string, createdAt?: Date): string {
+  if (!createdAt) {
+    return timestamp;
+  }
+  
+  // Extract just the time from createdAt
+  const hours = String(createdAt.getHours()).padStart(2, '0');
+  const minutes = String(createdAt.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}

@@ -444,7 +444,7 @@ export function MessageList({
                     {/* Timestamp */}
                     <div className={`text-[10px] mt-1 flex items-center gap-1 ${message.isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
                       }`}>
-                      <span>{formatTimestamp(message.timestamp, message.createdAt)}</span>
+                      <span>{formatTimeOnly(message.timestamp, message.createdAt)}</span>
                       {message.isCurrentUser && message.status && (
                         <span className="flex items-center" title={message.status}>
                           {renderStatusIcon(message.status)}
