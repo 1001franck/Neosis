@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/auth/useAuth';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { useTheme } from '@shared/hooks/useTheme';
@@ -13,6 +14,7 @@ import { socket } from '@infrastructure/websocket/socket';
  * Thème-aware via Tailwind CSS variables (bg-background, bg-card, etc.)
  */
 export default function SettingsPage(): React.ReactNode {
+  const router = useRouter();
   const { user, updateProfile, uploadAvatar, uploadBanner } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { locale, setLocale, t } = useLocale();
@@ -128,6 +130,14 @@ export default function SettingsPage(): React.ReactNode {
     }
   }, [uploadBanner, emitProfileUpdate]);
 
+  const handleBack = useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push('/messages');
+  }, [router]);
+
   if (!user) return null;
 
   return (
@@ -136,9 +146,21 @@ export default function SettingsPage(): React.ReactNode {
         {/* Header */}
         <div className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b border-border">
           <div className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              {t('settings.title')}
-            </h1>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-card border border-border hover:bg-muted transition-colors"
+                aria-label={t('nav.back')}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                {t('settings.title')}
+              </h1>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"

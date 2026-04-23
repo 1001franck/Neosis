@@ -48,6 +48,7 @@ export const fr = {
     },
   },
   nav: {
+    back: 'Retour',
     home: 'Accueil',
     createServer: 'Créer un serveur',
     joinServer: 'Rejoindre un serveur',

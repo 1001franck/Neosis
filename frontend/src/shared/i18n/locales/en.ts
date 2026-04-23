@@ -50,6 +50,7 @@ export const en: Translations = {
     },
   },
   nav: {
+    back: 'Back',
     home: 'Home',
     createServer: 'Create a server',
     joinServer: 'Join a server',
