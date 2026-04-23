@@ -414,15 +414,6 @@ export function MessageList({
                         : 'bg-card text-foreground rounded-bl-sm border border-border'
                       }`}
                   >
-                    {/* Header pour premier message du groupe */}
-                    {!isGrouped && !message.isCurrentUser && (
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-sm font-semibold">
-                          {message.username}
-                        </span>
-                      </div>
-                    )}
-
                     {/* Content */}
                     {editingMessageId === message.id ? (
                       <div className="space-y-1">

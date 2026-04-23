@@ -201,7 +201,7 @@ function ServerChannelsSidebarInternal({
             onClick={() => setShowServerMenu(!showServerMenu)}
             className="flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Menu du serveur"
-            title="ParamÃ¨tres du serveur"
+            title="Paramètres du serveur"
           >
             <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="5" r="2"/>
@@ -316,7 +316,7 @@ function ServerChannelsSidebarInternal({
                     }}
                     className="p-0.5 text-muted-foreground hover:text-foreground transition-all"
                     aria-label="Ajouter un salon"
-                    title={`Ajouter un salon Ã  ${category.name}`}
+                    title={`Ajouter un salon à ${category.name}`}
                   >
                     <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
                       <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
