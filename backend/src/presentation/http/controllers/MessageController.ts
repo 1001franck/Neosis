@@ -3,6 +3,7 @@ import {
   CreateMessageUseCase,
   GetMessageByIdUseCase,
   GetChannelMessagesUseCase,
+  SearchServerMessagesUseCase,
   UpdateMessageUseCase,
   DeleteMessageUseCase
 } from '../../../application/messages/usecases/messageUseCase.js';
@@ -16,6 +17,7 @@ export class MessageController {
     private createMessageUseCase: CreateMessageUseCase,
     private getMessageByIdUseCase: GetMessageByIdUseCase,
     private getChannelMessagesUseCase: GetChannelMessagesUseCase,
+    private searchServerMessagesUseCase: SearchServerMessagesUseCase,
     private updateMessageUseCase: UpdateMessageUseCase,
     private deleteMessageUseCase: DeleteMessageUseCase
   ) {}
@@ -94,6 +96,33 @@ export class MessageController {
       res.status(200).json({
         success: true,
         data: messages
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Rechercher des messages dans tous les channels d'un serveur
+   * GET /servers/:serverId/messages/search?q=...
+   */
+  searchServerMessages = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const serverId = req.params.serverId as string;
+      const userId = req.userId as string;
+      const query = (req.query.q as string | undefined) ?? '';
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+
+      const messages = await this.searchServerMessagesUseCase.execute({
+        serverId,
+        userId,
+        query,
+        limit,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: messages,
       });
     } catch (error) {
       next(error);

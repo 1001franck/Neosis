@@ -16,7 +16,7 @@ import { MessageController } from './presentation/http/controllers/MessageContro
 import { createAuthRoutes } from './presentation/http/routes/authRoute.js';
 import { createServerRoutes } from './presentation/http/routes/serverRoute.js';
 import { createChannelRoutes, createServerChannelRoutes } from './presentation/http/routes/channelRoute.js';
-import { createMessageRoutes, createChannelMessageRoutes } from './presentation/http/routes/messageRoute.js';
+import { createMessageRoutes, createChannelMessageRoutes, createServerMessageRoutes } from './presentation/http/routes/messageRoute.js';
 import { createUploadRoutes, createChannelMediaRoutes } from './presentation/http/routes/uploadRoute.js';
 import { createVoiceRouter } from './presentation/http/routes/voiceRoute.js';
 import { createFriendRoutes } from './presentation/http/routes/friendRoute.js';
@@ -95,6 +95,7 @@ const deleteChannelUseCase = container.deleteChannelUseCase();
 const createMessageUseCase = container.createMessageUseCase();
 const getMessageByIdUseCase = container.getMessageByIdUseCase();
 const getChannelMessagesUseCase = container.getChannelMessagesUseCase();
+const searchServerMessagesUseCase = container.searchServerMessagesUseCase();
 const updateMessageUseCase = container.updateMessageUseCase();
 const deleteMessageUseCase = container.deleteMessageUseCase();
 const markChannelAsReadUseCase = container.markChannelAsReadUseCase();
@@ -133,6 +134,7 @@ const messageController = new MessageController(
   createMessageUseCase,
   getMessageByIdUseCase,
   getChannelMessagesUseCase,
+  searchServerMessagesUseCase,
   updateMessageUseCase,
   deleteMessageUseCase
 );
@@ -263,6 +265,7 @@ app.use('/servers/:serverId/channels', authMiddleware, createServerChannelRoutes
 // Message routes + rate limit sur l'envoi
 app.use('/messages', authMiddleware, createMessageRoutes(messageController));
 app.use('/channels/:channelId/messages', authMiddleware, messageRateLimit, createChannelMessageRoutes(messageController));
+app.use('/servers/:serverId/messages', authMiddleware, createServerMessageRoutes(messageController));
 
 // Upload routes
 app.use('/upload', authMiddleware, createUploadRoutes(uploadController));

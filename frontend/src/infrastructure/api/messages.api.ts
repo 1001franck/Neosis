@@ -31,6 +31,18 @@ export const messagesApi = {
   },
 
   /**
+   * Rechercher des messages dans tous les channels d'un serveur
+   * GET /servers/:serverId/messages/search?q=...&limit=N
+   */
+  searchServerMessages: async (serverId: string, query: string, limit?: number): Promise<Message[]> => {
+    const params = new URLSearchParams();
+    params.set('q', query);
+    if (limit) params.set('limit', String(limit));
+    const response = await apiClient.get<Message[]>(`/servers/${serverId}/messages/search?${params.toString()}`);
+    return response.data;
+  },
+
+  /**
    * Récupérer un message
    * GET /messages/:id
    */

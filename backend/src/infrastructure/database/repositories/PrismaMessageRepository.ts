@@ -104,6 +104,59 @@ export class PrismaMessageRepository implements MessageRepository {
   }
 
   /**
+   * Recherche des messages dans tous les channels d'un serveur
+   */
+  async searchInServer(
+    serverId: string,
+    query: string,
+    limit: number = 100,
+    userId?: string
+  ): Promise<Message[]> {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return [];
+
+    const messages = await this.prisma.message.findMany({
+      where: {
+        deletedAt: null,
+        content: {
+          contains: trimmedQuery,
+          mode: 'insensitive',
+        },
+        channel: {
+          serverId,
+        },
+        ...(userId
+          ? {
+              deletions: {
+                none: { userId },
+              },
+            }
+          : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: {
+        member: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        attachments: true,
+        reactions: { select: { emoji: true, userId: true } },
+        deletions: userId ? { where: { userId }, select: { userId: true } } : false,
+      },
+    });
+
+    return messages.map((message) => this.toDomain(message, userId));
+  }
+
+  /**
    * Met à jour un message
    */
   async update(id: string, content: string): Promise<Message> {

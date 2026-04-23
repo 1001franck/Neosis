@@ -47,6 +47,7 @@ import {
   CreateMessageUseCase,
   GetMessageByIdUseCase,
   GetChannelMessagesUseCase,
+  SearchServerMessagesUseCase,
   GetRecentMessagesUseCase,
   UpdateMessageUseCase,
   DeleteMessageUseCase
@@ -404,6 +405,15 @@ export class Container {
     const memberRepository = this.createMemberRepository();
     const channelRepository = this.createChannelRepository();
     return new GetChannelMessagesUseCase(messageRepository, memberRepository, channelRepository);
+  }
+
+  /**
+   * Créer le Use Case pour rechercher des messages dans un serveur
+   */
+  searchServerMessagesUseCase() {
+    const messageRepository = this.createMessageRepository();
+    const memberRepository = this.createMemberRepository();
+    return new SearchServerMessagesUseCase(messageRepository, memberRepository);
   }
 
   /**

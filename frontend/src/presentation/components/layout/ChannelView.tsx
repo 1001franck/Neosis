@@ -22,6 +22,7 @@ import { ResponsiveSidebar } from '@presentation/components/common/ResponsiveSid
 import { ServerSidebar } from './ServerSidebar';
 import { ServerChannelsSidebar } from '@presentation/components/channels/ServerChannelsSidebar';
 import { ChatArea } from '@presentation/components/chat/ChatArea';
+import { ServerMessageSearchModal } from '@presentation/components/chat/ServerMessageSearchModal';
 import { MembersSidebar } from '@presentation/components/members/MembersSidebar';
 import { ChannelInfoSidebar } from '@presentation/components/channels/ChannelInfoSidebar';
 import { DirectMessagesPanel } from '@presentation/components/layout/DirectMessagesPanel';
@@ -139,14 +140,28 @@ export function ChannelView({
 
   // Local UI state
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isServerSearchOpen, setIsServerSearchOpen] = useState(false);
 
   const handleSearchOpen = useCallback(() => {
     setIsSearchOpen(true);
   }, []);
 
+  const handleServerSearchOpen = useCallback(() => {
+    setIsServerSearchOpen(true);
+  }, []);
+
   const handleSearchClose = useCallback(() => {
     setIsSearchOpen(false);
   }, []);
+
+  const handleServerSearchClose = useCallback(() => {
+    setIsServerSearchOpen(false);
+  }, []);
+
+  const handleServerSearchResultClick = useCallback((channelId: string) => {
+    callbacks?.onChannelClick?.(channelId);
+    setIsServerSearchOpen(false);
+  }, [callbacks]);
 
   // Trouver le channel actif
   const activeChannel = channels.list.find(ch => ch.id === channels.activeChannelId);
@@ -224,7 +239,7 @@ export function ChannelView({
           currentUserRole={members.currentUserRole}
           onChannelClick={callbacks?.onChannelClick}
           onServerMenuClick={callbacks?.onServerMenuClick}
-          onSearchClick={handleSearchOpen}
+          onSearchClick={handleServerSearchOpen}
           onLeaveServer={callbacks?.onLeaveServer}
           onAddChannel={callbacks?.onAddChannel}
           onDeleteServer={callbacks?.onDeleteServer}
@@ -272,6 +287,14 @@ export function ChannelView({
             onToggleChannelInfo: handleToggleChannelInfo,
             onToggleFriends: handleToggleFriends,
           }}
+        />
+
+        <ServerMessageSearchModal
+          isOpen={isServerSearchOpen}
+          onClose={handleServerSearchClose}
+          serverId={server.current.id}
+          channels={channels.list}
+          onResultClick={(channelId) => handleServerSearchResultClick(channelId)}
         />
       </div>
 

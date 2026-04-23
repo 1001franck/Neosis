@@ -141,6 +141,13 @@ export interface GetChannelMessagesDTO {
   before?: Date | undefined;
 }
 
+export interface SearchServerMessagesDTO {
+  serverId: string;
+  userId: string;
+  query: string;
+  limit?: number;
+}
+
 export class GetChannelMessagesUseCase extends BaseUseCase<GetChannelMessagesDTO, Message[]> {
   constructor(
     private messageRepository: MessageRepository,
@@ -170,6 +177,30 @@ export class GetChannelMessagesUseCase extends BaseUseCase<GetChannelMessagesDTO
       data.before,
       data.userId
     );
+  }
+}
+
+/**
+ * Use Case : Rechercher des messages dans tous les channels d'un serveur
+ */
+export class SearchServerMessagesUseCase extends BaseUseCase<SearchServerMessagesDTO, Message[]> {
+  constructor(
+    private messageRepository: MessageRepository,
+    private memberRepository: IMemberRepository
+  ) { super(); }
+
+  getName(): string {
+    return 'SearchServerMessagesUseCase';
+  }
+
+  async execute(data: SearchServerMessagesDTO): Promise<Message[]> {
+    const member = await this.memberRepository.findByUserAndServer(data.userId, data.serverId);
+    if (!member) {
+      throw new AppError(ErrorCode.INVALID_PERMISSIONS, 'Vous n\'êtes pas membre de ce serveur', 403);
+    }
+
+    const safeLimit = Math.min(Math.max(data.limit ?? 100, 1), 200);
+    return this.messageRepository.searchInServer(data.serverId, data.query, safeLimit, data.userId);
   }
 }
 

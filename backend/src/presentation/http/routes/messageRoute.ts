@@ -43,3 +43,15 @@ export function createChannelMessageRoutes(messageController: MessageController)
 
   return router;
 }
+
+/**
+ * Routes de recherche message à l'échelle serveur
+ * À monter sur /servers/:serverId/messages
+ */
+export function createServerMessageRoutes(messageController: MessageController): Router {
+  const router = Router({ mergeParams: true });
+
+  router.get('/search', messageController.searchServerMessages.bind(messageController));
+
+  return router;
+}
