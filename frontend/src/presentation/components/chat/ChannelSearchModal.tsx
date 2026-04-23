@@ -254,7 +254,7 @@ const ChannelSearchModalComponent = ({
             Ancien
           </button>
           <div className="ml-auto px-4 py-2 text-sm text-muted-foreground">
-            {sortedMessages.length} {sortedMessages.length === 1 ? 'rÃ©sultat' : 'rÃ©sultats'}
+            {sortedMessages.length} {sortedMessages.length === 1 ? 'résultat' : 'résultats'}
           </div>
         </div>
 
