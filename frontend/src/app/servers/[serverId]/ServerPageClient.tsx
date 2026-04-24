@@ -156,12 +156,14 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   // === SERVER MODAL STATE ===
   const [showCreateServer, setShowCreateServer] = useState(false);
   const [showJoinServer, setShowJoinServer] = useState(false);
+  const [showLeaveServerModal, setShowLeaveServerModal] = useState(false);
   const [createServerName, setCreateServerName] = useState('');
   const [createServerDesc, setCreateServerDesc] = useState('');
   const [joinInviteCode, setJoinInviteCode] = useState('');
   const [serverModalError, setServerModalError] = useState<string | null>(null);
   const [serverModalLoading, setServerModalLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [leavingServer, setLeavingServer] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   // === DATA LOADING ===
@@ -327,8 +329,8 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     logger.debug('Member clicked', { memberId });
   }, []);
 
-  const handleLeaveServer = useCallback(async (): Promise<void> => {
-    if (!confirm('Voulez-vous vraiment quitter ce serveur ?')) return;
+  const executeLeaveServer = useCallback(async (): Promise<void> => {
+    setLeavingServer(true);
     try {
       // Leave socket rooms before HTTP call
       if (activeChannelId) socketEmitters.leaveChannel(activeChannelId);
@@ -337,8 +339,15 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       router.push('/neosis');
     } catch (err) {
       logger.error('Failed to leave server', err);
+    } finally {
+      setLeavingServer(false);
+      setShowLeaveServerModal(false);
     }
   }, [serverId, activeChannelId, leaveServer, router]);
+
+  const handleLeaveServer = useCallback((): void => {
+    setShowLeaveServerModal(true);
+  }, []);
 
   const handleEditMessage = useCallback((messageId: string, content: string): void => {
     if (!activeChannelId) return;
@@ -870,6 +879,44 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
               >
                 {loggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* === MODAL : Quitter le serveur === */}
+      {showLeaveServerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => !leavingServer && setShowLeaveServerModal(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m0 3.75h.008v.008H12v-.008z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.34 3.94l-7.5 13a1.5 1.5 0 001.3 2.25h15.72a1.5 1.5 0 001.3-2.25l-7.5-13a1.5 1.5 0 00-2.6 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground text-center">Quitter ce serveur ?</h3>
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              Vous perdrez l&apos;accès aux salons et messages de ce serveur jusqu&apos;à rejoindre à nouveau.
+            </p>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowLeaveServerModal(false)}
+                disabled={leavingServer}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium text-foreground bg-secondary border border-border hover:bg-secondary/80 transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={executeLeaveServer}
+                disabled={leavingServer}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 transition-colors disabled:opacity-50"
+              >
+                {leavingServer ? 'Sortie...' : 'Quitter'}
               </button>
             </div>
           </div>
