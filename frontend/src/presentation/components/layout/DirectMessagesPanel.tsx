@@ -39,7 +39,27 @@ interface DirectMessagesPanelProps {
  * Réplique exacte du design Discord - Panel Messages
  * Contenu uniquement, le wrapper responsive est géré par ResponsiveSidebar
  */
-export function DirectMessagesPanel({ 
+function formatConversationTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today.getTime() - msgDay.getTime()) / 86_400_000);
+
+  if (diffDays === 0) {
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+  if (diffDays === 1) {
+    return 'Hier';
+  }
+  if (diffDays < 7) {
+    const day = date.toLocaleDateString('fr-FR', { weekday: 'long' });
+    return day.charAt(0).toUpperCase() + day.slice(1);
+  }
+  return date.toLocaleDateString('fr-FR');
+}
+
+export function DirectMessagesPanel({
   messages = [],
   activeView = 'messages'
 }: DirectMessagesPanelProps): React.ReactNode {
@@ -166,7 +186,7 @@ export function DirectMessagesPanel({
                     </span>
                     {conversation.updatedAt && (
                       <span className="text-xs text-muted-foreground flex-shrink-0 ml-1">
-                        {new Date(conversation.updatedAt).toLocaleDateString('fr-FR')}
+                        {formatConversationTime(conversation.updatedAt)}
                       </span>
                     )}
                   </div>
@@ -245,7 +265,7 @@ export function DirectMessagesPanel({
                         </span>
                         {conversation.updatedAt && (
                           <span className="text-xs text-muted-foreground flex-shrink-0 ml-1">
-                            {new Date(conversation.updatedAt).toLocaleDateString('fr-FR')}
+                            {formatConversationTime(conversation.updatedAt)}
                           </span>
                         )}
                       </div>
