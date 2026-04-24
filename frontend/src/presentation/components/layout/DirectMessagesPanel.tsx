@@ -14,10 +14,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDirectConversations } from '@application/direct/useDirectConversations';
 import { friendsApi } from '@infrastructure/api/friends.api';
-import { directApi } from '@infrastructure/api/direct.api';
 import { logger } from '@shared/utils/logger';
 import { Modal } from '@presentation/components/common/Modal';
-import type { Friend, FriendRequests } from '@domain/direct/types';
 import { useLocale } from '@shared/hooks/useLocale';
 
 interface DirectMessage {
@@ -55,10 +53,6 @@ export function DirectMessagesPanel({
   const [friendLoading, setFriendLoading] = useState(false);
   const { conversations, reload } = useDirectConversations();
   const { locale, setLocale, t } = useLocale();
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [requests, setRequests] = useState<FriendRequests>({ incoming: [], outgoing: [] });
-  const [friendsLoading, setFriendsLoading] = useState(false);
-  const [friendsError, setFriendsError] = useState<string | null>(null);
 
   const filteredConversations = conversations.filter((conv) =>
     (conv.user?.username || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,7 +66,6 @@ export function DirectMessagesPanel({
       await friendsApi.requestFriend(friendUsername.trim());
       setShowAddFriend(false);
       setFriendUsername('');
-      await loadFriends();
     } catch (err) {
       logger.error('Failed to request friend', err);
       setFriendError(t('dm.errors.sendRequest'));
@@ -80,50 +73,6 @@ export function DirectMessagesPanel({
       setFriendLoading(false);
     }
   };
-
-  const loadFriends = async () => {
-    setFriendsLoading(true);
-    setFriendsError(null);
-    try {
-      const [friendsData, requestsData] = await Promise.all([
-        friendsApi.listFriends(),
-        friendsApi.listRequests(),
-      ]);
-      setFriends(friendsData);
-      setRequests(requestsData);
-    } catch (err) {
-      logger.error('Failed to load friends', err);
-      setFriendsError(t('dm.errors.loadFriends'));
-    } finally {
-      setFriendsLoading(false);
-    }
-  };
-
-  const handleAcceptFriend = async (friendshipId: string) => {
-    try {
-      await friendsApi.acceptFriend(friendshipId);
-      await loadFriends();
-    } catch (err) {
-      logger.error('Failed to accept friend', err);
-      setFriendsError(t('dm.errors.acceptFriend'));
-    }
-  };
-
-  const handleStartConversation = async (userId?: string) => {
-    if (!userId) return;
-    try {
-      const convo = await directApi.createConversation(userId);
-      await reload();
-      router.push(`/messages/${convo.id}`);
-    } catch (err) {
-      logger.error('Failed to start conversation', err);
-      setFriendsError(t('dm.errors.startConversation'));
-    }
-  };
-
-  useEffect(() => {
-    loadFriends().catch(() => {});
-  }, []);
 
   useEffect(() => {
     const shouldOpen = searchParams?.get('addFriend') === '1';
@@ -260,11 +209,11 @@ export function DirectMessagesPanel({
             </div>
           )
         ) : (
-          <div className="flex flex-col h-full px-4 py-4 gap-6">
+          <div className="flex flex-col h-full px-4 py-4 gap-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-foreground">{t('dm.friends')}</h3>
-                <p className="text-xs text-muted-foreground">{t('dm.friendsDescription')}</p>
+                <h3 className="text-sm font-semibold text-foreground">Conversations privées</h3>
+                <p className="text-xs text-muted-foreground">Retrouvez toutes vos discussions privées ici</p>
               </div>
               <button
                 onClick={() => setShowAddFriend(true)}
@@ -274,134 +223,52 @@ export function DirectMessagesPanel({
               </button>
             </div>
 
-            {friendsError && (
-              <div className="text-xs text-red-500">{friendsError}</div>
-            )}
+            {filteredConversations.length > 0 ? (
+              <div className="space-y-1">
+                {filteredConversations.map((conversation) => (
+                  <button
+                    key={conversation.id}
+                    onClick={() => router.push(`/messages/${conversation.id}`)}
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className="relative flex-shrink-0">
+                      {conversation.user?.avatarUrl ? (
+                        <img
+                          src={conversation.user.avatarUrl}
+                          alt={conversation.user?.username || 'Utilisateur'}
+                          className="w-8 h-8 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                          <span className="text-sm font-semibold text-primary-foreground">
+                            {(conversation.user?.username || '?').substring(0, 1).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-            {friendsLoading ? (
-              <div className="text-sm text-muted-foreground">{t('dm.loading')}</div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground truncate">
+                          {conversation.user?.username || 'Utilisateur'}
+                        </span>
+                        {conversation.updatedAt && (
+                          <span className="text-xs text-muted-foreground flex-shrink-0 ml-1">
+                            {new Date(conversation.updatedAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {t('dm.privateConversation')}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             ) : (
-              <>
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t('dm.incomingRequests')}
-                  </h4>
-                  {requests.incoming.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">{t('dm.noIncomingRequests')}</p>
-                  ) : (
-                    requests.incoming.map((request) => (
-                      <div
-                        key={request.id}
-                        className="flex items-center justify-between px-3 py-2 bg-secondary/40 rounded-lg"
-                      >
-                        <div className="flex items-center gap-2">
-                          {request.user?.avatarUrl ? (
-                            <img
-                              src={request.user.avatarUrl}
-                              alt={request.user.username}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                              <span className="text-xs font-semibold text-primary-foreground">
-                                {(request.user?.username || '?').substring(0, 1).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                          <span className="text-sm text-foreground">
-                            {request.user?.username || 'Utilisateur'}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleAcceptFriend(request.id)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-emerald-500/90 text-white rounded-lg"
-                        >
-                          {t('dm.accept')}
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t('dm.outgoingRequests')}
-                  </h4>
-                  {requests.outgoing.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">{t('dm.noOutgoingRequests')}</p>
-                  ) : (
-                    requests.outgoing.map((request) => (
-                      <div
-                        key={request.id}
-                        className="flex items-center justify-between px-3 py-2 bg-secondary/30 rounded-lg"
-                      >
-                        <div className="flex items-center gap-2">
-                          {request.user?.avatarUrl ? (
-                            <img
-                              src={request.user.avatarUrl}
-                              alt={request.user.username}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                              <span className="text-xs font-semibold text-foreground">
-                                {(request.user?.username || '?').substring(0, 1).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                          <span className="text-sm text-foreground">
-                            {request.user?.username || 'Utilisateur'}
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{t('dm.pending')}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t('dm.yourFriends')}
-                  </h4>
-                  {friends.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      {t('dm.noFriends')}
-                    </p>
-                  ) : (
-                    friends.map((friend) => (
-                      <div
-                        key={friend.id}
-                        className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-secondary/40 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          {friend.user?.avatarUrl ? (
-                            <img
-                              src={friend.user.avatarUrl}
-                              alt={friend.user.username}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                              <span className="text-xs font-semibold text-primary-foreground">
-                                {(friend.user?.username || '?').substring(0, 1).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                          <span className="text-sm text-foreground">
-                            {friend.user?.username || 'Utilisateur'}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleStartConversation(friend.user?.id)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-lg"
-                        >
-                          {t('dm.message')}
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </>
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-xs text-muted-foreground">Aucune conversation privée pour le moment</p>
+              </div>
             )}
           </div>
         )}
