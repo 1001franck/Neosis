@@ -12,6 +12,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { useScrollbarVisibility } from '@shared/hooks/useScrollbarVisibility';
 import { motion } from 'framer-motion';
 import { MessageActions } from './MessageActions';
 import { MarkdownText } from './MarkdownText';
@@ -182,9 +183,11 @@ export function MessageList({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const { onScroll } = useScrollbarVisibility();
+
   if (messages.length === 0) {
     return (
-      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4">
+      <div className="flex-1 overflow-y-auto scrollbar-auto px-3 sm:px-4 py-3 sm:py-4" onScroll={onScroll}>
         <div className="h-full flex items-center justify-center">
           <p className="text-sm text-muted-foreground">
             Aucun message dans cette conversation
@@ -195,7 +198,7 @@ export function MessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4">
+    <div className="flex-1 overflow-y-auto scrollbar-auto px-3 sm:px-4 py-3 sm:py-4" onScroll={onScroll}>
       <div className="space-y-0">
         {messages.map((message, index) => {
           const prevMessage = index > 0 ? messages[index - 1] : undefined;

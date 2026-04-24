@@ -205,6 +205,34 @@
   background-color: var(--scrollbar-thumb-hover);
 }
 
+/* Scrollbar auto-hide : invisible au repos, apparaît au scroll */
+.scrollbar-auto::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-auto::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 999px;
+  transition: background-color 0.4s ease;
+}
+.scrollbar-auto.is-scrolling::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+}
+.scrollbar-auto.is-scrolling::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+/* Firefox */
+.scrollbar-auto {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+  transition: scrollbar-color 0.4s ease;
+}
+.scrollbar-auto.is-scrolling {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
 /* Hide scrollbar but keep functionality */
 @layer utilities {
   .scrollbar-hide {

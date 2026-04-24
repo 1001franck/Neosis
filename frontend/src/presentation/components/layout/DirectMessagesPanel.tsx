@@ -11,6 +11,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useScrollbarVisibility } from '@shared/hooks/useScrollbarVisibility';
 import { useRouter } from 'next/navigation';
 import { useDirectConversations } from '@application/direct/useDirectConversations';
 import { friendsApi } from '@infrastructure/api/friends.api';
@@ -71,6 +72,7 @@ export function DirectMessagesPanel({
   const [friendError, setFriendError] = useState<string | null>(null);
   const [friendLoading, setFriendLoading] = useState(false);
   const { conversations, reload } = useDirectConversations();
+  const { onScroll } = useScrollbarVisibility();
   const { locale, setLocale, t } = useLocale();
 
   const filteredConversations = conversations.filter((conv) =>
@@ -148,7 +150,7 @@ export function DirectMessagesPanel({
       </div>
 
       {/* Messages List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-auto" onScroll={onScroll}>
         {view === 'messages' ? (
           filteredConversations.length > 0 ? (
             filteredConversations.map((conversation) => (
