@@ -64,12 +64,19 @@ export const ResponsiveSidebar = React.memo(function ResponsiveSidebar({
   // Border selon la position
   const borderClass = position === 'left' ? 'border-r' : 'border-l';
 
+  // Ordre de superposition desktop pour éviter que certaines sidebars masquent les tooltips
+  const desktopZIndexClass = id === 'server'
+    ? 'md:z-40 md:overflow-visible'
+    : id === 'channels'
+      ? 'md:z-30'
+      : 'md:z-20';
+
   // Paramètres de drag selon la position
 
   // Classes de positionnement
   const positionClasses = position === 'left'
-    ? `fixed inset-y-0 left-0 z-50 w-full md:relative md:inset-auto md:z-auto md:${width}`
-    : `fixed inset-y-0 right-0 z-50 w-full md:relative md:inset-auto md:z-auto md:${width}`;
+    ? `fixed inset-y-0 left-0 z-50 w-full md:relative md:inset-auto ${desktopZIndexClass} md:${width}`
+    : `fixed inset-y-0 right-0 z-50 w-full md:relative md:inset-auto ${desktopZIndexClass} md:${width}`;
 
   // Rendu spécifique pour Desktop : la sidebar est retirée du flux si fermée
   if (!isMobile) {

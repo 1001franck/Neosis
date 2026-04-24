@@ -66,7 +66,7 @@ export function MainLayout({
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Server Sidebar - 72px, toujours visible sur desktop */}
-      <ResponsiveSidebar id="server" position="left" width="w-[72px]" className="bg-secondary py-3 gap-2">
+      <ResponsiveSidebar id="server" position="left" width="w-[72px]" showOnDesktop={true} className="bg-secondary py-3 gap-2">
         <ServerSidebar
           activeServerId={activeServerId}
           servers={servers}
