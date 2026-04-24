@@ -13,6 +13,7 @@
 'use client';
 
 import { memo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Member, Role } from '@domain/members/types';
 import { MemberRole } from '@domain/members/types';
 
@@ -340,7 +341,7 @@ export function MembersSidebar({
       </div>
 
       {/* Transfer Ownership Confirmation Modal */}
-      {transferTarget && (
+      {transferTarget && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setTransferTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground mb-2">Transférer la propriété</h3>
@@ -365,11 +366,12 @@ export function MembersSidebar({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Kick Confirmation Modal */}
-      {kickTarget && (
+      {kickTarget && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setKickTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground mb-2">Expulser le membre</h3>
@@ -394,11 +396,12 @@ export function MembersSidebar({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Ban Confirmation Modal */}
-      {banTarget && (
+      {banTarget && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setBanTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground mb-2">Bannir le membre</h3>
@@ -454,7 +457,8 @@ export function MembersSidebar({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* User Profile Card popup */}

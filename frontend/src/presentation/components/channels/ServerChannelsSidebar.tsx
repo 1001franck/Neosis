@@ -13,6 +13,7 @@
 'use client';
 
 import { memo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Channel, ChannelType, ChannelCategory } from '@domain/channels/types';
 import { Server } from '@domain/servers/types';
 import type { MemberRole } from '@domain/members/types';
@@ -370,29 +371,25 @@ function ServerChannelsSidebarInternal({
         </div>
       )}
 
-      {/* Server Settings Modal */}
-      {showServerSettings && (
+      {/* Server Settings Modal — rendu hors du DOM de la sidebar via portal */}
+      {showServerSettings && createPortal(
         <ServerSettingsModal
           server={server}
           isOwner={isOwner}
           onClose={() => setShowServerSettings(false)}
           onSave={async (data) => {
-            // Upload l'image d'abord si elle existe
             if (data.imageFile) {
               await uploadServerImage(server.id, data.imageFile);
             }
-
-            // Mettre à jour le serveur avec les autres données (sans imageUrl)
             const { imageFile: _imageFile, ...updateData } = data;
-            await updateServer(server.id, {
-              ...updateData,
-            });
+            await updateServer(server.id, { ...updateData });
           }}
-        />
+        />,
+        document.body
       )}
 
-      {/* Channel Settings Modal */}
-      {selectedChannelForSettings && (
+      {/* Channel Settings Modal — rendu hors du DOM de la sidebar via portal */}
+      {selectedChannelForSettings && createPortal(
         <ChannelSettingsModal
           channel={selectedChannelForSettings}
           canManage={isAdminOrOwner}
@@ -400,7 +397,8 @@ function ServerChannelsSidebarInternal({
           onSave={async (data) => {
             await updateChannel(selectedChannelForSettings.id, data);
           }}
-        />
+        />,
+        document.body
       )}
     </>
   );
