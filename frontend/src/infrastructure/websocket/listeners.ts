@@ -303,7 +303,9 @@ export function setupListeners() {
    */
   socket.on('direct:message:new', (message: DirectMessage) => {
     logger.info('DM received via socket', { messageId: message.id, conversationId: message.conversationId });
-    useDirectMessageStore.getState().addIncomingMessage(message);
+    const store = useDirectMessageStore.getState();
+    store.addIncomingMessage(message);
+    store.setConversationTimestamp(message.conversationId, message.createdAt);
 
     // Notification native desktop pour les DMs
     const currentUserId = useAuthStore.getState().user?.id;

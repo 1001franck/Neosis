@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DirectConversation } from '@domain/direct/types';
 import { directApi } from '@infrastructure/api/direct.api';
 import { logger } from '@shared/utils/logger';
+import { useDirectMessageStore } from './directMessageStore';
 
 export function useDirectConversations() {
   const [conversations, setConversations] = useState<DirectConversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const latestTimestamps = useDirectMessageStore((state) => state.latestConversationTimestamps);
 
   const loadConversations = useCallback(async () => {
     setIsLoading(true);
@@ -26,8 +29,19 @@ export function useDirectConversations() {
     loadConversations().catch(() => {});
   }, [loadConversations]);
 
+  // Fusionner les timestamps temps réel (envoi/réception) avec les données chargées
+  const conversationsWithLatestTime = useMemo(() =>
+    conversations
+      .map((conv) => ({
+        ...conv,
+        updatedAt: latestTimestamps.get(conv.id) ?? conv.updatedAt,
+      }))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+    [conversations, latestTimestamps]
+  );
+
   return {
-    conversations,
+    conversations: conversationsWithLatestTime,
     isLoading,
     error,
     reload: loadConversations,
