@@ -191,13 +191,6 @@ export function ChannelView({
     toggleSidebar('channel-info');
   };
 
-  const handleAddFriend = (): void => {
-    toggleSidebar('friends');
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('friends:add'));
-    }
-  };
-
   /**
    * Toggle friends sidebar
    * On mobile, ferme les autres sidebars de droite
@@ -222,7 +215,6 @@ export function ChannelView({
           onServerClick={callbacks?.onServerClick}
           onCreateServer={callbacks?.onCreateServer}
           onJoinServer={callbacks?.onJoinServer}
-          onAddFriend={handleAddFriend}
           onSettings={callbacks?.onSettings}
           onLogout={callbacks?.onLogout}
           user={user}
