@@ -11,7 +11,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useDirectConversations } from '@application/direct/useDirectConversations';
 import { friendsApi } from '@infrastructure/api/friends.api';
 import { logger } from '@shared/utils/logger';
@@ -44,7 +44,6 @@ export function DirectMessagesPanel({
   activeView = 'messages'
 }: DirectMessagesPanelProps): React.ReactNode {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [view, setView] = useState<'messages' | 'friends'>(activeView);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddFriend, setShowAddFriend] = useState(false);
@@ -73,14 +72,6 @@ export function DirectMessagesPanel({
       setFriendLoading(false);
     }
   };
-
-  useEffect(() => {
-    const shouldOpen = searchParams?.get('addFriend') === '1';
-    if (shouldOpen) {
-      setView('friends');
-      setShowAddFriend(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const handler = () => {
