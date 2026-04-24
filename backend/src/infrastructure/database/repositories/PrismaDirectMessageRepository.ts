@@ -6,20 +6,28 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
   constructor(private prisma: PrismaClient) {}
 
   async create(message: DirectMessage): Promise<DirectMessage> {
-    const created = await this.prisma.directMessage.create({
-      data: {
-        id: message.id,
-        conversationId: message.conversationId,
-        senderId: message.senderId,
-        content: message.content,
-        createdAt: message.createdAt,
-        updatedAt: message.updatedAt,
-        deletedAt: message.deletedAt,
-      },
-      include: {
-        sender: { select: { id: true, username: true, avatarUrl: true } },
-      },
-    });
+    // Transaction : créer le message ET mettre à jour updatedAt de la conversation
+    // pour que la liste des DM affiche le bon horodatage du dernier message.
+    const [, created] = await this.prisma.$transaction([
+      this.prisma.directConversation.update({
+        where: { id: message.conversationId },
+        data: { updatedAt: message.createdAt },
+      }),
+      this.prisma.directMessage.create({
+        data: {
+          id: message.id,
+          conversationId: message.conversationId,
+          senderId: message.senderId,
+          content: message.content,
+          createdAt: message.createdAt,
+          updatedAt: message.updatedAt,
+          deletedAt: message.deletedAt,
+        },
+        include: {
+          sender: { select: { id: true, username: true, avatarUrl: true } },
+        },
+      }),
+    ]);
     return this.toDomain(created);
   }
 
