@@ -16,7 +16,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '@presentation/components/common/Avatar';
 import type { Server } from '@domain/servers/types';
 import { useLocale } from '@shared/hooks/useLocale';
@@ -57,7 +57,9 @@ export function ServerSidebar({
   user,
 }: ServerSidebarProps): React.ReactNode {
   const router = useRouter();
+  const pathname = usePathname();
   const { t, locale, setLocale } = useLocale();
+  const isMessagesRoute = pathname?.startsWith('/messages') ?? false;
 
   const handleServerClick = (serverId: string) => {
     onServerClick?.(serverId);
@@ -190,13 +192,24 @@ export function ServerSidebar({
 
         {/* Add Friend */}
         <div className="flex items-center justify-center relative group">
+          {isMessagesRoute && (
+            <div className="absolute left-0 w-1 h-10 bg-white rounded-r-full" />
+          )}
           <button
             onClick={handleAddFriend}
-            className="flex items-center justify-center w-12 h-12 rounded-[24px] bg-card hover:rounded-[16px] hover:bg-primary transition-all duration-200"
+            className={`flex items-center justify-center w-12 h-12 transition-all duration-200 ${
+              isMessagesRoute
+                ? 'rounded-[16px] bg-primary'
+                : 'rounded-[24px] bg-card hover:rounded-[16px] hover:bg-primary'
+            }`}
             aria-label={t('nav.addFriend')}
           >
             <svg
-              className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors"
+              className={`w-6 h-6 transition-colors ${
+                isMessagesRoute
+                  ? 'text-primary-foreground'
+                  : 'text-primary group-hover:text-primary-foreground'
+              }`}
               fill="currentColor"
               viewBox="0 0 24 24"
             >
