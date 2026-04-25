@@ -5,6 +5,7 @@ import { logger } from '@shared/utils/logger';
 import { useFormState } from '@shared/hooks/useFormState';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLocale } from '@shared/hooks/useLocale';
 
 const fadeUp = {
@@ -23,6 +24,7 @@ const fadeUp = {
 export default function LoginPage() {
   const { login } = useAuth();
   const { t } = useLocale();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const { fields, error, isLoading, setField, setError, setLoading } = useFormState({
     email: '',
@@ -39,9 +41,7 @@ export default function LoginPage() {
       await login({ email: fields.email, password: fields.password });
       logger.info('Login successful');
 
-      // Rediriger vers /neosis/ — fichier statique qui existe dans out/
-      // Neosis gère ensuite la redirection SPA vers le bon serveur (router.push)
-      window.location.href = '/neosis/';
+      router.replace('/neosis/');
     } catch (err) {
       const message = (err as Error).message;
       logger.error('Login failed', err);
