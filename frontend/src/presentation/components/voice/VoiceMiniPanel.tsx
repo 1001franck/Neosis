@@ -15,6 +15,7 @@ import { useVoice } from '@application/voice/useVoice';
 import { useChannels } from '@application/channels/useChannels';
 import { VoiceUsersList } from './VoiceUsersList';
 import { useResponsiveLayout } from '@presentation/contexts/ResponsiveLayoutContext';
+import { useLocale } from '@shared/hooks/useLocale';
 
 export function VoiceMiniPanel(): React.ReactElement | null {
   const {
@@ -34,16 +35,17 @@ export function VoiceMiniPanel(): React.ReactElement | null {
 
   const { channels } = useChannels();
   const { isSidebarOpen, isMobile } = useResponsiveLayout();
+  const { t } = useLocale();
   const [showUsers, setShowUsers] = useState(true);
 
   const connectedChannel = channels.find(c => c.id === connectedChannelId);
-  const channelName = connectedChannel?.name || 'Salon vocal';
+  const channelName = connectedChannel?.name || t('voice.defaultChannel');
   const userCount = connectedUsers.length;
 
   const participantsLabel = useMemo(() => {
-    if (userCount === 0) return 'Aucun participant';
-    return `${userCount} ${userCount === 1 ? 'participant' : 'participants'}`;
-  }, [userCount]);
+    if (userCount === 0) return t('voice.noParticipants');
+    return `${userCount} ${userCount === 1 ? t('voice.participant') : t('voice.participants')}`;
+  }, [userCount, t]);
 
   if (!isConnected || !connectedChannelId) {
     return null;
@@ -67,7 +69,7 @@ export function VoiceMiniPanel(): React.ReactElement | null {
               </svg>
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-semibold text-green-400 uppercase tracking-wide">Connexion vocale</div>
+              <div className="text-xs font-semibold text-green-400 uppercase tracking-wide">{t('voice.connected')}</div>
               <div className="text-sm font-medium text-foreground truncate">{channelName}</div>
             </div>
           </div>
@@ -75,9 +77,9 @@ export function VoiceMiniPanel(): React.ReactElement | null {
           <button
             onClick={() => setShowUsers((v) => !v)}
             className="text-xs px-2 py-1 rounded bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Afficher les participants"
+            aria-label={t('voice.showParticipantsLabel')}
           >
-            {showUsers ? 'Masquer' : 'Voir'}
+            {showUsers ? t('voice.hideParticipants') : t('voice.showParticipants')}
           </button>
         </div>
 
@@ -99,7 +101,7 @@ export function VoiceMiniPanel(): React.ReactElement | null {
                 isMuted ? 'bg-red-500 text-white' : 'bg-secondary text-foreground'
               }`}
             >
-              {isMuted ? 'Activer le micro' : 'Couper le micro'}
+              {isMuted ? t('voice.unmute') : t('voice.mute')}
             </button>
             <button
               onClick={toggleDeafen}
@@ -107,7 +109,7 @@ export function VoiceMiniPanel(): React.ReactElement | null {
                 isDeafened ? 'bg-red-500 text-white' : 'bg-secondary text-foreground'
               }`}
             >
-              {isDeafened ? 'Activer le son' : 'Couper le son'}
+              {isDeafened ? t('voice.undeafen') : t('voice.deafen')}
             </button>
           </div>
 
@@ -119,7 +121,7 @@ export function VoiceMiniPanel(): React.ReactElement | null {
                 isVideoEnabled ? 'bg-blue-500 text-white' : 'bg-secondary text-foreground'
               }`}
             >
-              {isVideoEnabled ? 'Caméra ON' : 'Caméra'}
+              {isVideoEnabled ? t('voice.cameraOn') : t('voice.camera')}
             </button>
             <button
               onClick={() => void toggleScreenShare()}
@@ -127,13 +129,13 @@ export function VoiceMiniPanel(): React.ReactElement | null {
                 isScreenSharing ? 'bg-green-500 text-white' : 'bg-secondary text-foreground'
               }`}
             >
-              {isScreenSharing ? 'Partage ON' : 'Partager'}
+              {isScreenSharing ? t('voice.screenShareOn') : t('voice.screenShare')}
             </button>
             <button
-              onClick={() => leaveVoiceChannel()}
+              onClick={() => void leaveVoiceChannel()}
               className="flex-1 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
             >
-              Quitter
+              {t('voice.leave')}
             </button>
           </div>
         </div>

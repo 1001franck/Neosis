@@ -15,6 +15,7 @@ import React, { useState, useEffect } from 'react';
 import { useVoice } from '@application/voice/useVoice';
 import { useChannels } from '@application/channels/useChannels';
 import { getVoiceClient } from '@infrastructure/webrtc/VoiceClient';
+import { useLocale } from '@shared/hooks/useLocale';
 
 export function VoiceControls(): React.ReactElement | null {
   const {
@@ -32,6 +33,7 @@ export function VoiceControls(): React.ReactElement | null {
   } = useVoice();
 
   const { channels } = useChannels();
+  const { t } = useLocale();
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
   const [audioBlocked, setAudioBlocked] = useState(false);
 
@@ -49,7 +51,7 @@ export function VoiceControls(): React.ReactElement | null {
 
   // Trouver le nom du channel
   const connectedChannel = channels.find(c => c.id === connectedChannelId);
-  const channelName = connectedChannel?.name || 'Salon vocal';
+  const channelName = connectedChannel?.name || t('voice.defaultChannel');
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e1f22] via-[#232428] to-[#1e1f22] border-t border-[#3f4147] px-3 py-2.5 flex items-center gap-3 z-50 shadow-2xl">
@@ -62,7 +64,7 @@ export function VoiceControls(): React.ReactElement | null {
           }}
           className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-yellow-500 text-black text-xs font-semibold px-4 py-1.5 rounded-t-lg hover:bg-yellow-400 transition-colors"
         >
-          Cliquer pour activer le son
+          {t('voice.unlockAudio')}
         </button>
       )}
       {/* Section gauche : Info du channel */}
@@ -81,7 +83,7 @@ export function VoiceControls(): React.ReactElement | null {
         {/* Info texte */}
         <div className="flex flex-col min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-green-400 uppercase tracking-wide">Connexion vocale</span>
+            <span className="text-xs font-semibold text-green-400 uppercase tracking-wide">{t('voice.connected')}</span>
           </div>
           <span className="text-sm text-gray-200 font-medium truncate">
             {channelName}
@@ -104,7 +106,7 @@ export function VoiceControls(): React.ReactElement | null {
                 : 'bg-[#3f4147] hover:bg-[#4a4d55] shadow-md'
               }
             `}
-            title={isMuted ? 'Activer le micro' : 'Couper le micro'}
+            title={isMuted ? t('voice.unmute') : t('voice.mute')}
           >
             {isMuted ? (
               // Icône Micro OFF (slash)
@@ -122,7 +124,7 @@ export function VoiceControls(): React.ReactElement | null {
           {/* Tooltip */}
           {hoveredButton === 'mute' && (
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
-              {isMuted ? 'Activer le micro' : 'Couper le micro'}
+              {isMuted ? t('voice.unmute') : t('voice.mute')}
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
             </div>
           )}
@@ -141,7 +143,7 @@ export function VoiceControls(): React.ReactElement | null {
                 : 'bg-[#3f4147] hover:bg-[#4a4d55] shadow-md'
               }
             `}
-            title={isDeafened ? 'Activer le son' : 'Couper le son'}
+            title={isDeafened ? t('voice.undeafen') : t('voice.deafen')}
           >
             {isDeafened ? (
               // Icône Casque OFF (slash)
@@ -159,7 +161,7 @@ export function VoiceControls(): React.ReactElement | null {
           {/* Tooltip */}
           {hoveredButton === 'deafen' && (
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
-              {isDeafened ? 'Activer le son' : 'Couper le son'}
+              {isDeafened ? t('voice.undeafen') : t('voice.deafen')}
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
             </div>
           )}
@@ -178,7 +180,7 @@ export function VoiceControls(): React.ReactElement | null {
                 : 'bg-[#3f4147] hover:bg-[#4a4d55] shadow-md'
               }
             `}
-            title={isVideoEnabled ? 'Désactiver la caméra' : 'Activer la caméra'}
+            title={isVideoEnabled ? t('voice.disableCamera') : t('voice.enableCamera')}
           >
             {isVideoEnabled ? (
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -192,7 +194,7 @@ export function VoiceControls(): React.ReactElement | null {
           </button>
           {hoveredButton === 'camera' && (
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
-              {isVideoEnabled ? 'Désactiver la caméra' : 'Activer la caméra'}
+              {isVideoEnabled ? t('voice.disableCamera') : t('voice.enableCamera')}
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
             </div>
           )}
@@ -211,7 +213,7 @@ export function VoiceControls(): React.ReactElement | null {
                 : 'bg-[#3f4147] hover:bg-[#4a4d55] shadow-md'
               }
             `}
-            title={isScreenSharing ? 'Arrêter le partage' : 'Partager l\'écran'}
+            title={isScreenSharing ? t('voice.stopScreenShare') : t('voice.startScreenShare')}
           >
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zm-7-3.53v-2.19c-2.78.48-4.34 1.71-5.5 3.72.14-1.4.59-4.83 3.89-6.56l-.89-.86V6.5L15 10.26l-2 2-2 2.21z"/>
@@ -219,7 +221,7 @@ export function VoiceControls(): React.ReactElement | null {
           </button>
           {hoveredButton === 'screen' && (
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
-              {isScreenSharing ? 'Arrêter le partage' : "Partager l'écran"}
+              {isScreenSharing ? t('voice.stopScreenShare') : t('voice.startScreenShare')}
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
             </div>
           )}
@@ -231,11 +233,11 @@ export function VoiceControls(): React.ReactElement | null {
         {/* Bouton Déconnecter */}
         <div className="relative group">
           <button
-            onClick={() => leaveVoiceChannel()}
+            onClick={() => void leaveVoiceChannel()}
             onMouseEnter={() => setHoveredButton('disconnect')}
             onMouseLeave={() => setHoveredButton(null)}
             className="p-3 rounded-lg bg-[#3f4147] hover:bg-red-500 transition-all duration-200 transform hover:scale-105 shadow-md"
-            title="Se déconnecter"
+            title={t('voice.disconnect')}
           >
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M16 17V19H2V17H16ZM21 7V9L12 13.5V11L18 8V11H21V7M16 3V5H2V3H16Z"/>
@@ -245,7 +247,7 @@ export function VoiceControls(): React.ReactElement | null {
           {/* Tooltip */}
           {hoveredButton === 'disconnect' && (
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-xs font-medium rounded-md whitespace-nowrap pointer-events-none backdrop-blur-sm">
-              Se déconnecter
+              {t('voice.disconnect')}
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
             </div>
           )}

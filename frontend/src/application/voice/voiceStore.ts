@@ -178,7 +178,7 @@ export const useVoiceStore = create<VoiceStore>((set) => ({
   }),
 
   /**
-   * Mettre Ã  jour l'Ã©tat "parle" d'un utilisateur
+   * Mettre à jour l'état "parle" d'un utilisateur
    */
   setUserSpeaking: (channelId: string, userId: string, isSpeaking: boolean) => set((state) => {
     const newMap = new Map(state.connectedUsers);
