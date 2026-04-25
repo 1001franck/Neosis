@@ -13,6 +13,7 @@
 
 import React, { useState } from 'react';
 import type { Channel } from '@domain/channels/types';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface ChannelSettingsModalProps {
   channel: Channel;
@@ -27,15 +28,15 @@ export function ChannelSettingsModal({
   onClose,
   onSave,
 }: ChannelSettingsModalProps): React.ReactElement {
+  const { t } = useLocale();
   const [name, setName] = useState(channel.name || '');
   const [topic, setTopic] = useState(channel.topic || '');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Validation en temps réel
-  const nameError = name.trim().length === 0 ? 'Le nom est requis' :
-                    name.trim().length > 100 ? 'Maximum 100 caractères' : null;
-  const topicError = topic.length > 1024 ? 'Maximum 1024 caractères' : null;
+  const nameError = name.trim().length === 0 ? t('channel.settings.nameRequired') :
+                    name.trim().length > 100 ? t('channel.settings.nameMax') : null;
+  const topicError = topic.length > 1024 ? t('channel.settings.topicMax') : null;
   const hasChanges = name !== channel.name || topic !== (channel.topic || '');
 
   const handleSave = async () => {
@@ -58,7 +59,7 @@ export function ChannelSettingsModal({
       await onSave(updateData);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
+      setError(err instanceof Error ? err.message : t('common.errorSaving'));
     } finally {
       setIsSaving(false);
     }
@@ -75,15 +76,15 @@ export function ChannelSettingsModal({
                 <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Permission refusée</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('common.permissionDenied')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Seuls les administrateurs et le propriétaire du serveur peuvent modifier ce channel.
+              {t('channel.settings.adminOnly')}
             </p>
             <button
               onClick={onClose}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
-              Fermer
+              {t('common.close')}
             </button>
           </div>
         </div>
@@ -97,15 +98,15 @@ export function ChannelSettingsModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Paramètres du channel</h2>
+            <h2 className="text-xl font-bold text-foreground">{t('channel.settings.title')}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Personnalisez l&apos;apparence et le contenu de #{channel.name}
+              {t('channel.settings.subtitle')}#{channel.name}
             </p>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
-            aria-label="Fermer"
+            aria-label={t('common.close')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -119,7 +120,7 @@ export function ChannelSettingsModal({
             {/* Nom du channel */}
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
-                Nom du channel
+                {t('channel.settings.nameLabel')}
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
@@ -147,7 +148,7 @@ export function ChannelSettingsModal({
                 {nameError ? (
                   <p className="text-sm text-red-500">{nameError}</p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Le nom du channel visible par tous</p>
+                  <p className="text-sm text-muted-foreground">{t('channel.settings.nameHint')}</p>
                 )}
                 <span className="text-xs text-muted-foreground">
                   {name.length}/100
@@ -158,12 +159,12 @@ export function ChannelSettingsModal({
             {/* Topic du channel */}
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
-                Description du channel
+                {t('channel.settings.topicLabel')}
               </label>
               <textarea
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="Ajoutez une description pour aider les membres à comprendre l'objectif de ce channel... (optionnel)"
+                placeholder={t('channel.settings.topicPlaceholder')}
                 maxLength={1024}
                 rows={4}
                 className={`
@@ -181,7 +182,7 @@ export function ChannelSettingsModal({
                 {topicError ? (
                   <p className="text-sm text-red-500">{topicError}</p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Une courte description de ce channel</p>
+                  <p className="text-sm text-muted-foreground">{t('channel.settings.topicHint')}</p>
                 )}
                 <span className="text-xs text-muted-foreground">
                   {topic.length}/1024
@@ -197,9 +198,9 @@ export function ChannelSettingsModal({
                     <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
                   </svg>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-400 mb-1">Channel par défaut</p>
+                    <p className="text-sm font-medium text-blue-400 mb-1">{t('channel.settings.defaultInfo')}</p>
                     <p className="text-sm text-blue-300/80">
-                      Le channel &quot;general&quot; est le channel par défaut de votre serveur. Il ne peut pas être supprimé, mais vous pouvez le renommer.
+                      {t('channel.settings.defaultDesc')}
                     </p>
                   </div>
                 </div>
@@ -218,7 +219,7 @@ export function ChannelSettingsModal({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            {hasChanges ? 'Modifications non sauvegardées' : 'Aucune modification'}
+            {hasChanges ? t('common.unsavedChanges') : t('common.noChanges')}
           </div>
           <div className="flex gap-3">
             <button
@@ -226,14 +227,14 @@ export function ChannelSettingsModal({
               disabled={isSaving}
               className="px-4 py-2 text-foreground hover:bg-accent rounded-lg transition-colors disabled:opacity-50"
             >
-              Annuler
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={!hasChanges || isSaving || !!nameError || !!topicError}
               className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+              {isSaving ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </div>

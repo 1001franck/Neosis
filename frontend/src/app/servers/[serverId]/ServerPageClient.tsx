@@ -31,6 +31,7 @@ import { uploadApi } from '@infrastructure/api/upload.api';
 import { serversApi } from '@infrastructure/api/servers.api';
 import { toastBus } from '@shared/utils/toastBus';
 import type { ChannelMedia, ChannelLink } from '@presentation/components/channels/types';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface ServerPageProps {
   params: Promise<{ serverId: string }>;
@@ -152,6 +153,8 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   const [channelLinks, setChannelLinks] = useState<ChannelLink[]>([]);
   const [channelFiles, setChannelFiles] = useState<ChannelMedia[]>([]);
   const [, setMediaLoading] = useState(false);
+
+  const { t } = useLocale();
 
   // === SERVER MODAL STATE ===
   const [showCreateServer, setShowCreateServer] = useState(false);
@@ -501,7 +504,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       setCreateServerDesc('');
       router.push(`/servers/${server.id}`);
     } catch (err) {
-      setServerModalError((err as Error).message || 'Erreur lors de la création');
+      setServerModalError((err as Error).message || t('servers.create.error'));
     } finally {
       setServerModalLoading(false);
     }
@@ -518,7 +521,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       setJoinInviteCode('');
       router.push(`/servers/${server.id}`);
     } catch (err) {
-      setServerModalError((err as Error).message || "Code d'invitation invalide");
+      setServerModalError((err as Error).message || t('servers.join.invalidCode'));
     } finally {
       setServerModalLoading(false);
     }
@@ -691,10 +694,10 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       {showCreateChannel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowCreateChannel(false)}>
           <div className="bg-card border border-border rounded-xl shadow-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-foreground mb-4">Créer un channel</h3>
+            <h3 className="text-xl font-bold text-foreground mb-4">{t('channel.create.title')}</h3>
             <form onSubmit={handleCreateChannel} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Nom du channel *</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">{t('channel.create.nameLabel')}</label>
                 <input
                   type="text"
                   value={newChannelName}
@@ -707,7 +710,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Type</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">{t('channel.create.typeLabel')}</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -719,7 +722,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                       disabled={channelModalLoading}
                       className="accent-primary"
                     />
-                    <span className="text-sm text-foreground">Texte</span>
+                    <span className="text-sm text-foreground">{t('channel.create.typeText')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -731,7 +734,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                       disabled={channelModalLoading}
                       className="accent-primary"
                     />
-                    <span className="text-sm text-foreground">Vocal</span>
+                    <span className="text-sm text-foreground">{t('channel.create.typeVoice')}</span>
                   </label>
                 </div>
               </div>
@@ -740,10 +743,10 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
               )}
               <div className="flex gap-3 justify-end">
                 <button type="button" onClick={() => setShowCreateChannel(false)} className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors" disabled={channelModalLoading}>
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors" disabled={channelModalLoading || !newChannelName.trim()}>
-                  {channelModalLoading ? 'Création...' : 'Créer'}
+                  {channelModalLoading ? t('channel.create.submitting') : t('channel.create.submit')}
                 </button>
               </div>
             </form>
@@ -759,15 +762,15 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
             className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold text-foreground mb-5">Créer un serveur</h3>
+            <h3 className="text-xl font-bold text-foreground mb-5">{t('servers.create.title')}</h3>
             <form onSubmit={handleCreateServer} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">Nom du serveur *</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">{t('servers.create.nameLabel')}</label>
                 <input
                   type="text"
                   value={createServerName}
                   onChange={(e) => setCreateServerName(e.target.value)}
-                  placeholder="Mon serveur"
+                  placeholder={t('servers.create.namePlaceholder')}
                   required
                   className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                   disabled={serverModalLoading}
@@ -775,12 +778,12 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">Description (optionnel)</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">{t('servers.create.descLabel')}</label>
                 <input
                   type="text"
                   value={createServerDesc}
                   onChange={(e) => setCreateServerDesc(e.target.value)}
-                  placeholder="Description du serveur"
+                  placeholder={t('servers.create.descPlaceholder')}
                   className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                   disabled={serverModalLoading}
                 />
@@ -790,14 +793,14 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
               )}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={closeServerModals} className="px-4 py-2.5 text-muted-foreground hover:text-foreground text-sm transition-colors" disabled={serverModalLoading}>
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
                   disabled={serverModalLoading || !createServerName.trim()}
                 >
-                  {serverModalLoading ? 'Création...' : 'Créer'}
+                  {serverModalLoading ? t('servers.create.submitting') : t('servers.create.submit')}
                 </button>
               </div>
             </form>
@@ -813,15 +816,15 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
             className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold text-foreground mb-5">Rejoindre un serveur</h3>
+            <h3 className="text-xl font-bold text-foreground mb-5">{t('servers.join.title')}</h3>
             <form onSubmit={handleJoinServer} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">Code d&apos;invitation *</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">{t('servers.join.codeLabel')}</label>
                 <input
                   type="text"
                   value={joinInviteCode}
                   onChange={(e) => setJoinInviteCode(e.target.value)}
-                  placeholder="Entrez le code d'invitation"
+                  placeholder={t('servers.join.codePlaceholder')}
                   required
                   className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                   disabled={serverModalLoading}
@@ -833,14 +836,14 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
               )}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={closeServerModals} className="px-4 py-2.5 text-muted-foreground hover:text-foreground text-sm transition-colors" disabled={serverModalLoading}>
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
                   disabled={serverModalLoading || !joinInviteCode.trim()}
                 >
-                  {serverModalLoading ? 'Connexion...' : 'Rejoindre'}
+                  {serverModalLoading ? t('servers.join.submitting') : t('servers.join.submit')}
                 </button>
               </div>
             </form>
@@ -861,9 +864,9 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-foreground text-center">Se déconnecter ?</h3>
+            <h3 className="text-lg font-semibold text-foreground text-center">{t('logout.title')}</h3>
             <p className="text-sm text-muted-foreground text-center mt-2">
-              Êtes-vous sûr de vouloir vous déconnecter de votre compte ?
+              {t('logout.message')}
             </p>
             <div className="flex gap-3 mt-6">
               <button
@@ -871,14 +874,14 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                 disabled={loggingOut}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-foreground bg-secondary border border-border hover:bg-secondary/80 transition-colors disabled:opacity-50"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleLogout}
                 disabled={loggingOut}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
               >
-                {loggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+                {loggingOut ? t('logout.confirming') : t('logout.confirm')}
               </button>
             </div>
           </div>
@@ -899,9 +902,9 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.34 3.94l-7.5 13a1.5 1.5 0 001.3 2.25h15.72a1.5 1.5 0 001.3-2.25l-7.5-13a1.5 1.5 0 00-2.6 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-foreground text-center">Quitter ce serveur ?</h3>
+            <h3 className="text-lg font-semibold text-foreground text-center">{t('servers.leave.title')}</h3>
             <p className="text-sm text-muted-foreground text-center mt-2">
-              Vous perdrez l&apos;accès aux salons et messages de ce serveur jusqu&apos;à rejoindre à nouveau.
+              {t('servers.leave.message')}
             </p>
             <div className="flex gap-3 mt-6">
               <button
@@ -909,14 +912,14 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
                 disabled={leavingServer}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-foreground bg-secondary border border-border hover:bg-secondary/80 transition-colors disabled:opacity-50"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={executeLeaveServer}
                 disabled={leavingServer}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 transition-colors disabled:opacity-50"
               >
-                {leavingServer ? 'Sortie...' : 'Quitter'}
+                {leavingServer ? t('servers.leave.confirming') : t('servers.leave.confirm')}
               </button>
             </div>
           </div>

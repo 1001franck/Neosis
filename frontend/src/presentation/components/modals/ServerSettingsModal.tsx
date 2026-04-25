@@ -14,6 +14,7 @@
 
 import React, { useState, useRef } from 'react';
 import type { Server } from '@domain/servers/types';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface ServerSettingsModalProps {
   server: Server;
@@ -28,6 +29,7 @@ export function ServerSettingsModal({
   onClose,
   onSave,
 }: ServerSettingsModalProps): React.ReactElement {
+  const { t } = useLocale();
   const [name, setName] = useState(server.name || '');
   const [description, setDescription] = useState(server.description || '');
   const [imagePreview, setImagePreview] = useState<string | null>(server.imageUrl || null);
@@ -36,10 +38,9 @@ export function ServerSettingsModal({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Validation en temps réel
-  const nameError = name.trim().length === 0 ? 'Le nom est requis' :
-                    name.trim().length > 100 ? 'Maximum 100 caractères' : null;
-  const descError = description.length > 500 ? 'Maximum 500 caractères' : null;
+  const nameError = name.trim().length === 0 ? t('servers.settings.nameRequired') :
+                    name.trim().length > 100 ? t('servers.settings.nameMax') : null;
+  const descError = description.length > 500 ? t('servers.settings.descMax') : null;
   const hasChanges = name !== server.name ||
                      description !== (server.description || '') ||
                      imageFile !== null;
@@ -50,12 +51,12 @@ export function ServerSettingsModal({
 
     // Validation
     if (!file.type.startsWith('image/')) {
-      setError('Le fichier doit être une image');
+      setError(t('common.imageInvalid'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('L\'image ne doit pas dépasser 5 Mo');
+      setError(t('common.imageTooBig'));
       return;
     }
 
@@ -103,7 +104,7 @@ export function ServerSettingsModal({
       await onSave(updateData);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
+      setError(err instanceof Error ? err.message : t('common.errorSaving'));
     } finally {
       setIsSaving(false);
     }
@@ -120,15 +121,15 @@ export function ServerSettingsModal({
                 <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Permission refusée</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('common.permissionDenied')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Seul le propriétaire du serveur peut modifier ces paramètres.
+              {t('servers.settings.ownerOnly')}
             </p>
             <button
               onClick={onClose}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
-              Fermer
+              {t('common.close')}
             </button>
           </div>
         </div>
@@ -141,11 +142,11 @@ export function ServerSettingsModal({
       <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">Paramètres du serveur</h2>
+          <h2 className="text-xl font-bold text-foreground">{t('servers.settings.title')}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
-            aria-label="Fermer"
+            aria-label={t('common.close')}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -159,7 +160,7 @@ export function ServerSettingsModal({
             {/* Image du serveur */}
             <div>
               <label className="block text-sm font-semibold text-foreground mb-3">
-                Image du serveur
+                {t('servers.settings.imageLabel')}
               </label>
               <div className="flex items-center gap-4">
                 {/* Aperçu */}
@@ -186,18 +187,18 @@ export function ServerSettingsModal({
                     onClick={() => fileInputRef.current?.click()}
                     className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
                   >
-                    Choisir une image
+                    {t('servers.settings.chooseImage')}
                   </button>
                   {imagePreview && (
                     <button
                       onClick={handleRemoveImage}
                       className="w-full px-4 py-2 bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors text-sm font-medium"
                     >
-                      Supprimer l&apos;image
+                      {t('servers.settings.removeImage')}
                     </button>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    PNG, JPG ou GIF • Maximum 5 Mo
+                    {t('servers.settings.imageHint')}
                   </p>
                 </div>
               </div>
@@ -206,14 +207,14 @@ export function ServerSettingsModal({
             {/* Nom du serveur */}
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
-                Nom du serveur
+                {t('servers.settings.nameLabel')}
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Mon super serveur"
+                placeholder={t('servers.settings.namePlaceholder')}
                 maxLength={100}
                 className={`
                   w-full px-4 py-3 rounded-lg
@@ -229,7 +230,7 @@ export function ServerSettingsModal({
                 {nameError ? (
                   <p className="text-sm text-red-500">{nameError}</p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Le nom du serveur visible par tous</p>
+                  <p className="text-sm text-muted-foreground">{t('servers.settings.nameHint')}</p>
                 )}
                 <span className="text-xs text-muted-foreground">
                   {name.length}/100
@@ -240,12 +241,12 @@ export function ServerSettingsModal({
             {/* Description */}
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
-                Description
+                {t('servers.settings.descLabel')}
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Décrivez votre serveur... (optionnel)"
+                placeholder={t('servers.settings.descPlaceholder')}
                 maxLength={500}
                 rows={4}
                 className={`
@@ -263,7 +264,7 @@ export function ServerSettingsModal({
                 {descError ? (
                   <p className="text-sm text-red-500">{descError}</p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Une courte description de votre serveur</p>
+                  <p className="text-sm text-muted-foreground">{t('servers.settings.descHint')}</p>
                 )}
                 <span className="text-xs text-muted-foreground">
                   {description.length}/500
@@ -283,7 +284,7 @@ export function ServerSettingsModal({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            {hasChanges ? 'Modifications non sauvegardées' : 'Aucune modification'}
+            {hasChanges ? t('common.unsavedChanges') : t('common.noChanges')}
           </div>
           <div className="flex gap-3">
             <button
@@ -291,14 +292,14 @@ export function ServerSettingsModal({
               disabled={isSaving}
               className="px-4 py-2 text-foreground hover:bg-accent rounded-lg transition-colors disabled:opacity-50"
             >
-              Annuler
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={!hasChanges || isSaving || !!nameError || !!descError}
               className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+              {isSaving ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </div>

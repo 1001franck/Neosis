@@ -20,6 +20,7 @@ import { MemberRole } from '@domain/members/types';
 import { TEXT_COLORS } from '@shared/constants/colors';
 import { useResponsiveLayout } from '@presentation/contexts/ResponsiveLayoutContext';
 import { usePresenceStore } from '@application/members/presenceStore';
+import { useLocale } from '@shared/hooks/useLocale';
 import { UserProfileCard } from './UserProfileCard';
 
 /**
@@ -53,13 +54,10 @@ function getStatusColor(status: PresenceStatus): string {
   }
 }
 
-/**
- * Labels et couleurs pour les roles
- */
-const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
-  [MemberRole.OWNER]: { label: 'Propriétaire', color: '#e2b714' },
-  [MemberRole.ADMIN]: { label: 'Administrateur', color: '#5865f2' },
-  [MemberRole.MEMBER]: { label: 'Membres', color: '' },
+const ROLE_COLORS: Record<string, string> = {
+  [MemberRole.OWNER]: '#e2b714',
+  [MemberRole.ADMIN]: '#5865f2',
+  [MemberRole.MEMBER]: '',
 };
 
 /**
@@ -80,6 +78,7 @@ export function MembersSidebar({
   onBanMember,
 }: MembersSidebarProps): React.ReactElement | null {
   // Responsive layout
+  const { t } = useLocale();
   const { isMembersSidebarOpen: _isMembersSidebarOpen, toggleMembersSidebar: _toggleMembersSidebar, closeAllSidebars, isMobile } = useResponsiveLayout();
 
   // Presence store - get online users for this server
@@ -126,12 +125,18 @@ export function MembersSidebar({
   /**
    * Construire les groupes dans l'ordre correct
    */
+  const ROLE_LABELS: Record<string, string> = {
+    [MemberRole.OWNER]: t('members.roles.owner'),
+    [MemberRole.ADMIN]: t('members.roles.admin'),
+    [MemberRole.MEMBER]: t('members.roles.member'),
+  };
+
   const roleGroups = ROLE_ORDER
     .filter(role => membersByRole[role] && membersByRole[role].length > 0)
     .map(role => ({
       key: role,
-      label: ROLE_CONFIG[role]?.label || role,
-      color: ROLE_CONFIG[role]?.color || '',
+      label: ROLE_LABELS[role] || role,
+      color: ROLE_COLORS[role] || '',
       members: membersByRole[role],
     }));
 
@@ -140,7 +145,7 @@ export function MembersSidebar({
       {/* Close Button (Mobile only) */}
       {isMobile && (
         <div className="h-12 px-4 flex items-center justify-between border-b border-border">
-          <h2 className="text-base font-semibold text-white">Membres</h2>
+          <h2 className="text-base font-semibold text-white">{t('members.list')}</h2>
           <button
             onClick={closeAllSidebars}
             className="p-2 text-muted-foreground hover:text-white transition-colors"
@@ -257,7 +262,7 @@ export function MembersSidebar({
                               <>
                                 <div className="fixed inset-0 z-40" onClick={() => setRoleDropdownId(null)} />
                                 <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-lg shadow-lg z-50 py-1">
-                                  <p className="px-3 py-1 text-xs text-muted-foreground font-semibold uppercase">Changer le rôle</p>
+                                  <p className="px-3 py-1 text-xs text-muted-foreground font-semibold uppercase">{t('members.roles.changeRole')}</p>
                                   {[MemberRole.ADMIN, MemberRole.MEMBER].map((role) => (
                                     <button
                                       key={role}
@@ -271,7 +276,7 @@ export function MembersSidebar({
                                       }`}
                                       disabled={member.role === role}
                                     >
-                                      {role === MemberRole.ADMIN ? 'Administrateur' : 'Membre'}
+                                      {role === MemberRole.ADMIN ? t('members.roles.adminLabel') : t('members.roles.memberLabel')}
                                       {member.role === role && ' \u2713'}
                                     </button>
                                   ))}
@@ -288,7 +293,7 @@ export function MembersSidebar({
                                         }}
                                         className="w-full text-left px-3 py-1.5 text-sm text-amber-500 hover:bg-amber-900/20 transition-colors"
                                       >
-                                        Transférer la propriété
+                                        {t('members.transfer.action')}
                                       </button>
                                     </>
                                   )}
@@ -305,7 +310,7 @@ export function MembersSidebar({
                                         }}
                                         className="w-full text-left px-3 py-1.5 text-sm text-orange-500 hover:bg-orange-900/20 transition-colors"
                                       >
-                                        Expulser
+                                        {t('members.kick.action')}
                                       </button>
                                     </>
                                   )}
@@ -322,7 +327,7 @@ export function MembersSidebar({
                                         }}
                                         className="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-red-900/20 transition-colors"
                                       >
-                                        Bannir
+                                        {t('members.ban.action')}
                                       </button>
                                     </>
                                   )}
@@ -344,16 +349,16 @@ export function MembersSidebar({
       {transferTarget && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setTransferTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-2">Transférer la propriété</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">{t('members.transfer.title')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Êtes-vous sûr de vouloir transférer la propriété du serveur à <strong className="text-foreground">{transferTarget.user.username}</strong> ? Vous deviendrez un membre ordinaire. Cette action est irréversible.
+              {t('members.transfer.message')} <strong className="text-foreground">{transferTarget.user.username}</strong> {t('members.transfer.messageSuffix')}
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setTransferTarget(null)}
                 className="px-4 py-2 text-sm rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -362,7 +367,7 @@ export function MembersSidebar({
                 }}
                 className="px-4 py-2 text-sm rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
               >
-                Transférer
+                {t('members.transfer.confirm')}
               </button>
             </div>
           </div>
@@ -374,16 +379,16 @@ export function MembersSidebar({
       {kickTarget && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setKickTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-2">Expulser le membre</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">{t('members.kick.title')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Êtes-vous sûr de vouloir expulser <strong className="text-foreground">{kickTarget.user.username}</strong> du serveur ? Il pourra rejoindre à nouveau avec un code d&apos;invitation.
+              {t('members.kick.message')} <strong className="text-foreground">{kickTarget.user.username}</strong> {t('members.kick.messageSuffix')}
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setKickTarget(null)}
                 className="px-4 py-2 text-sm rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -392,7 +397,7 @@ export function MembersSidebar({
                 }}
                 className="px-4 py-2 text-sm rounded bg-orange-600 text-white hover:bg-orange-700 transition-colors"
               >
-                Expulser
+                {t('members.kick.confirm')}
               </button>
             </div>
           </div>
@@ -404,31 +409,31 @@ export function MembersSidebar({
       {banTarget && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setBanTarget(null)}>
           <div className="bg-card border border-border rounded-lg shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-2">Bannir le membre</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">{t('members.ban.title')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Êtes-vous sûr de vouloir bannir <strong className="text-foreground">{banTarget.user.username}</strong> ? Un ban définitif l&apos;empêchera de rejoindre le serveur.
+              {t('members.ban.message')} <strong className="text-foreground">{banTarget.user.username}</strong> {t('members.ban.messageSuffix')}
             </p>
             <div className="space-y-3 mb-4">
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Durée</label>
+                <label className="block text-xs text-muted-foreground mb-1">{t('members.ban.duration')}</label>
                 <select
                   value={banDuration}
                   onChange={(e) => setBanDuration(e.target.value as typeof banDuration)}
                   className="w-full px-3 py-2 text-sm rounded-md bg-secondary text-foreground border border-border"
                 >
-                  <option value="permanent">Définitif</option>
-                  <option value="1h">1 heure</option>
-                  <option value="24h">24 heures</option>
-                  <option value="7d">7 jours</option>
+                  <option value="permanent">{t('members.ban.permanent')}</option>
+                  <option value="1h">{t('members.ban.hour')}</option>
+                  <option value="24h">{t('members.ban.day')}</option>
+                  <option value="7d">{t('members.ban.week')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Raison (optionnel)</label>
+                <label className="block text-xs text-muted-foreground mb-1">{t('members.ban.reason')}</label>
                 <input
                   value={banReason}
                   onChange={(e) => setBanReason(e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-md bg-secondary text-foreground border border-border"
-                  placeholder="Raison du bannissement"
+                  placeholder={t('members.ban.reasonPlaceholder')}
                 />
               </div>
             </div>
@@ -437,7 +442,7 @@ export function MembersSidebar({
                 onClick={() => setBanTarget(null)}
                 className="px-4 py-2 text-sm rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -453,7 +458,7 @@ export function MembersSidebar({
                 }}
                 className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
-                Bannir
+                {t('members.ban.confirm')}
               </button>
             </div>
           </div>

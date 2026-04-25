@@ -12,6 +12,7 @@ import { useServers } from '@application/servers/useServers';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { logger } from '@shared/utils/logger';
+import { useLocale } from '@shared/hooks/useLocale';
 import { motion, type Variants } from 'framer-motion';
 
 const fadeIn: Variants = {
@@ -25,6 +26,7 @@ const fadeIn: Variants = {
 
 export default function NeosisPage(): React.ReactNode {
   const router = useRouter();
+  const { t } = useLocale();
   const { user, logout } = useAuth();
   const { servers, getServers, createServer, joinServer } = useServers();
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,7 @@ export default function NeosisPage(): React.ReactNode {
       closeServerModals();
       router.push(`/servers/${server.id}`);
     } catch (err) {
-      setServerModalError((err as Error).message || 'Erreur lors de la création');
+      setServerModalError((err as Error).message || t('servers.create.error'));
     } finally {
       setServerModalLoading(false);
     }
@@ -98,7 +100,7 @@ export default function NeosisPage(): React.ReactNode {
       closeServerModals();
       router.push(`/servers/${server.id}`);
     } catch (err) {
-      setServerModalError((err as Error).message || "Code d'invitation invalide");
+      setServerModalError((err as Error).message || t('servers.join.invalidCode'));
     } finally {
       setServerModalLoading(false);
     }
@@ -147,7 +149,7 @@ export default function NeosisPage(): React.ReactNode {
               onClick={() => setShowLogoutModal(true)}
               className="text-sm text-muted-foreground hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10"
             >
-              Déconnexion
+              {t('nav.logout')}
             </button>
           </div>
 
@@ -191,7 +193,7 @@ export default function NeosisPage(): React.ReactNode {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.6 }}
                 >
-                  Bienvenue {user?.username} !
+                  {t('neosis.welcome')} {user?.username} !
                 </motion.h1>
 
                 <motion.p
@@ -200,7 +202,7 @@ export default function NeosisPage(): React.ReactNode {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                  Commencez votre aventure en créant votre premier serveur ou rejoignez une communauté existante.
+                  {t('neosis.subtitle')}
                 </motion.p>
               </div>
 
@@ -221,7 +223,7 @@ export default function NeosisPage(): React.ReactNode {
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20 11.1111H12.8889V4H11.1111V11.1111H4V12.8889H11.1111V20H12.8889V12.8889H20V11.1111Z" />
                     </svg>
-                    Créer un serveur
+                    {t('nav.createServer')}
                   </span>
                 </button>
 
@@ -234,7 +236,7 @@ export default function NeosisPage(): React.ReactNode {
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 10.9C11.39 10.9 10.9 11.39 10.9 12C10.9 12.61 11.39 13.1 12 13.1C12.61 13.1 13.1 12.61 13.1 12C13.1 11.39 12.61 10.9 12 10.9ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.19 14.19L6 18L9.81 9.81L18 6L14.19 14.19Z" />
                     </svg>
-                    Rejoindre un serveur
+                    {t('nav.joinServer')}
                   </span>
                 </button>
               </motion.div>
@@ -249,16 +251,16 @@ export default function NeosisPage(): React.ReactNode {
                 {/* Séparateur */}
                 <div className="flex items-center gap-4 max-w-md mx-auto">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Pourquoi créer un serveur ?</span>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('neosis.whyCreate')}</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
                 </div>
 
                 {/* Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
                   {[
-                    { icon: '💬', title: 'Discuter', desc: 'Messages en temps réel' },
-                    { icon: '👥', title: 'Collaborer', desc: 'Invitez vos amis' },
-                    { icon: '🎨', title: 'Personnaliser', desc: 'Créez votre espace' },
+                    { icon: '💬', title: t('neosis.features.chat.title'), desc: t('neosis.features.chat.desc') },
+                    { icon: '👥', title: t('neosis.features.collab.title'), desc: t('neosis.features.collab.desc') },
+                    { icon: '🎨', title: t('neosis.features.custom.title'), desc: t('neosis.features.custom.desc') },
                   ].map((feature, i) => (
                     <motion.div
                       key={feature.title}
@@ -286,15 +288,15 @@ export default function NeosisPage(): React.ReactNode {
               className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-foreground mb-5">Créer un serveur</h3>
+              <h3 className="text-xl font-bold text-foreground mb-5">{t('servers.create.title')}</h3>
               <form onSubmit={handleCreateServer} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">Nom du serveur *</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">{t('servers.create.nameLabel')}</label>
                   <input
                     type="text"
                     value={createServerName}
                     onChange={(e) => setCreateServerName(e.target.value)}
-                    placeholder="Mon serveur"
+                    placeholder={t('servers.create.namePlaceholder')}
                     required
                     className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                     disabled={serverModalLoading}
@@ -302,12 +304,12 @@ export default function NeosisPage(): React.ReactNode {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">Description (optionnel)</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">{t('servers.create.descLabel')}</label>
                   <input
                     type="text"
                     value={createServerDesc}
                     onChange={(e) => setCreateServerDesc(e.target.value)}
-                    placeholder="Description du serveur"
+                    placeholder={t('servers.create.descPlaceholder')}
                     className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                     disabled={serverModalLoading}
                   />
@@ -317,14 +319,14 @@ export default function NeosisPage(): React.ReactNode {
                 )}
                 <div className="flex gap-3 justify-end pt-2">
                   <button type="button" onClick={closeServerModals} className="px-4 py-2.5 text-muted-foreground hover:text-foreground text-sm transition-colors" disabled={serverModalLoading}>
-                    Annuler
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
                     disabled={serverModalLoading || !createServerName.trim()}
                   >
-                    {serverModalLoading ? 'Création...' : 'Créer'}
+                    {serverModalLoading ? t('servers.create.submitting') : t('servers.create.submit')}
                   </button>
                 </div>
               </form>
@@ -340,15 +342,15 @@ export default function NeosisPage(): React.ReactNode {
               className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-foreground mb-5">Rejoindre un serveur</h3>
+              <h3 className="text-xl font-bold text-foreground mb-5">{t('servers.join.title')}</h3>
               <form onSubmit={handleJoinServer} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">Code d&apos;invitation *</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">{t('servers.join.codeLabel')}</label>
                   <input
                     type="text"
                     value={joinInviteCode}
                     onChange={(e) => setJoinInviteCode(e.target.value)}
-                    placeholder="Entrez le code d'invitation"
+                    placeholder={t('servers.join.codePlaceholder')}
                     required
                     className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                     disabled={serverModalLoading}
@@ -360,14 +362,14 @@ export default function NeosisPage(): React.ReactNode {
                 )}
                 <div className="flex gap-3 justify-end pt-2">
                   <button type="button" onClick={closeServerModals} className="px-4 py-2.5 text-muted-foreground hover:text-foreground text-sm transition-colors" disabled={serverModalLoading}>
-                    Annuler
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
                     disabled={serverModalLoading || !joinInviteCode.trim()}
                   >
-                    {serverModalLoading ? 'Connexion...' : 'Rejoindre'}
+                    {serverModalLoading ? t('servers.join.submitting') : t('servers.join.submit')}
                   </button>
                 </div>
               </form>
@@ -388,9 +390,9 @@ export default function NeosisPage(): React.ReactNode {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-foreground text-center">Se déconnecter ?</h3>
+              <h3 className="text-lg font-semibold text-foreground text-center">{t('logout.title')}</h3>
               <p className="text-sm text-muted-foreground text-center mt-2">
-                Êtes-vous sûr de vouloir vous déconnecter de votre compte ?
+                {t('logout.message')}
               </p>
               <div className="flex gap-3 mt-6">
                 <button
@@ -398,14 +400,14 @@ export default function NeosisPage(): React.ReactNode {
                   disabled={loggingOut}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium text-foreground bg-secondary border border-border hover:bg-secondary/80 transition-colors disabled:opacity-50"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleLogout}
                   disabled={loggingOut}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
                 >
-                  {loggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+                  {loggingOut ? t('logout.confirming') : t('logout.confirm')}
                 </button>
               </div>
             </div>

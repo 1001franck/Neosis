@@ -7,6 +7,7 @@
 
 import { memo } from 'react';
 import type { TabType } from './types';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface ChannelTabsProps {
   activeTab: TabType;
@@ -23,6 +24,7 @@ const ChannelTabsComponent = ({
   filesCount,
   onTabChange,
 }: ChannelTabsProps): React.ReactElement => {
+  const { t } = useLocale();
   return (
     <div className="flex border-b border-border animate-fadeIn">
       <button
@@ -35,7 +37,7 @@ const ChannelTabsComponent = ({
           }
         `}
       >
-        Médias        {mediaCount > 0 && (
+        {t('channel.tabs.media')}        {mediaCount > 0 && (
           <span className="ml-1 text-xs text-muted-foreground">({mediaCount})</span>
         )}
         {activeTab === 'media' && (
@@ -53,7 +55,7 @@ const ChannelTabsComponent = ({
           }
         `}
       >
-        Liens
+        {t('channel.tabs.links')}
         {linksCount > 0 && (
           <span className="ml-1 text-xs text-muted-foreground">({linksCount})</span>
         )}
@@ -72,7 +74,7 @@ const ChannelTabsComponent = ({
           }
         `}
       >
-        Fichiers
+        {t('channel.tabs.files')}
         {filesCount > 0 && (
           <span className="ml-1 text-xs text-muted-foreground">({filesCount})</span>
         )}

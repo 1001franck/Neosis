@@ -28,6 +28,7 @@ import { ServerSettingsModal } from '@presentation/components/modals/ServerSetti
 import { ChannelSettingsModal } from '@presentation/components/modals/ChannelSettingsModal';
 import { useServerSettings } from '@application/servers/useServerSettings';
 import { useChannelSettings } from '@application/channels/useChannelSettings';
+import { useLocale } from '@shared/hooks/useLocale';
 
 // Constantes
 const ICON_SIZE = 'w-4 h-4';
@@ -79,6 +80,7 @@ function ServerChannelsSidebarInternal({
   onJoinVoice,
 }: ServerChannelsSidebarProps): React.ReactElement | null {
   // Tous les hooks déclarés en premier (règle des hooks React)
+  const { t } = useLocale();
   const [showServerMenu, setShowServerMenu] = useState(false);
   const [showServerSettings, setShowServerSettings] = useState(false);
   const [selectedChannelForSettings, setSelectedChannelForSettings] = useState<Channel | null>(null);
@@ -126,8 +128,8 @@ function ServerChannelsSidebarInternal({
   const syntheticCategories: ChannelCategory[] = categories.length > 0
     ? getSortedCategories(categories)
     : [
-        { id: 'text-channels', name: 'Salons textuels', position: 0, serverId: server.id, isCollapsed: false },
-        { id: 'voice-channels', name: 'Salons vocaux', position: 1, serverId: server.id, isCollapsed: false },
+        { id: 'text-channels', name: t('servers.sidebar.textChannels'), position: 0, serverId: server.id, isCollapsed: false },
+        { id: 'voice-channels', name: t('servers.sidebar.voiceChannels'), position: 1, serverId: server.id, isCollapsed: false },
       ];
 
   const effectiveChannelsByCategory: Record<string, Channel[]> = categories.length > 0
@@ -167,7 +169,7 @@ function ServerChannelsSidebarInternal({
             <button
               onClick={closeAllSidebars}
               className="flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors md:hidden"
-              aria-label="Fermer la barre latérale"
+              aria-label={t('servers.sidebar.closeSidebar')}
             >
               <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -179,8 +181,8 @@ function ServerChannelsSidebarInternal({
           <button
             onClick={toggleCollapsed}
             className="hidden md:flex flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Réduire la barre latérale"
-            title="Réduire la barre latérale"
+            aria-label={t('servers.sidebar.collapseSidebar')}
+            title={t('servers.sidebar.collapseSidebar')}
           >
             <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
               <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z"/>
@@ -201,8 +203,8 @@ function ServerChannelsSidebarInternal({
           <button
             onClick={() => setShowServerMenu(!showServerMenu)}
             className="flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Menu du serveur"
-            title="Paramètres du serveur"
+            aria-label={t('servers.sidebar.serverMenu')}
+            title={t('servers.sidebar.serverSettings')}
           >
             <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="5" r="2"/>
@@ -266,8 +268,8 @@ function ServerChannelsSidebarInternal({
         <button
           onClick={onSearchClick}
           className="flex-1 p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
-          aria-label="Rechercher"
-          title="Rechercher des messages"
+          aria-label={t('chat.search')}
+          title={t('servers.sidebar.searchMessages')}
         >
           <svg className={`${ICON_SIZE_MEDIUM} mx-auto`} fill="currentColor" viewBox="0 0 24 24">
             <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z"/>
@@ -316,7 +318,7 @@ function ServerChannelsSidebarInternal({
                       onAddChannel?.(category.id);
                     }}
                     className="p-0.5 text-muted-foreground hover:text-foreground transition-all"
-                    aria-label="Ajouter un salon"
+                    aria-label={t('servers.sidebar.addChannel')}
                     title={`Ajouter un salon à ${category.name}`}
                   >
                     <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
@@ -361,7 +363,7 @@ function ServerChannelsSidebarInternal({
           <button
             onClick={onLeaveServer}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded transition-colors"
-            aria-label="Quitter le serveur"
+            aria-label={t('servers.sidebar.leaveServer')}
           >
             <svg className={ICON_SIZE} fill="currentColor" viewBox="0 0 24 24">
               <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>

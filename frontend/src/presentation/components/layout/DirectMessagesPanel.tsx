@@ -137,7 +137,7 @@ function FriendsView() {
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
-          Tous ({friends.length})
+          {t('dm.allFriends')} ({friends.length})
         </button>
         <button
           onClick={() => setTab('pending')}
@@ -147,7 +147,7 @@ function FriendsView() {
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
-          En attente
+          {t('dm.pendingTab')}
           {pendingCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {pendingCount}
@@ -162,7 +162,7 @@ function FriendsView() {
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
-          + Ajouter
+          {t('dm.addTab')}
         </button>
       </div>
 
@@ -185,7 +185,7 @@ function FriendsView() {
           ) : (
             <div className="py-1">
               <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Amis — {friends.length}
+                {t('dm.yourFriends')} — {friends.length}
               </p>
               {friends.map((friend) => (
                 <div
@@ -196,7 +196,7 @@ function FriendsView() {
                   <Avatar username={friend.user?.username ?? '?'} avatarUrl={friend.user?.avatarUrl} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{friend.user?.username ?? 'Utilisateur'}</p>
-                    <p className="text-[11px] text-muted-foreground">Ami</p>
+                    <p className="text-[11px] text-muted-foreground">{t('dm.friendLabel')}</p>
                   </div>
                   {/* Actions au hover */}
                   <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -204,7 +204,7 @@ function FriendsView() {
                     <button
                       onClick={() => handleStartDM(friend)}
                       className="w-7 h-7 flex items-center justify-center rounded-md bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
-                      title="Envoyer un message"
+                      title={t('dm.message')}
                     >
                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
@@ -215,7 +215,7 @@ function FriendsView() {
                       <button
                         onClick={() => setOpenMenuId(openMenuId === friend.id ? null : friend.id)}
                         className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                        title="Plus d'options"
+                        title={t('dm.moreOptions')}
                       >
                         <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -227,7 +227,7 @@ function FriendsView() {
                             onClick={() => { void remove(friend.id); setOpenMenuId(null); }}
                             className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                           >
-                            Supprimer l&apos;ami
+                            {t('dm.removeFriend')}
                           </button>
                         </div>
                       )}
@@ -243,7 +243,7 @@ function FriendsView() {
             {/* Reçues */}
             <div>
               <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Reçues — {requests.incoming.length}
+                {t('dm.received')} — {requests.incoming.length}
               </p>
               {requests.incoming.length === 0 ? (
                 <EmptyState
@@ -256,7 +256,7 @@ function FriendsView() {
                     <Avatar username={req.user?.username ?? '?'} avatarUrl={req.user?.avatarUrl} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{req.user?.username ?? 'Utilisateur'}</p>
-                      <p className="text-[11px] text-muted-foreground">Souhaite vous ajouter</p>
+                      <p className="text-[11px] text-muted-foreground">{t('dm.wantsToAdd')}</p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
@@ -285,7 +285,7 @@ function FriendsView() {
             {/* Envoyées */}
             <div>
               <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Envoyées — {requests.outgoing.length}
+                {t('dm.sentRequests')} — {requests.outgoing.length}
               </p>
               {requests.outgoing.length === 0 ? (
                 <EmptyState
@@ -298,12 +298,12 @@ function FriendsView() {
                     <Avatar username={req.user?.username ?? '?'} avatarUrl={req.user?.avatarUrl} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{req.user?.username ?? 'Utilisateur'}</p>
-                      <p className="text-[11px] text-amber-500 font-medium">En attente</p>
+                      <p className="text-[11px] text-amber-500 font-medium">{t('dm.pending')}</p>
                     </div>
                     <button
                       onClick={() => void cancel(req.id)}
                       className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
-                      title="Annuler la demande"
+                      title={t('dm.cancelRequest')}
                     >
                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
@@ -316,9 +316,9 @@ function FriendsView() {
           /* ── Ajouter un ami ── */
           <div className="px-3 py-4 flex flex-col gap-3">
             <div>
-              <p className="text-xs font-semibold text-foreground mb-0.5">Ajouter un ami</p>
+              <p className="text-xs font-semibold text-foreground mb-0.5">{t('dm.addFriendTitle')}</p>
               <p className="text-[11px] text-muted-foreground leading-snug">
-                Entrez le nom d&apos;utilisateur exact de la personne.
+                {t('dm.addFriendDesc')}
               </p>
             </div>
             <div className="flex gap-2">
@@ -327,7 +327,7 @@ function FriendsView() {
                 value={addUsername}
                 onChange={(e) => { setAddUsername(e.target.value); setAddError(null); setAddSuccess(false); }}
                 onKeyDown={(e) => { if (e.key === 'Enter') void handleSendRequest(); }}
-                placeholder="Nom d'utilisateur"
+                placeholder={t('dm.addFriendPlaceholder')}
                 className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-border bg-muted/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-colors"
                 autoFocus
               />
@@ -355,7 +355,7 @@ function FriendsView() {
             {addSuccess && (
               <p className="text-xs text-emerald-500 flex items-center gap-1">
                 <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                Demande envoyée avec succès !
+                {t('dm.requestSent')}
               </p>
             )}
           </div>
