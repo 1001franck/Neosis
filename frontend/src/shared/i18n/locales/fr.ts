@@ -1,4 +1,4 @@
- export const fr = {
+export const fr = {
   auth: {
     login: {
       title: 'Bon retour !',
@@ -348,6 +348,12 @@
     label: 'Langue',
     fr: 'Français',
     en: 'English',
+  },
+  notifications: {
+    mentionTitle: 'Neosis - Mention',
+    mentionedYou: 'vous a mentionné',
+    newMessageTitle: 'Neosis - Nouveau message',
+    dmTitle: 'Neosis - Message privé',
   },
 };
 

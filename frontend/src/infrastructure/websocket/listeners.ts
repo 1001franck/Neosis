@@ -25,9 +25,34 @@ import type { VoiceUser } from '@domain/voice/types';
 import type { Member } from '@domain/members/types';
 import { logger } from '@shared/utils/logger';
 import { useAuthStore } from '@application/auth/authStore';
+import { useChannelStore } from '@application/channels/channelStore';
 import { toastBus } from '@shared/utils/toastBus';
-import { sendDesktopNotification } from '@shared/hooks/useDesktopNotification';
+import { sendDesktopNotification, isTauriApp } from '@shared/hooks/useDesktopNotification';
+import { useLocale } from '@shared/hooks/useLocale';
 import { getVoiceClient } from '@infrastructure/webrtc/VoiceClient';
+
+/**
+ * Détermine si une notification doit être envoyée pour un message de canal.
+ * Sur web : uniquement si l'onglet est masqué (document.hidden).
+ * Sur desktop Tauri : aussi si le message arrive dans un canal différent du canal actif.
+ */
+function shouldNotifyForChannel(channelId: string): boolean {
+  if (typeof document === 'undefined') return false;
+  if (document.hidden) return true;
+  if (isTauriApp()) {
+    return channelId !== useChannelStore.getState().currentChannel?.id;
+  }
+  return false;
+}
+
+/**
+ * Détermine si une notification doit être envoyée pour un DM.
+ * Notifie si la fenêtre/onglet n'est pas au premier plan.
+ */
+function shouldNotifyForDM(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.hidden || !document.hasFocus();
+}
 
 function messageMentionsUser(content: string, username: string): boolean {
   const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -78,20 +103,18 @@ export function setupListeners() {
       const isMention = messageMentionsUser(message.content || '', currentUser.username);
       if (isMention) {
         store.addMention(message.channelId);
-        const authorName = message.author?.username ?? "Unknown";
+        const authorName = message.author?.username ?? 'Unknown';
+        const t = useLocale.getState().t;
         toastBus.emit({
           type: 'info',
-          message: `${authorName} vous a mentionné`,
+          message: `${authorName} ${t('notifications.mentionedYou')}`,
           duration: 4000,
         });
-        // Notification native desktop
-        void sendDesktopNotification('Neosis - Mention', `${authorName} vous a mentionné`);
-      } else {
-        // Notification pour tout nouveau message quand la fenêtre est masquée
-        if (typeof document !== 'undefined' && document.hidden) {
-          const authorName = message.author?.username ?? "Unknown";
-          void sendDesktopNotification('Neosis - Nouveau message', `${authorName} : ${(message.content || '').slice(0, 80)}`);
-        }
+        void sendDesktopNotification(t('notifications.mentionTitle'), `${authorName} ${t('notifications.mentionedYou')}`);
+      } else if (shouldNotifyForChannel(message.channelId)) {
+        const authorName = message.author?.username ?? 'Unknown';
+        const t = useLocale.getState().t;
+        void sendDesktopNotification(t('notifications.newMessageTitle'), `${authorName} : ${(message.content || '').slice(0, 80)}`);
       }
     }
   });
@@ -309,8 +332,9 @@ export function setupListeners() {
 
     // Notification native desktop pour les DMs
     const currentUserId = useAuthStore.getState().user?.id;
-    if (message.senderId !== currentUserId) {
-      void sendDesktopNotification('Neosis - Message privé', (message.content || '').slice(0, 80));
+    if (message.senderId !== currentUserId && shouldNotifyForDM()) {
+      const t = useLocale.getState().t;
+      void sendDesktopNotification(t('notifications.dmTitle'), (message.content || '').slice(0, 80));
     }
   });
 

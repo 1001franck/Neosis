@@ -351,4 +351,10 @@ export const en: Translations = {
     fr: 'Français',
     en: 'English',
   },
+  notifications: {
+    mentionTitle: 'Neosis - Mention',
+    mentionedYou: 'mentioned you',
+    newMessageTitle: 'Neosis - New message',
+    dmTitle: 'Neosis - Direct message',
+  },
 };
