@@ -145,6 +145,7 @@ export const en: Translations = {
     bannedTemporary: 'You are temporarily banned until',
     bannedPermanent: 'You have been temporarily banned from this server',
     banReason: 'Reason:',
+    addReaction: 'Add reaction',
   },
   messages: {
     title: 'Direct Messages',

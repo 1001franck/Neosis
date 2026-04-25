@@ -6,6 +6,7 @@
 
 import React from 'react';
 import type { MessageReaction } from '@domain/messages/types';
+import { useLocale } from '@shared/hooks/useLocale';
 
 export interface MessageReactionsProps {
   reactions: MessageReaction[];
@@ -24,6 +25,7 @@ export function MessageReactions({
   onRemoveReaction,
   canReact = true,
 }: MessageReactionsProps) {
+  const { t } = useLocale();
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
 
   const handleReactionClick = (emoji: string, userIds: string[]) => {
@@ -43,7 +45,7 @@ export function MessageReactions({
           onClick={() => setShowEmojiPicker(true)}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          + Add reaction
+          + {t('chat.addReaction')}
         </button>
       </div>
     );
@@ -100,7 +102,7 @@ export function MessageReactions({
         <button
           onClick={() => setShowEmojiPicker(true)}
           className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-secondary hover:bg-secondary/80 text-muted-foreground transition-colors"
-          title="Ajouter une réaction"
+          title={t('chat.addReaction')}
         >
           <span className="text-sm">+</span>
         </button>

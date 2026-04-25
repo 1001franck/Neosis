@@ -143,6 +143,7 @@
     bannedTemporary: "Vous êtes banni temporairement jusqu'au",
     bannedPermanent: 'Vous avez été banni temporairement de ce serveur',
     banReason: 'Raison :',
+    addReaction: 'Ajouter une réaction',
   },
   messages: {
     title: 'Messages privés',
