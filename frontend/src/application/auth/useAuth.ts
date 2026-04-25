@@ -1,4 +1,4 @@
-+/**
+/**
  * APPLICATION - AUTH
  * Hook personnalisé pour utiliser l'authentification
  *
