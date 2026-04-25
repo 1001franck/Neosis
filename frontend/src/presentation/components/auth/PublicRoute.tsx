@@ -40,10 +40,10 @@ export function PublicRoute({ children }: PublicRouteProps): React.ReactNode {
       return;
     }
 
-    // Rediriger vers dashboard si déjà authentifié — navigation complète pour Tauri
+    // Rediriger vers neosis si déjà authentifié — navigation complète pour Tauri
     if (isAuthenticated) {
-      logger.info('Utilisateur déjà authentifié - redirection vers servers');
-      window.location.href = '/servers/';
+      logger.info('Utilisateur déjà authentifié - redirection vers neosis');
+      window.location.href = '/neosis/';
     }
   }, [isAuthenticated, isInitialized]);
 
@@ -64,7 +64,7 @@ export function PublicRoute({ children }: PublicRouteProps): React.ReactNode {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <p className="text-muted-foreground">Redirection vers le dashboard...</p>
+          <p className="text-muted-foreground">Redirection...</p>
         </div>
       </div>
     );

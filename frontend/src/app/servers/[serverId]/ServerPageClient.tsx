@@ -38,7 +38,19 @@ interface ServerPageProps {
 }
 
 export default function ServerPage({ params }: ServerPageProps): React.ReactNode {
-  const { serverId } = use(params);
+  const { serverId: rawServerId } = use(params);
+
+  // En export statique Tauri, neosis/page.tsx navigue vers '/servers/_/' en stockant
+  // le vrai ID dans localStorage. On le récupère ici une seule fois au montage.
+  const [serverId] = useState<string>(() => {
+    if (rawServerId !== '_') return rawServerId;
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('neosis_server_id') : null;
+    if (stored) {
+      localStorage.removeItem('neosis_server_id');
+      return stored;
+    }
+    return rawServerId;
+  });
 
   // === HOOKS ===
   const { user, logout } = useAuth();

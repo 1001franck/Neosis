@@ -24,6 +24,20 @@ const fadeIn: Variants = {
   }
 };
 
+/**
+ * En export statique Tauri, les pages /servers/[id]/ ne sont pas pré-générées pour les vrais IDs.
+ * On stocke l'ID cible et on navigue vers la page statique '_'.
+ * En dev/web, navigation directe vers l'URL réelle.
+ */
+function navigateToServer(serverId: string): void {
+  if (process.env.NEXT_PUBLIC_IS_TAURI === '1') {
+    localStorage.setItem('neosis_server_id', serverId);
+    window.location.href = '/servers/_/';
+  } else {
+    window.location.href = `/servers/${serverId}/`;
+  }
+}
+
 export default function NeosisPage(): React.ReactNode {
   const router = useRouter();
   const { t } = useLocale();
@@ -60,10 +74,13 @@ export default function NeosisPage(): React.ReactNode {
   // Rediriger vers le premier serveur si l'utilisateur en a
   useEffect(() => {
     if (!loading && servers.length > 0) {
-      logger.info('User has servers, redirecting to first', { serverId: servers[0].id });
-      router.push(`/servers/${servers[0].id}`);
+      const targetId = servers[0].id;
+      logger.info('User has servers, redirecting to first', { serverId: targetId });
+      navigateToServer(targetId);
     }
-  }, [loading, servers, router]);
+    // navigateToServer est stable (défini hors du composant)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, servers]);
 
   const closeServerModals = () => {
     setShowCreateServer(false);
@@ -82,7 +99,7 @@ export default function NeosisPage(): React.ReactNode {
     try {
       const server = await createServer({ name: createServerName.trim(), description: createServerDesc.trim() || undefined });
       closeServerModals();
-      router.push(`/servers/${server.id}`);
+      navigateToServer(server.id);
     } catch (err) {
       setServerModalError((err as Error).message || t('servers.create.error'));
     } finally {
@@ -98,7 +115,7 @@ export default function NeosisPage(): React.ReactNode {
     try {
       const server = await joinServer(joinInviteCode.trim());
       closeServerModals();
-      router.push(`/servers/${server.id}`);
+      navigateToServer(server.id);
     } catch (err) {
       setServerModalError((err as Error).message || t('servers.join.invalidCode'));
     } finally {
