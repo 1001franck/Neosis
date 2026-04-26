@@ -220,6 +220,7 @@ export function MessageList({
           return (
             <motion.div
               key={message.id}
+              data-message-id={message.id}
               initial={isNew ? { opacity: 0, y: 10 } : false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}

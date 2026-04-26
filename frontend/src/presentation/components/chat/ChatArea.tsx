@@ -147,11 +147,11 @@ export function ChatArea({
       )}
 
       {/* Search Modal */}
-      {channelId && recipient && (
+      {recipient && (
         <ChannelSearchModal
           isOpen={isSearchOpen}
           onClose={handleSearchClose}
-          channelId={channelId}
+          channelId={channelId ?? ''}
           channelName={recipient.name}
           messages={messages}
           onMessageClick={handleMessageClick}

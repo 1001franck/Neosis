@@ -65,6 +65,15 @@ export default function DirectConversationPage(): React.ReactNode {
   const [showProfile, setShowProfile] = useState(false);
   const toggleProfile = useCallback(() => setShowProfile((prev) => !prev), []);
 
+  const handleMessageClick = useCallback((messageId: string) => {
+    const el = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('bg-primary/10');
+      setTimeout(() => el.classList.remove('bg-primary/10'), 1500);
+    }
+  }, []);
+
   useEffect(() => {
     getServers().catch((err) => logger.error('Failed to load servers', err));
   }, [getServers]);
@@ -100,6 +109,7 @@ export default function DirectConversationPage(): React.ReactNode {
               <div className="p-4 text-sm text-red-500">{conversationError}</div>
             )}
             <ChatArea
+              channelId={conversationId ?? undefined}
               recipient={{
                 name: conversation?.user?.username ?? 'Conversation',
                 avatar: conversation?.user?.avatarUrl ?? undefined,
@@ -120,6 +130,7 @@ export default function DirectConversationPage(): React.ReactNode {
                 },
                 onTypingStart: () => {},
                 onTypingStop: () => {},
+                onMessageClick: handleMessageClick,
               }}
             />
           </div>

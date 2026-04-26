@@ -172,7 +172,7 @@ export function ChatHeader({
           </button>
         )}
 
-        {isChannel && onSearchClick && (
+        {onSearchClick && (
           <button
             onClick={onSearchClick}
             className="text-muted-foreground hover:text-foreground transition-colors"

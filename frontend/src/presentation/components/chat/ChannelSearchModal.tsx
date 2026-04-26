@@ -152,12 +152,12 @@ const ChannelSearchModalComponent = ({
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-white">
-              Rechercher dans la chaîne &ldquo;{channelName}&rdquo;
+              {t('chat.searchIn')} &ldquo;{channelName}&rdquo;
             </h2>
             <button
               onClick={onClose}
               className="text-muted-foreground hover:text-white transition-colors"
-              aria-label="Fermer"
+              aria-label={t('chat.searchClose')}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7A.996.996 0 1 0 5.7 7.11L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z" />
@@ -169,7 +169,7 @@ const ChannelSearchModalComponent = ({
           <div className="relative">
             <input
               type="text"
-              placeholder="Rechercher des messages..."
+              placeholder={t('chat.searchPlaceholder')}
               value={filters.query}
               onChange={(e) => setFilters({ ...filters, query: e.target.value })}
               className="w-full px-3 py-2 pl-9 bg-secondary text-white text-sm rounded focus:outline-none focus:ring-2 focus:ring-primary"
@@ -189,24 +189,24 @@ const ChannelSearchModalComponent = ({
             onClick={() => setShowFilters(!showFilters)}
             className="mt-2 text-xs text-primary hover:underline"
           >
-            {showFilters ? 'Masquer les filtres' : 'Afficher les filtres'}
+            {showFilters ? t('chat.searchHideFilters') : t('chat.searchShowFilters')}
           </button>
 
           {/* Filters Panel */}
           {showFilters && (
             <div className="mt-3 space-y-2 p-3 bg-secondary rounded">
               <div>
-                <label className="text-xs text-muted-foreground">De l&apos;utilisateur :</label>
+                <label className="text-xs text-muted-foreground">{t('chat.searchFrom')}</label>
                 <input
                   type="text"
-                  placeholder="nom d'utilisateur"
+                  placeholder={t('chat.searchUsernamePlaceholder')}
                   value={filters.from || ''}
                   onChange={(e) => setFilters({ ...filters, from: e.target.value || undefined })}
                   className="w-full mt-1 px-2 py-1 bg-card text-white text-sm rounded"
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">Contient :</label>
+                <label className="text-xs text-muted-foreground">{t('chat.searchContains')}</label>
                 <select
                   value={filters.has || ''}
                   onChange={(e) => {
@@ -215,8 +215,8 @@ const ChannelSearchModalComponent = ({
                   }}
                   className="w-full mt-1 px-2 py-1 bg-card text-white text-sm rounded"
                 >
-                  <option value="">Tout</option>
-                  <option value="link">Lien</option>
+                  <option value="">{t('chat.searchAll')}</option>
+                  <option value="link">{t('chat.searchLink')}</option>
                 </select>
               </div>
             </div>
@@ -233,7 +233,7 @@ const ChannelSearchModalComponent = ({
                 : 'text-muted-foreground hover:text-white'
             }`}
           >
-            Pertinent
+            {t('chat.searchRelevant')}
           </button>
           <button
             onClick={() => setSortOrder('new')}
@@ -243,7 +243,7 @@ const ChannelSearchModalComponent = ({
                 : 'text-muted-foreground hover:text-white'
             }`}
           >
-            Récent
+            {t('chat.searchNew')}
           </button>
           <button
             onClick={() => setSortOrder('old')}
@@ -253,10 +253,10 @@ const ChannelSearchModalComponent = ({
                 : 'text-muted-foreground hover:text-white'
             }`}
           >
-            Ancien
+            {t('chat.searchOld')}
           </button>
           <div className="ml-auto px-4 py-2 text-sm text-muted-foreground">
-            {sortedMessages.length} {sortedMessages.length === 1 ? 'résultat' : 'résultats'}
+            {sortedMessages.length} {sortedMessages.length === 1 ? t('chat.searchResult') : t('chat.searchResults')}
           </div>
         </div>
 
@@ -264,7 +264,7 @@ const ChannelSearchModalComponent = ({
         <div className="max-h-[500px] overflow-y-auto">
           {sortedMessages.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              {filters.query.trim() ? 'Aucun message trouvé' : 'Commencez à taper pour rechercher...'}
+              {filters.query.trim() ? t('chat.searchNoResults') : t('chat.searchStart')}
             </div>
           ) : (
             <div className="divide-y divide-border">
