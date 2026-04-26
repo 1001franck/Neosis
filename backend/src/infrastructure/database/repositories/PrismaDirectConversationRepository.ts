@@ -36,8 +36,22 @@ export class PrismaDirectConversationRepository implements DirectConversationRep
         OR: [{ userOneId: userId }, { userTwoId: userId }],
       },
       orderBy: { updatedAt: 'desc' },
+      include: {
+        messages: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
     });
-    return rows.map(this.toDomain);
+    return rows.map((r) => {
+      const conv = this.toDomain(r);
+      const last = r.messages[0];
+      if (last) {
+        conv.lastMessage = { content: last.content, senderId: last.senderId, createdAt: last.createdAt };
+      }
+      return conv;
+    });
   }
 
   async findById(conversationId: string): Promise<DirectConversation | null> {

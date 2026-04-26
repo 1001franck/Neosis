@@ -329,6 +329,11 @@ export function setupListeners() {
     const store = useDirectMessageStore.getState();
     store.addIncomingMessage(message);
     store.setConversationTimestamp(message.conversationId, message.createdAt);
+    store.setLastMessage(message.conversationId, {
+      content: message.content,
+      senderId: message.senderId,
+      createdAt: message.createdAt,
+    });
 
     // Notification native desktop pour les DMs
     const currentUserId = useAuthStore.getState().user?.id;

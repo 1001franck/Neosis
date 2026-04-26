@@ -44,6 +44,9 @@ export class DirectConversationController {
             ? { id: otherUser.id, username: otherUser.username, avatarUrl: otherUser.avatarUrl }
             : null,
           updatedAt: conv.updatedAt,
+          lastMessage: conv.lastMessage
+            ? { content: conv.lastMessage.content, senderId: conv.lastMessage.senderId, createdAt: conv.lastMessage.createdAt }
+            : null,
         };
       });
 

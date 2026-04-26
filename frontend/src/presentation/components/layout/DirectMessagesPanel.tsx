@@ -10,6 +10,7 @@ import { useLocale } from '@shared/hooks/useLocale';
 import { useScrollbarVisibility } from '@shared/hooks/useScrollbarVisibility';
 import { setLastDmConversationId, toConversationRoute } from '@shared/utils/desktopRoutes';
 import type { Friend } from '@domain/direct/types';
+import { useAuthStore } from '@application/auth/authStore';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -374,6 +375,7 @@ function MessagesView() {
   const { t } = useLocale();
   const { conversations } = useDirectConversations();
   const { onScroll } = useScrollbarVisibility();
+  const currentUserId = useAuthStore((state) => state.user?.id);
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-auto" onScroll={onScroll}>
@@ -398,13 +400,19 @@ function MessagesView() {
                   <span className="text-sm font-medium text-foreground truncate">
                     {conversation.user?.username ?? 'Utilisateur'}
                   </span>
-                  {conversation.updatedAt && (
+                  {(conversation.lastMessage?.createdAt ?? conversation.updatedAt) && (
                     <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                      {formatConversationTime(conversation.updatedAt)}
+                      {formatConversationTime(conversation.lastMessage?.createdAt ?? conversation.updatedAt)}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground truncate">{t('dm.privateConversation')}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {conversation.lastMessage
+                    ? (conversation.lastMessage.senderId === currentUserId
+                        ? `Vous : ${conversation.lastMessage.content}`
+                        : conversation.lastMessage.content)
+                    : t('dm.privateConversation')}
+                </p>
               </div>
             </button>
           ))}

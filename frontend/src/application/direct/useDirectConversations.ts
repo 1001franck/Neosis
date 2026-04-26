@@ -10,6 +10,7 @@ export function useDirectConversations() {
   const [error, setError] = useState<string | null>(null);
 
   const latestTimestamps = useDirectMessageStore((state) => state.latestConversationTimestamps);
+  const lastMessages = useDirectMessageStore((state) => state.lastMessageByConversation);
 
   const loadConversations = useCallback(async () => {
     setIsLoading(true);
@@ -35,9 +36,10 @@ export function useDirectConversations() {
       .map((conv) => ({
         ...conv,
         updatedAt: latestTimestamps.get(conv.id) ?? conv.updatedAt,
+        lastMessage: lastMessages.get(conv.id) ?? conv.lastMessage,
       }))
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
-    [conversations, latestTimestamps]
+    [conversations, latestTimestamps, lastMessages]
   );
 
   return {

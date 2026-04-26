@@ -49,6 +49,11 @@ export function useDirectMessages(conversationId?: string) {
         const sent = await directApi.sendMessage(conversationId, content);
         setInitialMessages((prev) => [...prev, sent]);
         useDirectMessageStore.getState().setConversationTimestamp(conversationId, sent.createdAt);
+        useDirectMessageStore.getState().setLastMessage(conversationId, {
+          content: sent.content,
+          senderId: sent.senderId,
+          createdAt: sent.createdAt,
+        });
       } catch (err) {
         logger.error('Échec de l\'envoi du message', err);
         setError('Impossible d\'envoyer le message');

@@ -8,6 +8,11 @@ export interface DirectConversation {
   id: string;
   user: DirectUser | null;
   updatedAt: string;
+  lastMessage?: {
+    content: string;
+    senderId: string;
+    createdAt: string;
+  } | null;
 }
 
 export interface DirectMessage {
