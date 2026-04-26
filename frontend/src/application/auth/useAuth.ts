@@ -12,6 +12,8 @@ import type { AuthStoreState } from './authStore';
 import { authService } from './authService';
 import { connectSocket, disconnectSocket } from '@infrastructure/websocket/socket';
 import { setupListeners, cleanupListeners } from '@infrastructure/websocket/listeners';
+import { storage } from '@infrastructure/storage/localStorage';
+import { STORAGE_KEYS } from '@shared/constants/app';
 import type { LoginRequest, RegisterRequest, UpdateProfileRequest } from '@domain/auth/types';
 import { logger } from '@shared/utils/logger';
 
@@ -53,7 +55,16 @@ export function useAuth() {
         // La validation réseau ci-dessous se fait en arrière-plan
         setInitialized(true);
 
-        // Valider la session côté serveur (cookie httpOnly ou token Bearer)
+        // Si aucun credential disponible, inutile d'appeler /auth/me (réponse garantiement 401).
+        // Cela évite la race condition : checkSession() envoyé sans token, login() stocke un token
+        // pendant le vol de la requête, checkSession() reçoit 401 et supprime le nouveau token.
+        const storedToken = storage.getItem<string>(STORAGE_KEYS.TOKEN);
+        if (!storedUser && !storedToken) {
+          logger.info('No credentials, skipping session check');
+          return;
+        }
+
+        // Valider la session côté serveur (Bearer token)
         const validUser = await authService.checkSession();
         if (validUser) {
           setUser(validUser);
@@ -63,9 +74,11 @@ export function useAuth() {
           setupListeners();
           logger.info('Auth restored and validated', { userId: validUser.id });
         } else if (storedUser) {
-          // Server returned 401 — session expirée
-          reset();
-          logger.warn('Stored session invalid, logged out');
+          // Server returned 401 — ne réinitialiser que si login() n'a pas été appelé entre-temps
+          if (!useAuthStore.getState().isAuthenticated) {
+            reset();
+            logger.warn('Stored session invalid, logged out');
+          }
         }
         // Si ni storedUser ni validUser → reste non authentifié (ProtectedRoute redirigera)
       } catch (error) {

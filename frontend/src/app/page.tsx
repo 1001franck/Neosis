@@ -7,7 +7,7 @@
 'use client';
 
 import { useEffect } from 'react';
-// Pas de useRouter ni Link Next.js : navigation via window.location / <a> pour Tauri static export
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@application/auth/useAuth';
 import { Space_Grotesk, Newsreader } from 'next/font/google';
@@ -201,18 +201,14 @@ const features = [
 
 export default function LandingPage(): React.ReactNode {
   const { isAuthenticated, isInitialized } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const redirectAuthenticatedUser = async () => {
-      if (isAuthenticated && isInitialized) {
-        // Rediriger vers /neosis/ — fichier statique qui existe dans out/
-        // Neosis gère ensuite la redirection SPA vers le bon serveur (router.push)
-        window.location.href = '/neosis/';
-      }
-    };
-
-    redirectAuthenticatedUser();
-  }, [isAuthenticated, isInitialized]);
+    if (isAuthenticated && isInitialized) {
+      // Navigation SPA — évite le rechargement complet qui réinitialiserait _authInitStarted
+      router.replace('/neosis/');
+    }
+  }, [isAuthenticated, isInitialized, router]);
 
   useEffect(() => {
     const html = document.documentElement;

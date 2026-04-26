@@ -98,19 +98,25 @@ export class AuthService {
    * Le cookie httpOnly est envoyé automatiquement par le navigateur
    */
   async checkSession(): Promise<AuthUser | null> {
+    // Capturer le token avant la requête pour détecter un login concurrent
+    const tokenSnapshot = storage.getItem<string>(STORAGE_KEYS.TOKEN);
     try {
       const user = await authApi.getCurrentUser();
       storage.setItem(USER_KEY, user);
       return user;
     } catch (error: unknown) {
-      // Only clear storage if the server explicitly rejected (401 = cookie expired)
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
-        storage.removeItem(USER_KEY);
-        storage.removeItem(STORAGE_KEYS.TOKEN);
+        // Ne supprimer le storage que si le token n'a pas changé depuis l'envoi de la requête.
+        // Si login() a été appelé pendant le vol de la requête, le token a changé → ne pas supprimer.
+        const currentToken = storage.getItem<string>(STORAGE_KEYS.TOKEN);
+        if (currentToken === tokenSnapshot) {
+          storage.removeItem(USER_KEY);
+          storage.removeItem(STORAGE_KEYS.TOKEN);
+        }
         return null;
       }
-      // Network error / timeout — don't touch storage, re-throw so caller can decide
+      // Erreur réseau / timeout — ne pas toucher au storage, laisser l'appelant décider
       throw error;
     }
   }
