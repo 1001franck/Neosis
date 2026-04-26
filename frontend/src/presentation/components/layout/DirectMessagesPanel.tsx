@@ -23,19 +23,28 @@ function isGifUrl(text: string): boolean {
   );
 }
 
+function SentIcon() {
+  return (
+    <svg className="w-4 h-3 text-muted-foreground flex-shrink-0" viewBox="0 0 24 16" fill="none">
+      <path d="M1 9l4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function formatMessagePreview(content: string, isMine: boolean): React.ReactNode {
-  const prefix = isMine ? 'Vous : ' : '';
-  if (isGifUrl(content)) {
-    return (
-      <span className="flex items-center gap-1">
-        {prefix && <span>{prefix}</span>}
-        <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-muted text-[10px] font-semibold text-muted-foreground leading-none">
+  const isGif = isGifUrl(content);
+  return (
+    <span className="flex items-center gap-1 min-w-0">
+      {isMine && <SentIcon />}
+      {isGif ? (
+        <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-muted text-[10px] font-semibold text-muted-foreground leading-none flex-shrink-0">
           GIF
         </span>
-      </span>
-    );
-  }
-  return `${prefix}${content}`;
+      ) : (
+        <span className="truncate">{content}</span>
+      )}
+    </span>
+  );
 }
 
 function formatConversationTime(dateString: string): string {
@@ -430,14 +439,14 @@ function MessagesView() {
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground truncate">
+                <div className="flex items-center text-[11px] text-muted-foreground min-w-0 overflow-hidden">
                   {conversation.lastMessage
                     ? formatMessagePreview(
                         conversation.lastMessage.content,
                         conversation.lastMessage.senderId === currentUserId
                       )
-                    : t('dm.privateConversation')}
-                </p>
+                    : <span className="truncate">{t('dm.privateConversation')}</span>}
+                </div>
               </div>
             </button>
           ))}
