@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { ChatArea, type Message } from '@presentation/components/chat/ChatArea';
@@ -16,6 +16,7 @@ import { useDirectMessages } from '@application/direct/useDirectMessages';
 import { directApi } from '@infrastructure/api/direct.api';
 import type { DirectConversation, DirectMessage } from '@domain/direct/types';
 import { logger } from '@shared/utils/logger';
+import { resolveConversationIdFromRoute } from '@shared/utils/desktopRoutes';
 
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
@@ -45,10 +46,15 @@ function mapDirectMessage(message: DirectMessage, currentUserId?: string): Messa
 
 export default function DirectConversationPage(): React.ReactNode {
   const params = useParams();
+  const searchParams = useSearchParams();
   const conversationIdParam = params?.conversationId;
-  const conversationId = Array.isArray(conversationIdParam)
+  const routeConversationId = Array.isArray(conversationIdParam)
     ? conversationIdParam[0]
     : conversationIdParam;
+  const conversationId = useMemo(
+    () => resolveConversationIdFromRoute(routeConversationId, searchParams),
+    [routeConversationId, searchParams]
+  );
   const { user } = useAuth();
   const { servers, getServers } = useServers();
   const { messages, isLoading, error, sendMessage } = useDirectMessages(conversationId);

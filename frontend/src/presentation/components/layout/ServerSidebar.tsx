@@ -20,6 +20,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '@presentation/components/common/Avatar';
 import type { Server } from '@domain/servers/types';
 import { useLocale } from '@shared/hooks/useLocale';
+import { toServerRoute } from '@shared/utils/desktopRoutes';
 
 interface ServerSidebarUser {
   username: string;
@@ -63,7 +64,7 @@ export function ServerSidebar({
 
   const handleServerClick = (serverId: string) => {
     onServerClick?.(serverId);
-    router.push(`/servers/${serverId}`);
+    router.push(toServerRoute(serverId));
   };
 
   const handleAddFriend = () => {

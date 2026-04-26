@@ -9,7 +9,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChannelView } from '@presentation/components/layout/ChannelView';
 import { useServers } from '@application/servers/useServers';
 import { useChannels } from '@application/channels/useChannels';
@@ -32,13 +32,19 @@ import { serversApi } from '@infrastructure/api/servers.api';
 import { toastBus } from '@shared/utils/toastBus';
 import type { ChannelMedia, ChannelLink } from '@presentation/components/channels/types';
 import { useLocale } from '@shared/hooks/useLocale';
+import { resolveServerIdFromRoute, toServerRoute } from '@shared/utils/desktopRoutes';
 
 interface ServerPageProps {
   params: Promise<{ serverId: string }>;
 }
 
 export default function ServerPage({ params }: ServerPageProps): React.ReactNode {
-  const { serverId } = use(params);
+  const { serverId: routeServerId } = use(params);
+  const searchParams = useSearchParams();
+  const serverId = useMemo(
+    () => resolveServerIdFromRoute(routeServerId, searchParams),
+    [routeServerId, searchParams]
+  );
 
   // === HOOKS ===
   const { user, logout } = useAuth();
@@ -502,7 +508,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       setShowCreateServer(false);
       setCreateServerName('');
       setCreateServerDesc('');
-      router.push(`/servers/${server.id}`);
+      router.push(toServerRoute(server.id));
     } catch (err) {
       setServerModalError((err as Error).message || t('servers.create.error'));
     } finally {
@@ -519,7 +525,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       const server = await joinServer(joinInviteCode.trim());
       setShowJoinServer(false);
       setJoinInviteCode('');
-      router.push(`/servers/${server.id}`);
+      router.push(toServerRoute(server.id));
     } catch (err) {
       setServerModalError((err as Error).message || t('servers.join.invalidCode'));
     } finally {
@@ -662,7 +668,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
         banInfo={banInfo}
         callbacks={{
           onChannelClick: handleChannelClick,
-          onServerClick: (id) => router.push(`/servers/${id}`),
+          onServerClick: (id) => router.push(toServerRoute(id)),
           onServerMenuClick: () => logger.debug('Server menu clicked'),
           onSendMessage: handleSendMessage,
           onMemberClick: handleMemberClick,

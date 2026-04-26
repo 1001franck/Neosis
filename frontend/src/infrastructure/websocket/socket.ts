@@ -12,26 +12,44 @@ export const socket = io(env.SOCKET_URL, {
   withCredentials: false,
 });
 
+let isConnecting = false;
+
 socket.on('connect', () => {
+  isConnecting = false;
   logger.info('Socket connected', { socketId: socket.id });
 });
 
+socket.on('connect_error', (error) => {
+  isConnecting = false;
+  logger.warn('Socket connection error', { message: error.message });
+});
+
 socket.on('disconnect', () => {
+  isConnecting = false;
   logger.warn('Socket disconnected');
 });
 
 export function connectSocket() {
-  if (!socket.connected) {
-    const token = storage.getItem<string>(STORAGE_KEYS.TOKEN);
-    if (token) {
-      socket.auth = { token };
-    }
-    socket.connect();
+  const isActive = (socket as unknown as { active?: boolean }).active === true;
+  if (socket.connected || isActive || isConnecting) {
+    return;
   }
+
+  const token = storage.getItem<string>(STORAGE_KEYS.TOKEN);
+  if (!token) {
+    logger.warn('Socket connect skipped: no auth token available');
+    return;
+  }
+
+  socket.auth = { token };
+  isConnecting = true;
+  socket.connect();
 }
 
 export function disconnectSocket() {
-  if (socket.connected) {
+  isConnecting = false;
+  const isActive = (socket as unknown as { active?: boolean }).active === true;
+  if (socket.connected || isActive) {
     socket.disconnect();
   }
 }

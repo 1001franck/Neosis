@@ -13,6 +13,7 @@ import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { logger } from '@shared/utils/logger';
 import { useLocale } from '@shared/hooks/useLocale';
+import { toServerRoute } from '@shared/utils/desktopRoutes';
 import { motion, type Variants } from 'framer-motion';
 
 const fadeIn: Variants = {
@@ -61,7 +62,7 @@ export default function NeosisPage(): React.ReactNode {
   useEffect(() => {
     if (!loading && servers.length > 0) {
       logger.info('User has servers, redirecting to first', { serverId: servers[0].id });
-      router.push(`/servers/${servers[0].id}`);
+      router.push(toServerRoute(servers[0].id));
     }
   }, [loading, servers, router]);
 
@@ -82,7 +83,7 @@ export default function NeosisPage(): React.ReactNode {
     try {
       const server = await createServer({ name: createServerName.trim(), description: createServerDesc.trim() || undefined });
       closeServerModals();
-      router.push(`/servers/${server.id}`);
+      router.push(toServerRoute(server.id));
     } catch (err) {
       setServerModalError((err as Error).message || t('servers.create.error'));
     } finally {
@@ -98,7 +99,7 @@ export default function NeosisPage(): React.ReactNode {
     try {
       const server = await joinServer(joinInviteCode.trim());
       closeServerModals();
-      router.push(`/servers/${server.id}`);
+      router.push(toServerRoute(server.id));
     } catch (err) {
       setServerModalError((err as Error).message || t('servers.join.invalidCode'));
     } finally {
