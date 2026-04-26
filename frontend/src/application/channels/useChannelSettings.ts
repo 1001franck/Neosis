@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useChannelStore } from './channelStore';
+import { channelsApi } from '@infrastructure/api/channels.api';
 
 interface UpdateChannelData {
   name?: string;
@@ -22,26 +23,8 @@ export function useChannelSettings() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/channels/${channelId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la mise à jour du channel');
-      }
-
-      const result = await response.json();
-
-      // Mettre à jour le store local
-      if (result.data) {
-        updateChannelInStore(channelId, result.data);
-      }
+      const updatedChannel = await channelsApi.updateChannel(channelId, data);
+      updateChannelInStore(channelId, updatedChannel);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du channel';
       setError(errorMessage);
