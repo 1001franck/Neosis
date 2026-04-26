@@ -9,7 +9,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo, use } from 'react';
-import { useLocale } from '@shared/hooks/useLocale';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChannelView } from '@presentation/components/layout/ChannelView';
 import { useServers } from '@application/servers/useServers';
