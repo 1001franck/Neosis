@@ -8,7 +8,7 @@ import { directApi } from '@infrastructure/api/direct.api';
 import { logger } from '@shared/utils/logger';
 import { useLocale } from '@shared/hooks/useLocale';
 import { useScrollbarVisibility } from '@shared/hooks/useScrollbarVisibility';
-import { toConversationRoute } from '@shared/utils/desktopRoutes';
+import { setLastDmConversationId, toConversationRoute } from '@shared/utils/desktopRoutes';
 import type { Friend } from '@domain/direct/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -103,6 +103,7 @@ function FriendsView() {
     if (!friend.user) return;
     try {
       const conv = await directApi.createConversation(friend.user.id);
+      setLastDmConversationId(conv.id);
       router.push(toConversationRoute(conv.id));
     } catch (err) {
       logger.error('Failed to start DM', err);
@@ -381,7 +382,10 @@ function MessagesView() {
           {conversations.map((conversation) => (
             <button
               key={conversation.id}
-              onClick={() => router.push(toConversationRoute(conversation.id))}
+              onClick={() => {
+                setLastDmConversationId(conversation.id);
+                router.push(toConversationRoute(conversation.id));
+              }}
               className="w-full flex items-center gap-2.5 px-2 py-2 mx-1 rounded-lg hover:bg-secondary/70 transition-colors group"
               style={{ width: 'calc(100% - 8px)' }}
             >

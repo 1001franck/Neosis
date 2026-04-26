@@ -16,7 +16,7 @@ import { useDirectMessages } from '@application/direct/useDirectMessages';
 import { directApi } from '@infrastructure/api/direct.api';
 import type { DirectConversation, DirectMessage } from '@domain/direct/types';
 import { logger } from '@shared/utils/logger';
-import { resolveConversationIdFromRoute } from '@shared/utils/desktopRoutes';
+import { resolveConversationIdFromRoute, setLastDmConversationId } from '@shared/utils/desktopRoutes';
 
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
@@ -64,6 +64,11 @@ export default function DirectConversationPage(): React.ReactNode {
   useEffect(() => {
     getServers().catch((err) => logger.error('Failed to load servers', err));
   }, [getServers]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    setLastDmConversationId(conversationId);
+  }, [conversationId]);
 
   useEffect(() => {
     if (!conversationId) return;

@@ -20,7 +20,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '@presentation/components/common/Avatar';
 import type { Server } from '@domain/servers/types';
 import { useLocale } from '@shared/hooks/useLocale';
-import { toServerRoute } from '@shared/utils/desktopRoutes';
+import { getPreferredMessagesRoute, toServerRoute } from '@shared/utils/desktopRoutes';
 
 interface ServerSidebarUser {
   username: string;
@@ -81,7 +81,7 @@ export function ServerSidebar({
       <div className="flex items-center justify-center mb-2">
         <div className="relative group">
           <button
-            onClick={() => router.push('/messages')}
+            onClick={() => router.push(getPreferredMessagesRoute())}
             className="group relative flex items-center justify-center w-12 h-12 rounded-[24px] bg-card hover:rounded-[16px] hover:bg-primary transition-all duration-200"
             aria-label={t('nav.home')}
           >

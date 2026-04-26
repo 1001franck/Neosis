@@ -1,5 +1,7 @@
 'use client';
 
+const LAST_DM_CONVERSATION_KEY = 'neosis:lastDmConversationId';
+
 function isDesktopTauriRuntime(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
@@ -18,6 +20,29 @@ export function toConversationRoute(conversationId: string): string {
     return `/messages/_?conversationId=${encodedId}`;
   }
   return `/messages/${encodedId}`;
+}
+
+export function setLastDmConversationId(conversationId: string): void {
+  if (typeof window === 'undefined') return;
+  const normalized = conversationId.trim();
+  if (!normalized) return;
+  window.localStorage.setItem(LAST_DM_CONVERSATION_KEY, normalized);
+}
+
+export function getLastDmConversationId(): string | null {
+  if (typeof window === 'undefined') return null;
+  const value = window.localStorage.getItem(LAST_DM_CONVERSATION_KEY);
+  if (!value) return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+export function getPreferredMessagesRoute(): string {
+  const lastConversationId = getLastDmConversationId();
+  if (lastConversationId) {
+    return toConversationRoute(lastConversationId);
+  }
+  return '/messages';
 }
 
 export function resolveServerIdFromRoute(
