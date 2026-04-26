@@ -61,6 +61,9 @@ export const en: Translations = {
     imageInvalid: 'The file must be an image',
     imageTooBig: 'The image must not exceed 5 MB',
     errorSaving: 'Error while saving',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    unknownDate: 'Unknown date',
   },
   nav: {
     back: 'Back',

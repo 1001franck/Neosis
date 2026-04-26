@@ -16,6 +16,7 @@ import { memo, useState, useMemo, useCallback, useEffect } from 'react';
 import type { Message as MessageListMessage } from './MessageList';
 import { formatTimestamp } from '@shared/utils/date';
 import { logger } from '@shared/utils/logger';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface ChannelSearchModalProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ const ChannelSearchModalComponent = ({
   messages,
   onMessageClick,
 }: ChannelSearchModalProps): React.ReactNode => {
+  const { locale, t } = useLocale();
   const [filters, setFilters] = useState<SearchFilters>({ query: '' });
   const [sortOrder, setSortOrder] = useState<SortOrder>('relevant');
   const [showFilters, setShowFilters] = useState(false);
@@ -269,11 +271,13 @@ const ChannelSearchModalComponent = ({
               {sortedMessages.map((message) => {
                 const timestamp = message.createdAt
                   ? formatTimestamp(
-                      new Date(message.createdAt).toLocaleTimeString('fr-FR', {
+                      new Date(message.createdAt).toLocaleTimeString(locale, {
                         hour: '2-digit',
                         minute: '2-digit',
                       }),
-                      new Date(message.createdAt)
+                      new Date(message.createdAt),
+                      locale,
+                      t('common.yesterday')
                     )
                   : message.timestamp;
 

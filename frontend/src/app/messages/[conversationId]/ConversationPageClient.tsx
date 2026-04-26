@@ -12,6 +12,7 @@ import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { ChatArea, type Message } from '@presentation/components/chat/ChatArea';
 import { DmUserProfilePanel } from '@presentation/components/chat/DmUserProfilePanel';
 import { useAuth } from '@application/auth/useAuth';
+import { useLocale } from '@shared/hooks/useLocale';
 import { useServers } from '@application/servers/useServers';
 import { useDirectMessages } from '@application/direct/useDirectMessages';
 import { directApi } from '@infrastructure/api/direct.api';
@@ -19,15 +20,14 @@ import type { DirectConversation, DirectMessage } from '@domain/direct/types';
 import { logger } from '@shared/utils/logger';
 import { resolveConversationIdFromRoute, setLastDmConversationId } from '@shared/utils/desktopRoutes';
 
-function formatTime(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('fr-FR', {
+function formatTime(dateString: string, locale: string): string {
+  return new Date(dateString).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
   });
 }
 
-function mapDirectMessage(message: DirectMessage, currentUserId?: string): Message {
+function mapDirectMessage(message: DirectMessage, currentUserId?: string, locale = 'fr'): Message {
   const senderId = message.sender?.id ?? message.senderId;
   const senderName = message.sender?.username ?? 'Utilisateur';
   const isCurrentUser = currentUserId ? senderId === currentUserId : false;
@@ -37,7 +37,7 @@ function mapDirectMessage(message: DirectMessage, currentUserId?: string): Messa
     username: senderName,
     avatar: message.sender?.avatarUrl ?? undefined,
     content: message.content,
-    timestamp: formatTime(message.createdAt),
+    timestamp: formatTime(message.createdAt, locale),
     createdAt: new Date(message.createdAt),
     updatedAt: new Date(message.updatedAt),
     isCurrentUser,
@@ -56,6 +56,7 @@ export default function DirectConversationPage(): React.ReactNode {
     () => resolveConversationIdFromRoute(routeConversationId, searchParams),
     [routeConversationId, searchParams]
   );
+  const { locale } = useLocale();
   const { user } = useAuth();
   const { servers, getServers } = useServers();
   const { messages, isLoading, error, sendMessage } = useDirectMessages(conversationId);
@@ -86,8 +87,8 @@ export default function DirectConversationPage(): React.ReactNode {
   }, [conversationId]);
 
   const mappedMessages = useMemo(
-    () => messages.map((m) => mapDirectMessage(m, user?.id)),
-    [messages, user?.id]
+    () => messages.map((m) => mapDirectMessage(m, user?.id, locale)),
+    [messages, user?.id, locale]
   );
 
   return (

@@ -5,6 +5,7 @@ import type { Channel } from '@domain/channels/types';
 import type { Message } from '@domain/messages/types';
 import { messagesApi } from '@infrastructure/api/messages.api';
 import { formatTimeOnly } from '@shared/utils/date';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface ServerMessageSearchModalProps {
   isOpen: boolean;
@@ -38,9 +39,9 @@ function toIndexedMessage(message: Message, channelName: string): IndexedMessage
   };
 }
 
-function formatResultTime(createdAt: string): string {
+function formatResultTime(createdAt: string, locale: string): string {
   const date = new Date(createdAt);
-  const time = date.toLocaleTimeString('fr-FR', {
+  const time = date.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
@@ -56,6 +57,7 @@ const ServerMessageSearchModalComponent = ({
   channels,
   onResultClick,
 }: ServerMessageSearchModalProps): React.ReactNode => {
+  const { locale } = useLocale();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<IndexedMessage[]>([]);
@@ -194,7 +196,7 @@ const ServerMessageSearchModalComponent = ({
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="font-semibold text-white">{result.authorName}</span>
                         <span className="text-xs text-muted-foreground">dans #{result.channelName}</span>
-                        <span className="text-xs text-muted-foreground">{formatResultTime(result.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground">{formatResultTime(result.createdAt, locale)}</span>
                       </div>
                       <div className="text-sm text-foreground mt-1 line-clamp-3">{result.content}</div>
                     </div>

@@ -55,7 +55,7 @@ const ChatInputComponent = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   // Typing indicator avec debounce automatique
   useTypingIndicator({
@@ -162,7 +162,7 @@ const ChatInputComponent = ({
   // Afficher la notice de ban si l'utilisateur est banni temporairement
   if (banInfo) {
     const expiryText = banInfo.expiresAt
-      ? new Date(banInfo.expiresAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
+      ? new Date(banInfo.expiresAt).toLocaleString(locale, { dateStyle: 'long', timeStyle: 'short' })
       : null;
     return (
       <div className="px-3 sm:px-4 pb-4 sm:pb-6">

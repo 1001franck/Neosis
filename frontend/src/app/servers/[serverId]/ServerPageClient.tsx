@@ -9,6 +9,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo, use } from 'react';
+import { useLocale } from '@shared/hooks/useLocale';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChannelView } from '@presentation/components/layout/ChannelView';
 import { useServers } from '@application/servers/useServers';
@@ -47,6 +48,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   );
 
   // === HOOKS ===
+  const { locale } = useLocale();
   const { user, logout } = useAuth();
   const { servers, currentServer, getServers, getServer, leaveServer, deleteServer, createServer, joinServer, isLoading: serversLoading } = useServers();
   const { channels, listChannels, createChannel, updateChannel, deleteChannel } = useChannels();
@@ -606,7 +608,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     username: msg.author?.username || 'Unknown',
     avatar: msg.author?.avatar,
     content: msg.content,
-    timestamp: new Date(msg.createdAt).toLocaleTimeString('fr-FR', {
+    timestamp: new Date(msg.createdAt).toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,

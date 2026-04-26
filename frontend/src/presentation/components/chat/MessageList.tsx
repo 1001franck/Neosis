@@ -13,6 +13,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { useScrollbarVisibility } from '@shared/hooks/useScrollbarVisibility';
+import { useLocale } from '@shared/hooks/useLocale';
 import { motion } from 'framer-motion';
 import { MessageActions } from './MessageActions';
 import { MarkdownText } from './MarkdownText';
@@ -118,6 +119,7 @@ export function MessageList({
   onDeleteMessage,
 }: MessageListProps): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { locale, t } = useLocale();
 
   // === INLINE EDIT STATE ===
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -227,7 +229,7 @@ export function MessageList({
                 <div className="flex items-center justify-center my-4">
                   <div className="h-px flex-1 bg-border" />
                   <span className="px-2 text-xs font-semibold text-muted-foreground">
-                    {message.createdAt ? formatDateSeparator(new Date(message.createdAt)) : 'Date inconnue'}
+                    {message.createdAt ? formatDateSeparator(new Date(message.createdAt), locale, t('common.today'), t('common.yesterday')) : t('common.unknownDate')}
                   </span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
@@ -268,7 +270,7 @@ export function MessageList({
                       })()}
                     </span>
                     <span className="text-[10px] not-italic text-muted-foreground/70">
-                      {formatTimestamp(message.timestamp, message.createdAt)}
+                      {formatTimestamp(message.timestamp, message.createdAt, locale, t('common.yesterday'))}
                     </span>
                     {message.deletedByRole && message.deletedByRole !== 'MEMBER' && (
                       <span

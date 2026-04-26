@@ -59,6 +59,9 @@ export const fr = {
     imageInvalid: 'Le fichier doit être une image',
     imageTooBig: "L'image ne doit pas dépasser 5 Mo",
     errorSaving: 'Erreur lors de la sauvegarde',
+    today: "Aujourd'hui",
+    yesterday: 'Hier',
+    unknownDate: 'Date inconnue',
   },
   nav: {
     back: 'Retour',
