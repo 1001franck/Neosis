@@ -14,6 +14,30 @@ import { useAuthStore } from '@application/auth/authStore';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+function isGifUrl(text: string): boolean {
+  const t = text.trim();
+  return (
+    /^https?:\/\/media\d*\.giphy\.com\/.+\.gif(\?.*)?$/i.test(t) ||
+    /^https?:\/\/i\.giphy\.com\/.+\.gif(\?.*)?$/i.test(t) ||
+    /^https?:\/\/media\d*\.tenor\.com\/.+\.(gif|mp4)(\?.*)?$/i.test(t)
+  );
+}
+
+function formatMessagePreview(content: string, isMine: boolean): React.ReactNode {
+  const prefix = isMine ? 'Vous : ' : '';
+  if (isGifUrl(content)) {
+    return (
+      <span className="flex items-center gap-1">
+        {prefix && <span>{prefix}</span>}
+        <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-muted text-[10px] font-semibold text-muted-foreground leading-none">
+          GIF
+        </span>
+      </span>
+    );
+  }
+  return `${prefix}${content}`;
+}
+
 function formatConversationTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -408,9 +432,10 @@ function MessagesView() {
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate">
                   {conversation.lastMessage
-                    ? (conversation.lastMessage.senderId === currentUserId
-                        ? `Vous : ${conversation.lastMessage.content}`
-                        : conversation.lastMessage.content)
+                    ? formatMessagePreview(
+                        conversation.lastMessage.content,
+                        conversation.lastMessage.senderId === currentUserId
+                      )
                     : t('dm.privateConversation')}
                 </p>
               </div>
