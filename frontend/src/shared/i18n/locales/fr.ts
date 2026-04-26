@@ -126,6 +126,8 @@ export const fr = {
     profileSince: 'Membre depuis',
     profileClose: 'Fermer le profil',
     profileError: 'Impossible de charger le profil',
+    mute: 'Mettre en sourdine',
+    unmute: 'Réactiver les notifications',
     errors: {
       sendRequest: "Impossible d'envoyer la demande",
       loadFriends: 'Impossible de charger les amis',

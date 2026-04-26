@@ -128,6 +128,8 @@ export const en: Translations = {
     profileSince: 'Member since',
     profileClose: 'Close profile',
     profileError: 'Unable to load profile',
+    mute: 'Mute conversation',
+    unmute: 'Unmute conversation',
     errors: {
       sendRequest: 'Unable to send request',
       loadFriends: 'Unable to load friends',

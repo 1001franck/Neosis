@@ -29,6 +29,7 @@ import { useChannelStore } from '@application/channels/channelStore';
 import { toastBus } from '@shared/utils/toastBus';
 import { sendDesktopNotification, isTauriApp } from '@shared/hooks/useDesktopNotification';
 import { useLocale } from '@shared/hooks/useLocale';
+import { isMutedConversation } from '@shared/hooks/useMutedConversations';
 import { getVoiceClient } from '@infrastructure/webrtc/VoiceClient';
 
 /**
@@ -337,7 +338,7 @@ export function setupListeners() {
 
     // Notification native desktop pour les DMs
     const currentUserId = useAuthStore.getState().user?.id;
-    if (message.senderId !== currentUserId && shouldNotifyForDM()) {
+    if (message.senderId !== currentUserId && shouldNotifyForDM() && !isMutedConversation(message.conversationId)) {
       const t = useLocale.getState().t;
       void sendDesktopNotification(t('notifications.dmTitle'), (message.content || '').slice(0, 80));
     }

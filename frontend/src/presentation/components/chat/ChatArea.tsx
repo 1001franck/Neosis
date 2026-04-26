@@ -44,10 +44,12 @@ interface ChatUIState {
   showMembers?: boolean;
   showFriends?: boolean;
   showProfile?: boolean;
+  isMuted?: boolean;
   onToggleChannelInfo?: () => void;
   onToggleMembers?: () => void;
   onToggleFriends?: () => void;
   onToggleProfile?: () => void;
+  onToggleMute?: () => void;
 }
 
 interface BanInfo {
@@ -138,10 +140,12 @@ export function ChatArea({
           showMembers={ui?.showMembers}
           showFriends={ui?.showFriends}
           showProfile={ui?.showProfile}
+          isMuted={ui?.isMuted}
           onToggleChannelInfo={ui?.onToggleChannelInfo}
           onToggleMembers={ui?.onToggleMembers}
           onToggleFriends={ui?.onToggleFriends}
           onToggleProfile={ui?.onToggleProfile}
+          onToggleMute={ui?.onToggleMute}
           onSearchClick={handleSearchClick}
         />
       )}

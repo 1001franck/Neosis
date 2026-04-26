@@ -27,10 +27,12 @@ interface ChatHeaderProps {
   showMembers?: boolean;
   showFriends?: boolean;
   showProfile?: boolean;
+  isMuted?: boolean;
   onToggleChannelInfo?: () => void;
   onToggleMembers?: () => void;
   onToggleFriends?: () => void;
   onToggleProfile?: () => void;
+  onToggleMute?: () => void;
   onSearchClick?: () => void;
 }
 
@@ -44,9 +46,11 @@ export function ChatHeader({
   showChannelInfo = false,
   showMembers = false,
   showProfile = false,
+  isMuted = false,
   onToggleChannelInfo,
   onToggleMembers,
   onToggleProfile,
+  onToggleMute,
   onSearchClick,
 }: ChatHeaderProps): React.ReactElement {
   const { toggleChannelSidebar, isChannelSidebarOpen, isMobile, toggleSidebar, isSidebarOpen } = useResponsiveLayout();
@@ -169,6 +173,30 @@ export function ChatHeader({
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
             </svg>
+          </button>
+        )}
+
+        {!isChannel && onToggleMute && (
+          <button
+            onClick={onToggleMute}
+            className={`hidden sm:inline-flex transition-colors ${
+              isMuted
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            aria-label={isMuted ? t('dm.unmute') : t('dm.mute')}
+            title={isMuted ? t('dm.unmute') : t('dm.mute')}
+          >
+            {isMuted ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3.536-3.536M12 18l3.536-3.536M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            )}
           </button>
         )}
 

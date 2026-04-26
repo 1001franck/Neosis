@@ -19,6 +19,7 @@ import { directApi } from '@infrastructure/api/direct.api';
 import type { DirectConversation, DirectMessage } from '@domain/direct/types';
 import { logger } from '@shared/utils/logger';
 import { resolveConversationIdFromRoute, setLastDmConversationId } from '@shared/utils/desktopRoutes';
+import { useMutedConversations } from '@shared/hooks/useMutedConversations';
 
 function formatTime(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleTimeString(locale, {
@@ -64,6 +65,7 @@ export default function DirectConversationPage(): React.ReactNode {
   const [conversationError, setConversationError] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const toggleProfile = useCallback(() => setShowProfile((prev) => !prev), []);
+  const { isMuted, toggle: toggleMute } = useMutedConversations(conversationId);
 
   const handleMessageClick = useCallback((messageId: string) => {
     const el = document.querySelector(`[data-message-id="${messageId}"]`);
@@ -122,6 +124,8 @@ export default function DirectConversationPage(): React.ReactNode {
               ui={{
                 showProfile,
                 onToggleProfile: toggleProfile,
+                isMuted,
+                onToggleMute: toggleMute,
               }}
               callbacks={{
                 onSendMessage: async (content) => {
