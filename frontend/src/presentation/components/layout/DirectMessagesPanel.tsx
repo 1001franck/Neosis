@@ -381,7 +381,7 @@ function MessagesView() {
           {conversations.map((conversation) => (
             <button
               key={conversation.id}
-              onClick={() => router.push(`/messages/${conversation.id}`)}
+              onClick={() => router.push(toConversationRoute(conversation.id))}
               className="w-full flex items-center gap-2.5 px-2 py-2 mx-1 rounded-lg hover:bg-secondary/70 transition-colors group"
               style={{ width: 'calc(100% - 8px)' }}
             >
