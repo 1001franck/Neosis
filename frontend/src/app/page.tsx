@@ -264,7 +264,7 @@ export default function LandingPage(): React.ReactNode {
   }
 
   return (
-    <div className={`${space.className} min-h-screen bg-[#09090b] text-white relative overflow-x-hidden`}>
+    <div className={`${space.className} min-h-screen bg-[#09090b] relative overflow-x-hidden`} style={{ color: '#f1f5f9' }}>
       {/* Halo central fixe — subtil */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-indigo-600/[0.07] blur-[100px] rounded-full" />
@@ -301,21 +301,23 @@ export default function LandingPage(): React.ReactNode {
       <section className="relative z-10 px-6 md:px-14 pt-16 pb-20 text-center">
         <motion.h1
           className={`${news.className} text-5xl md:text-[68px] font-semibold leading-[1.07] tracking-tight max-w-3xl mx-auto`}
+          style={{ color: '#f1f5f9' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, ease }}
         >
           Parle à ta communauté.{' '}
-          <em className="text-indigo-400">Sans friction.</em>
+          <em style={{ color: '#818cf8', fontStyle: 'italic' }}>Sans friction.</em>
         </motion.h1>
 
         <motion.p
-          className="mt-6 text-base md:text-[17px] text-white/40 max-w-lg mx-auto leading-relaxed"
+          className="mt-6 text-base md:text-[17px] max-w-lg mx-auto leading-relaxed"
+          style={{ color: 'rgba(241,245,249,0.60)' }}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.12, ease }}
         >
-          Serveurs, salons, messages privés et voice chat — tout ce dont une communauté a besoin, rien de superflu.
+          Serveurs, salons, messages privés et voice chat - tout ce dont une communauté a besoin, rien de superflu.
         </motion.p>
 
         <motion.div
@@ -373,8 +375,8 @@ export default function LandingPage(): React.ReactNode {
                   {f.num}
                 </span>
                 <div className="flex-1 grid md:grid-cols-2 gap-2 md:gap-10">
-                  <h3 className="text-lg font-semibold text-white leading-snug">{f.title}</h3>
-                  <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
+                  <h3 className="text-lg font-semibold leading-snug" style={{ color: '#f1f5f9' }}>{f.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(241,245,249,0.60)' }}>{f.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -391,11 +393,14 @@ export default function LandingPage(): React.ReactNode {
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease }}
         >
-          <h2 className={`${news.className} text-4xl md:text-[52px] font-semibold leading-[1.1] tracking-tight`}>
+          <h2
+            className={`${news.className} text-4xl md:text-[52px] font-semibold leading-[1.1] tracking-tight`}
+            style={{ color: '#f1f5f9' }}
+          >
             Prêt à lancer{' '}
-            <em className="text-indigo-400">ton serveur ?</em>
+            <em style={{ color: '#818cf8', fontStyle: 'italic' }}>ton serveur ?</em>
           </h2>
-          <p className="text-white/35 mt-4 text-[15px]">
+          <p className="mt-4 text-[15px]" style={{ color: 'rgba(241,245,249,0.50)' }}>
             Inscription gratuite. Aucune carte bancaire.
           </p>
           <div className="mt-8">
