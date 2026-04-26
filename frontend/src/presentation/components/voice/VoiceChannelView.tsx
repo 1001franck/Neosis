@@ -79,8 +79,7 @@ function ParticipantTile({ user }: { user: VoiceUser }) {
 
 export function VoiceChannelView({ channelId, channelName, onJoinVoice }: VoiceChannelViewProps): React.ReactElement {
   const { t } = useLocale();
-  const { isConnected, connectedChannelId, isConnecting } = useVoice();
-  const { leaveVoiceChannel } = useVoice();
+  const { isConnected, connectedChannelId, isConnecting, leaveVoiceChannel } = useVoice();
 
   const connectedUsers = useVoiceStore((s) => s.connectedUsers.get(channelId) ?? []);
 

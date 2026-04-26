@@ -581,6 +581,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   const handleJoinVoice = useCallback(async (channelId: string): Promise<void> => {
     try {
       await joinVoiceChannel(channelId);
+      setActiveChannelId(channelId);
       logger.info('Joined voice channel', { channelId });
     } catch (err) {
       logger.error('Failed to join voice channel', err);
