@@ -72,10 +72,6 @@ export function ChannelItem({
   const voiceUserCount = connectedUsers ?? 0;
   const voiceActionLabel = voiceUserCount > 0 ? 'Rejoindre' : 'Démarrer';
   const handleClick = (): void => {
-    // Pour les voice channels, on ne change pas le channel actif au clic
-    if (type === ChannelType.VOICE) {
-      return;
-    }
     onClick?.(id);
   };
 

@@ -22,12 +22,14 @@ import { ResponsiveSidebar } from '@presentation/components/common/ResponsiveSid
 import { ServerSidebar } from './ServerSidebar';
 import { ServerChannelsSidebar } from '@presentation/components/channels/ServerChannelsSidebar';
 import { ChatArea } from '@presentation/components/chat/ChatArea';
+import { VoiceChannelView } from '@presentation/components/voice/VoiceChannelView';
 import { ServerMessageSearchModal } from '@presentation/components/chat/ServerMessageSearchModal';
 import { MembersSidebar } from '@presentation/components/members/MembersSidebar';
 import { ChannelInfoSidebar } from '@presentation/components/channels/ChannelInfoSidebar';
 import { DirectMessagesPanel } from '@presentation/components/layout/DirectMessagesPanel';
 import { useResponsiveLayout } from '@presentation/contexts/ResponsiveLayoutContext';
 import type { Server } from '@domain/servers/types';
+import { ChannelType } from '@domain/channels/types';
 import type { Channel, ChannelCategory } from '@domain/channels/types';
 import type { Member, Role, MemberRole } from '@domain/members/types';
 import type { Message } from '@presentation/components/chat/MessageList';
@@ -244,42 +246,50 @@ export function ChannelView({
 
       {/* Chat Area - Flex-1 */}
       <div className="flex-1 flex flex-col overflow-hidden bg-background/35 backdrop-blur-[1px]">
-        <ChatArea
-          messages={messages || []}
-          typingUsernames={typingUsernames}
-          currentUserId={currentUserId}
-          channelId={channels.activeChannelId}
-          serverName={server.current.name}
-          serverAvatar={server.current.imageUrl || server.current.icon}
-          recipient={{
-            name: activeChannel?.name || 'channel',
-            avatar: undefined,
-            status: undefined,
-          }}
-          isChannel={true}
-          canModerate={members.currentUserRole === 'OWNER' || members.currentUserRole === 'ADMIN'}
-          searchOpen={isSearchOpen}
-          onSearchOpen={handleSearchOpen}
-          onSearchClose={handleSearchClose}
-          banInfo={banInfo}
-          callbacks={{
-            onSendMessage: callbacks?.onSendMessage || (() => {}),
-            onEditMessage: callbacks?.onEditMessage,
-            onDeleteMessage: callbacks?.onDeleteMessage,
-            onAddReaction: callbacks?.onAddReaction,
-            onRemoveReaction: callbacks?.onRemoveReaction,
-            onTypingStart: callbacks?.onTypingStart,
-            onTypingStop: callbacks?.onTypingStop,
-          }}
-          ui={{
-            showMembers: isSidebarOpen('members'),
-            showChannelInfo: isSidebarOpen('channel-info'),
-            showFriends: isSidebarOpen('friends'),
-            onToggleMembers: handleToggleMembers,
-            onToggleChannelInfo: handleToggleChannelInfo,
-            onToggleFriends: handleToggleFriends,
-          }}
-        />
+        {activeChannel?.type === ChannelType.VOICE ? (
+          <VoiceChannelView
+            channelId={activeChannel.id}
+            channelName={activeChannel.name}
+            onJoinVoice={callbacks?.onJoinVoice ?? (() => {})}
+          />
+        ) : (
+          <ChatArea
+            messages={messages || []}
+            typingUsernames={typingUsernames}
+            currentUserId={currentUserId}
+            channelId={channels.activeChannelId}
+            serverName={server.current.name}
+            serverAvatar={server.current.imageUrl || server.current.icon}
+            recipient={{
+              name: activeChannel?.name || 'channel',
+              avatar: undefined,
+              status: undefined,
+            }}
+            isChannel={true}
+            canModerate={members.currentUserRole === 'OWNER' || members.currentUserRole === 'ADMIN'}
+            searchOpen={isSearchOpen}
+            onSearchOpen={handleSearchOpen}
+            onSearchClose={handleSearchClose}
+            banInfo={banInfo}
+            callbacks={{
+              onSendMessage: callbacks?.onSendMessage || (() => {}),
+              onEditMessage: callbacks?.onEditMessage,
+              onDeleteMessage: callbacks?.onDeleteMessage,
+              onAddReaction: callbacks?.onAddReaction,
+              onRemoveReaction: callbacks?.onRemoveReaction,
+              onTypingStart: callbacks?.onTypingStart,
+              onTypingStop: callbacks?.onTypingStop,
+            }}
+            ui={{
+              showMembers: isSidebarOpen('members'),
+              showChannelInfo: isSidebarOpen('channel-info'),
+              showFriends: isSidebarOpen('friends'),
+              onToggleMembers: handleToggleMembers,
+              onToggleChannelInfo: handleToggleChannelInfo,
+              onToggleFriends: handleToggleFriends,
+            }}
+          />
+        )}
 
         <ServerMessageSearchModal
           isOpen={isServerSearchOpen}
