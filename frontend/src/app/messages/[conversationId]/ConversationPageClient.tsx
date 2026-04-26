@@ -5,11 +5,12 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
 import { MainLayout } from '@presentation/components/layout/MainLayout';
 import { ChatArea, type Message } from '@presentation/components/chat/ChatArea';
+import { DmUserProfilePanel } from '@presentation/components/chat/DmUserProfilePanel';
 import { useAuth } from '@application/auth/useAuth';
 import { useServers } from '@application/servers/useServers';
 import { useDirectMessages } from '@application/direct/useDirectMessages';
@@ -60,6 +61,8 @@ export default function DirectConversationPage(): React.ReactNode {
   const { messages, isLoading, error, sendMessage } = useDirectMessages(conversationId);
   const [conversation, setConversation] = useState<DirectConversation | null>(null);
   const [conversationError, setConversationError] = useState<string | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const toggleProfile = useCallback(() => setShowProfile((prev) => !prev), []);
 
   useEffect(() => {
     getServers().catch((err) => logger.error('Failed to load servers', err));
@@ -90,29 +93,41 @@ export default function DirectConversationPage(): React.ReactNode {
   return (
     <ProtectedRoute>
       <MainLayout showDirectMessages servers={servers} user={user ? { username: user.username, avatar: user.avatar ?? undefined } : undefined}>
-        <div className="flex-1 flex flex-col h-full">
-          {conversationError && (
-            <div className="p-4 text-sm text-red-500">{conversationError}</div>
+        <div className="flex-1 flex h-full overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0">
+            {conversationError && (
+              <div className="p-4 text-sm text-red-500">{conversationError}</div>
+            )}
+            <ChatArea
+              recipient={{
+                name: conversation?.user?.username ?? 'Conversation',
+                avatar: conversation?.user?.avatarUrl ?? undefined,
+              }}
+              messages={mappedMessages}
+              currentUserId={user?.id}
+              isChannel={false}
+              isLoading={isLoading}
+              error={error ?? undefined}
+              ui={{
+                showProfile,
+                onToggleProfile: toggleProfile,
+              }}
+              callbacks={{
+                onSendMessage: async (content) => {
+                  if (!conversationId) return;
+                  await sendMessage(content);
+                },
+                onTypingStart: () => {},
+                onTypingStop: () => {},
+              }}
+            />
+          </div>
+          {showProfile && conversation?.user && (
+            <DmUserProfilePanel
+              userId={conversation.user.id}
+              onClose={() => setShowProfile(false)}
+            />
           )}
-          <ChatArea
-            recipient={{
-              name: conversation?.user?.username ?? 'Conversation',
-              avatar: conversation?.user?.avatarUrl ?? undefined,
-            }}
-            messages={mappedMessages}
-            currentUserId={user?.id}
-            isChannel={false}
-            isLoading={isLoading}
-            error={error ?? undefined}
-            callbacks={{
-              onSendMessage: async (content) => {
-                if (!conversationId) return;
-                await sendMessage(content);
-              },
-              onTypingStart: () => {},
-              onTypingStop: () => {},
-            }}
-          />
         </div>
       </MainLayout>
     </ProtectedRoute>
