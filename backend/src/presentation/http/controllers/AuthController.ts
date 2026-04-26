@@ -172,6 +172,23 @@ export class AuthController {
   };
 
   /**
+   * Récupérer le profil public d'un utilisateur par ID
+   * GET /auth/users/:id
+   */
+  getUserById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params['id'] as string;
+      const user = await this.userRepository.findById(id);
+      if (!user) {
+        throw new AppError(ErrorCode.USER_NOT_FOUND, "Utilisateur non trouvé", 404);
+      }
+      res.status(200).json({ success: true, data: { user: user.toPublic() } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * Upload banner image
    * POST /auth/me/banner
    * Body: multipart/form-data with field "banner" (single file)

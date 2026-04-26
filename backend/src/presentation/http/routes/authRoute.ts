@@ -24,6 +24,7 @@ export function createAuthRoutes(authController: AuthController): Router {
   router.put('/me', authMiddleware, validate(UpdateProfileDTO), authController.updateProfile.bind(authController));
   router.post('/me/avatar', authMiddleware, upload.single('avatar'), authController.uploadAvatar.bind(authController));
   router.post('/me/banner', authMiddleware, upload.single('banner'), authController.uploadBanner.bind(authController));
+  router.get('/users/:id', authMiddleware, authController.getUserById.bind(authController));
 
   return router;
 }
