@@ -11,6 +11,7 @@
 'use client';
 
 import React, { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 
@@ -33,19 +34,17 @@ interface PublicRouteProps {
  */
 export function PublicRoute({ children }: PublicRouteProps): React.ReactNode {
   const { isAuthenticated, isInitialized } = useAuth();
+  const router = useRouter();
 
   React.useEffect(() => {
-    // Attendre l'initialisation avant de vérifier
-    if (!isInitialized) {
-      return;
-    }
+    if (!isInitialized) return;
 
-    // Rediriger vers neosis si déjà authentifié — navigation complète pour Tauri
+    // Navigation SPA — pas de rechargement complet pour ne pas réinitialiser le store et le socket
     if (isAuthenticated) {
       logger.info('Utilisateur déjà authentifié - redirection vers neosis');
-      window.location.href = '/neosis/';
+      router.replace('/neosis/');
     }
-  }, [isAuthenticated, isInitialized]);
+  }, [isAuthenticated, isInitialized, router]);
 
   // Afficher un loader pendant l'initialisation
   if (!isInitialized) {

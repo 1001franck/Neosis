@@ -7,6 +7,7 @@ import { env } from '@shared/config/env';
 import { logger } from '@shared/utils/logger';
 import { storage } from '@infrastructure/storage/localStorage';
 import { STORAGE_KEYS } from '@shared/constants/app';
+import { useAuthStore } from '@application/auth/authStore';
 
 export const apiClient = axios.create({
   baseURL: env.API_URL,
@@ -62,9 +63,10 @@ apiClient.interceptors.response.use(
       storage.removeItem('auth_user');
       storage.removeItem(STORAGE_KEYS.TOKEN);
 
-      // Rediriger vers login (si pas déjà sur une page auth)
-      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
-        window.location.href = '/auth/login';
+      // Mettre à jour le store sans rechargement — ProtectedRoute détecte isAuthenticated = false
+      // et redirige via router.replace (SPA, pas de réinitialisation du module ni du socket)
+      if (typeof window !== 'undefined') {
+        useAuthStore.getState().logout();
       }
     }
 

@@ -11,6 +11,7 @@
 'use client';
 
 import React, { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 
@@ -32,19 +33,17 @@ interface ProtectedRouteProps {
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps): React.ReactNode {
   const { isAuthenticated, isInitialized } = useAuth();
+  const router = useRouter();
 
   React.useEffect(() => {
-    // Attendre l'initialisation avant de vérifier
-    if (!isInitialized) {
-      return;
-    }
+    if (!isInitialized) return;
 
-    // Rediriger vers login si pas authentifié — navigation complète pour Tauri
+    // Navigation SPA — pas de rechargement complet pour ne pas réinitialiser le store et le socket
     if (!isAuthenticated) {
       logger.warn('Accès refusé - redirection vers login');
-      window.location.href = '/auth/login/';
+      router.replace('/auth/login/');
     }
-  }, [isAuthenticated, isInitialized]);
+  }, [isAuthenticated, isInitialized, router]);
 
   // Afficher un loader pendant l'initialisation
   if (!isInitialized) {
