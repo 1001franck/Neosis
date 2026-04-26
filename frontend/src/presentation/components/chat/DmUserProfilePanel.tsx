@@ -2,23 +2,25 @@
 
 import React, { useEffect, useState } from 'react';
 import { usersApi, type UserProfile } from '@infrastructure/api/users.api';
+import { useLocale } from '@shared/hooks/useLocale';
 
 interface DmUserProfilePanelProps {
   userId: string;
   onClose: () => void;
 }
 
-function formatJoinDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
 export function DmUserProfilePanel({ userId, onClose }: DmUserProfilePanelProps): React.ReactElement {
+  const { t, locale } = useLocale();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  function formatJoinDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
 
   useEffect(() => {
     setIsLoading(true);
@@ -37,7 +39,7 @@ export function DmUserProfilePanel({ userId, onClose }: DmUserProfilePanelProps)
         <button
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
-          aria-label="Fermer le profil"
+          aria-label={t('dm.profileClose')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -94,7 +96,7 @@ export function DmUserProfilePanel({ userId, onClose }: DmUserProfilePanelProps)
             {profile.bio && (
               <div>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                  À propos de moi
+                  {t('dm.profileAbout')}
                 </h3>
                 <p className="text-sm text-foreground whitespace-pre-line">{profile.bio}</p>
               </div>
@@ -102,7 +104,7 @@ export function DmUserProfilePanel({ userId, onClose }: DmUserProfilePanelProps)
 
             <div>
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                Membre depuis
+                {t('dm.profileSince')}
               </h3>
               <p className="text-sm text-foreground">{formatJoinDate(profile.createdAt)}</p>
             </div>
@@ -112,7 +114,7 @@ export function DmUserProfilePanel({ userId, onClose }: DmUserProfilePanelProps)
 
       {!isLoading && !profile && (
         <div className="flex items-center justify-center flex-1 px-4 text-sm text-muted-foreground text-center">
-          Impossible de charger le profil
+          {t('dm.profileError')}
         </div>
       )}
     </div>

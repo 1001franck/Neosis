@@ -31,14 +31,14 @@ function SentIcon() {
   );
 }
 
-function formatMessagePreview(content: string, isMine: boolean): React.ReactNode {
+function formatMessagePreview(content: string, isMine: boolean, gifLabel: string): React.ReactNode {
   const isGif = isGifUrl(content);
   return (
     <span className="flex items-center gap-1 min-w-0">
       {isMine && <SentIcon />}
       {isGif ? (
         <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-muted text-[10px] font-semibold text-muted-foreground leading-none flex-shrink-0">
-          GIF
+          {gifLabel}
         </span>
       ) : (
         <span className="truncate">{content}</span>
@@ -47,19 +47,19 @@ function formatMessagePreview(content: string, isMine: boolean): React.ReactNode
   );
 }
 
-function formatConversationTime(dateString: string): string {
+function formatConversationTime(dateString: string, locale: string, t: (key: string) => string): string {
   const date = new Date(dateString);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const diffDays = Math.round((today.getTime() - msgDay.getTime()) / 86_400_000);
-  if (diffDays === 0) return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  if (diffDays === 1) return 'Hier';
+  if (diffDays === 0) return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 1) return t('dm.yesterday');
   if (diffDays < 7) {
-    const day = date.toLocaleDateString('fr-FR', { weekday: 'long' });
+    const day = date.toLocaleDateString(locale, { weekday: 'long' });
     return day.charAt(0).toUpperCase() + day.slice(1);
   }
-  return date.toLocaleDateString('fr-FR');
+  return date.toLocaleDateString(locale);
 }
 
 const AVATAR_COLORS = [
@@ -405,7 +405,7 @@ function FriendsView() {
 
 function MessagesView() {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { conversations } = useDirectConversations();
   const { onScroll } = useScrollbarVisibility();
   const currentUserId = useAuthStore((state) => state.user?.id);
@@ -435,7 +435,7 @@ function MessagesView() {
                   </span>
                   {(conversation.lastMessage?.createdAt ?? conversation.updatedAt) && (
                     <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                      {formatConversationTime(conversation.lastMessage?.createdAt ?? conversation.updatedAt)}
+                      {formatConversationTime(conversation.lastMessage?.createdAt ?? conversation.updatedAt, locale, t)}
                     </span>
                   )}
                 </div>
@@ -443,7 +443,8 @@ function MessagesView() {
                   {conversation.lastMessage
                     ? formatMessagePreview(
                         conversation.lastMessage.content,
-                        conversation.lastMessage.senderId === currentUserId
+                        conversation.lastMessage.senderId === currentUserId,
+                        t('dm.gifLabel')
                       )
                     : <span className="truncate">{t('dm.privateConversation')}</span>}
                 </div>
