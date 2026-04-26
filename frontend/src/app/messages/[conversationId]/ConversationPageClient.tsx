@@ -137,6 +137,7 @@ export default function DirectConversationPage(): React.ReactNode {
           {showProfile && conversation?.user && (
             <DmUserProfilePanel
               userId={conversation.user.id}
+              messages={mappedMessages}
               onClose={() => setShowProfile(false)}
             />
           )}

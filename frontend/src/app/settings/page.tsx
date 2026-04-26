@@ -1,7 +1,7 @@
 // Copied from /dashboard/settings/page.tsx
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@application/auth/useAuth';
 import { ProtectedRoute } from '@presentation/components/auth/ProtectedRoute';
@@ -24,6 +24,14 @@ export default function SettingsPage(): React.ReactNode {
   const [bio, setBio] = useState(user?.bio ?? '');
   const [customStatus, setCustomStatus] = useState(user?.customStatus ?? '');
   const [statusEmoji, setStatusEmoji] = useState(user?.statusEmoji ?? '');
+
+  const hasChanges = useMemo(() =>
+    username !== (user?.username ?? '') ||
+    bio !== (user?.bio ?? '') ||
+    customStatus !== (user?.customStatus ?? '') ||
+    statusEmoji !== (user?.statusEmoji ?? ''),
+    [username, bio, customStatus, statusEmoji, user]
+  );
 
   // UI state
   const [saving, setSaving] = useState(false);
@@ -385,8 +393,12 @@ export default function SettingsPage(): React.ReactNode {
             <div className="flex gap-4 justify-end">
               <button
                 type="submit"
-                disabled={saving}
-                className="px-8 py-3 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl"
+                disabled={saving || !hasChanges}
+                className={`px-8 py-3 font-semibold rounded-lg transition-all ${
+                  hasChanges && !saving
+                    ? 'bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl cursor-pointer'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                }`}
               >
                 {saving ? (
                   <span className="flex items-center gap-2">
