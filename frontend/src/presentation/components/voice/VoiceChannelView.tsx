@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceStore } from '@application/voice/voiceStore';
 import { useVoice } from '@application/voice/useVoice';
 import { useLocale } from '@shared/hooks/useLocale';
+import { VoiceVideoGrid } from './VoiceVideoGrid';
 import type { VoiceUser } from '@domain/voice/types';
 
 const EMPTY_USERS: VoiceUser[] = [];
@@ -129,6 +130,9 @@ export function VoiceChannelView({ channelId, channelName, onJoinVoice }: VoiceC
           )}
         </div>
       </div>
+
+      {/* Grille vidéo — affichée si caméra ou partage d'écran actif */}
+      <VoiceVideoGrid />
 
       {/* Zone principale */}
       <div className="flex-1 flex flex-col items-center justify-center p-8">
