@@ -7,6 +7,8 @@ import { useVoice } from '@application/voice/useVoice';
 import { useLocale } from '@shared/hooks/useLocale';
 import type { VoiceUser } from '@domain/voice/types';
 
+const EMPTY_USERS: VoiceUser[] = [];
+
 interface VoiceChannelViewProps {
   channelId: string;
   channelName: string;
@@ -81,7 +83,7 @@ export function VoiceChannelView({ channelId, channelName, onJoinVoice }: VoiceC
   const { t } = useLocale();
   const { isConnected, connectedChannelId, isConnecting, leaveVoiceChannel } = useVoice();
 
-  const connectedUsers = useVoiceStore((s) => s.connectedUsers.get(channelId) ?? []);
+  const connectedUsers = useVoiceStore((s) => s.connectedUsers.get(channelId) ?? EMPTY_USERS);
 
   const isInThisChannel = isConnected && connectedChannelId === channelId;
   const hasParticipants = connectedUsers.length > 0;

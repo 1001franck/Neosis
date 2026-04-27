@@ -767,6 +767,10 @@ export class VoiceClient {
   cleanup(): void {
     logger.info('🧹 Cleaning up voice client...');
 
+    // Neutraliser le callback avant de stopper les tracks pour éviter que onended
+    // déclenche setScreenSharing(false) pendant un render React (→ erreur #185)
+    this.onScreenShareEnded = null;
+
     // Retirer le listener WebRTC pour éviter les connexions fantômes
     socket.off('voice:webrtc_signal');
 
