@@ -105,6 +105,8 @@ export const fr = {
     friendLabel: 'Ami',
     cancelRequest: 'Annuler la demande',
     removeFriend: "Supprimer l'ami",
+    removeFriendTitle: 'Retirer cet ami ?',
+    removeFriendMessage: "sera retiré de votre liste d'amis.",
     moreOptions: "Plus d'options",
     addFriendTitle: 'Ajouter un ami',
     addFriendDesc: "Entrez le nom d'utilisateur exact de la personne.",

@@ -33,6 +33,7 @@ interface ChatHeaderProps {
   onToggleFriends?: () => void;
   onToggleProfile?: () => void;
   onToggleMute?: () => void;
+  onRemoveFriend?: () => void;
   onSearchClick?: () => void;
 }
 
@@ -51,6 +52,7 @@ export function ChatHeader({
   onToggleMembers,
   onToggleProfile,
   onToggleMute,
+  onRemoveFriend,
   onSearchClick,
 }: ChatHeaderProps): React.ReactElement {
   const { toggleChannelSidebar, isChannelSidebarOpen, isMobile, toggleSidebar, isSidebarOpen } = useResponsiveLayout();
@@ -197,6 +199,19 @@ export function ChatHeader({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3.536-3.536M12 18l3.536-3.536M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             )}
+          </button>
+        )}
+
+        {!isChannel && onRemoveFriend && (
+          <button
+            onClick={onRemoveFriend}
+            className="hidden sm:inline-flex text-muted-foreground hover:text-red-400 transition-colors"
+            aria-label={t('dm.removeFriend')}
+            title={t('dm.removeFriend')}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+            </svg>
           </button>
         )}
 

@@ -50,6 +50,7 @@ interface ChatUIState {
   onToggleFriends?: () => void;
   onToggleProfile?: () => void;
   onToggleMute?: () => void;
+  onRemoveFriend?: () => void;
 }
 
 interface BanInfo {
@@ -146,6 +147,7 @@ export function ChatArea({
           onToggleFriends={ui?.onToggleFriends}
           onToggleProfile={ui?.onToggleProfile}
           onToggleMute={ui?.onToggleMute}
+          onRemoveFriend={ui?.onRemoveFriend}
           onSearchClick={handleSearchClick}
         />
       )}

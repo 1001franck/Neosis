@@ -107,6 +107,8 @@ export const en: Translations = {
     friendLabel: 'Friend',
     cancelRequest: 'Cancel request',
     removeFriend: 'Remove friend',
+    removeFriendTitle: 'Remove this friend?',
+    removeFriendMessage: 'will be removed from your friend list.',
     moreOptions: 'More options',
     addFriendTitle: 'Add a friend',
     addFriendDesc: 'Enter the exact username of the person.',

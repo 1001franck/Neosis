@@ -20,6 +20,7 @@ import type { DirectConversation, DirectMessage } from '@domain/direct/types';
 import { logger } from '@shared/utils/logger';
 import { resolveConversationIdFromRoute, setLastDmConversationId } from '@shared/utils/desktopRoutes';
 import { useMutedConversations } from '@shared/hooks/useMutedConversations';
+import { useFriends } from '@application/direct/useFriends';
 
 function formatTime(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleTimeString(locale, {
@@ -57,7 +58,7 @@ export default function DirectConversationPage(): React.ReactNode {
     () => resolveConversationIdFromRoute(routeConversationId, searchParams),
     [routeConversationId, searchParams]
   );
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const { user } = useAuth();
   const { servers, getServers } = useServers();
   const { messages, isLoading, error, sendMessage } = useDirectMessages(conversationId);
@@ -66,6 +67,24 @@ export default function DirectConversationPage(): React.ReactNode {
   const [showProfile, setShowProfile] = useState(false);
   const toggleProfile = useCallback(() => setShowProfile((prev) => !prev), []);
   const { isMuted, toggle: toggleMute } = useMutedConversations(conversationId);
+  const { friends, remove: removeFriend } = useFriends(true);
+  const [showRemoveFriendModal, setShowRemoveFriendModal] = useState(false);
+  const [removingFriend, setRemovingFriend] = useState(false);
+
+  const friendship = friends.find(f => f.user?.id === conversation?.user?.id);
+
+  const handleRemoveFriend = useCallback(async () => {
+    if (!friendship) return;
+    setRemovingFriend(true);
+    try {
+      await removeFriend(friendship.id);
+      setShowRemoveFriendModal(false);
+    } catch (err) {
+      logger.error('Failed to remove friend', err);
+    } finally {
+      setRemovingFriend(false);
+    }
+  }, [friendship, removeFriend]);
 
   const handleMessageClick = useCallback((messageId: string) => {
     const el = document.querySelector(`[data-message-id="${messageId}"]`);
@@ -126,6 +145,7 @@ export default function DirectConversationPage(): React.ReactNode {
                 onToggleProfile: toggleProfile,
                 isMuted,
                 onToggleMute: toggleMute,
+                onRemoveFriend: friendship ? () => setShowRemoveFriendModal(true) : undefined,
               }}
               callbacks={{
                 onSendMessage: async (content) => {
@@ -147,6 +167,33 @@ export default function DirectConversationPage(): React.ReactNode {
           )}
         </div>
       </MainLayout>
+      {showRemoveFriendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-background rounded-lg shadow-xl w-full max-w-sm mx-4 p-6 flex flex-col gap-4">
+            <h2 className="text-lg font-bold text-foreground">{t('dm.removeFriendTitle')}</h2>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{conversation?.user?.username}</span>{' '}
+              {t('dm.removeFriendMessage')}
+            </p>
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                onClick={() => setShowRemoveFriendModal(false)}
+                disabled={removingFriend}
+                className="px-4 py-2 text-sm rounded-md bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleRemoveFriend}
+                disabled={removingFriend}
+                className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {removingFriend ? t('common.saving') : t('dm.removeFriend')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 }
