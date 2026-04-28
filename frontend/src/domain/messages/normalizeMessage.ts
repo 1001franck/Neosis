@@ -45,6 +45,16 @@ export function normalizeMessage(raw: any): Message {
     deletedBy: raw.deletedBy,
     deletedByUserId: raw.deletedByUserId || raw.deletedForUserId,
     deletedByRole: raw.deletedByRole,
+    replyTo: raw.replyTo
+      ? {
+          id: raw.replyTo.id,
+          content: raw.replyTo.content ?? null,
+          authorId: raw.replyTo.authorId || raw.replyTo.author?.id || '',
+          author: raw.replyTo.author
+            ? { id: raw.replyTo.author.id, username: raw.replyTo.author.username, avatar: raw.replyTo.author.avatar }
+            : null,
+        }
+      : null,
   };
 }
 

@@ -11,7 +11,7 @@ import { socket } from './socket';
 export const socketEmitters = {
   // === MESSAGE EVENTS ===
 
-  sendMessage: (data: { content: string; channelId: string; attachmentIds?: string[]; clientTempId?: string }) => {
+  sendMessage: (data: { content: string; channelId: string; attachmentIds?: string[]; clientTempId?: string; replyToId?: string }) => {
     socket.emit('message:send', data);
   },
 

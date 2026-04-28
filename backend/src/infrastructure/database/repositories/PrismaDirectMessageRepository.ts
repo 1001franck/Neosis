@@ -2,6 +2,17 @@ import { PrismaClient } from '@prisma/client';
 import type { DirectMessageRepository } from '../../../domain/direct/repositories/DirectMessageRepository.js';
 import { DirectMessage } from '../../../domain/direct/entities/DirectMessage.js';
 
+const SENDER_SELECT = { id: true, username: true, avatarUrl: true } as const;
+
+const DM_INCLUDE = {
+  sender: { select: SENDER_SELECT },
+  replyTo: {
+    include: {
+      sender: { select: SENDER_SELECT },
+    },
+  },
+} as const;
+
 export class PrismaDirectMessageRepository implements DirectMessageRepository {
   constructor(private prisma: PrismaClient) {}
 
@@ -22,10 +33,9 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
           createdAt: message.createdAt,
           updatedAt: message.updatedAt,
           deletedAt: message.deletedAt,
+          ...(message.replyToId ? { replyToId: message.replyToId } : {}),
         },
-        include: {
-          sender: { select: { id: true, username: true, avatarUrl: true } },
-        },
+        include: DM_INCLUDE,
       }),
     ]);
     return this.toDomain(created);
@@ -33,30 +43,16 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
 
   async listByConversation(conversationId: string, limit = 50, offset = 0): Promise<DirectMessage[]> {
     const rows = await this.prisma.directMessage.findMany({
-      where: {
-        conversationId,
-        deletedAt: null,
-      },
+      where: { conversationId, deletedAt: null },
       orderBy: { createdAt: 'asc' },
       take: limit,
       skip: offset,
-      include: {
-        sender: { select: { id: true, username: true, avatarUrl: true } },
-      },
+      include: DM_INCLUDE,
     });
     return rows.map(r => this.toDomain(r));
   }
 
-  private toDomain(raw: {
-    id: string;
-    conversationId: string;
-    senderId: string;
-    content: string;
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt: Date | null;
-    sender?: { id: string; username: string; avatarUrl: string | null } | null;
-  }): DirectMessage {
+  private toDomain(raw: any): DirectMessage {
     const msg = new DirectMessage(
       raw.id,
       raw.conversationId,
@@ -64,10 +60,19 @@ export class PrismaDirectMessageRepository implements DirectMessageRepository {
       raw.content,
       raw.createdAt,
       raw.updatedAt,
-      raw.deletedAt
+      raw.deletedAt,
+      raw.replyToId ?? null
     );
     if (raw.sender) {
       msg.sender = { id: raw.sender.id, username: raw.sender.username, avatarUrl: raw.sender.avatarUrl };
+    }
+    if (raw.replyTo) {
+      msg.replyTo = {
+        id: raw.replyTo.id,
+        content: raw.replyTo.content,
+        senderId: raw.replyTo.senderId,
+        sender: raw.replyTo.sender ?? null,
+      };
     }
     return msg;
   }

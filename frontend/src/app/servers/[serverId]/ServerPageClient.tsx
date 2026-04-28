@@ -308,7 +308,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     logger.debug('Channel switched', { channelId });
   }, []);
 
-  const handleSendMessage = useCallback((content: string, attachmentIds?: string[]): void => {
+  const handleSendMessage = useCallback((content: string, attachmentIds?: string[], replyToId?: string): void => {
     if (!activeChannelId || !user?.id) return;
     const clientTempId = `temp-${crypto.randomUUID()}`;
     const nowIso = new Date().toISOString();
@@ -331,7 +331,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       },
     });
 
-    socketEmitters.sendMessage({ content, channelId: activeChannelId, attachmentIds, clientTempId });
+    socketEmitters.sendMessage({ content, channelId: activeChannelId, attachmentIds, clientTempId, ...(replyToId ? { replyToId } : {}) });
     logger.debug('Message sent via socket', { channelId: activeChannelId, attachmentIds, clientTempId });
   }, [activeChannelId, user?.id, user?.username, user?.avatar, addOptimisticMessage]);
 
@@ -623,6 +623,7 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
     deletedByRole: (msg as { deletedByRole?: PresentationMessage['deletedByRole'] }).deletedByRole,
     attachments: msg.attachments,
     reactions: msg.reactions ?? [],
+    replyTo: msg.replyTo ?? null,
   }));
 
   // === LOADING STATE ===

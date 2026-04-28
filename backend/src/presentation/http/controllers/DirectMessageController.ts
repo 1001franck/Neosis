@@ -14,15 +14,17 @@ export class DirectMessageController {
   sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const conversationId = req.params.id as string;
-      const { content } = req.body;
+      const { content, replyToId } = req.body;
       const userId = req.userId!;
-      const message = await this.sendDirectMessageUseCase.execute(userId, conversationId, content);
+      const message = await this.sendDirectMessageUseCase.execute(userId, conversationId, content, replyToId);
 
       const payload = {
         id: message.id,
         conversationId: message.conversationId,
         senderId: message.senderId,
         content: message.content,
+        replyToId: message.replyToId ?? null,
+        replyTo: message.replyTo ?? null,
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
         sender: message.sender ?? null,
@@ -35,6 +37,18 @@ export class DirectMessageController {
           ? conversation.userTwoId
           : conversation.userOneId;
         this.io.to(`user:${recipientId}`).emit('direct:message:new', payload);
+
+        // Notifier l'auteur du message cité s'il est différent de l'expéditeur et du destinataire
+        if (message.replyTo?.sender?.id && message.replyTo.sender.id !== userId && message.replyTo.sender.id !== recipientId) {
+          this.io.to(`user:${message.replyTo.sender.id}`).emit('reply:notification', {
+            type: 'dm_reply',
+            conversationId,
+            messageId: message.id,
+            repliedToId: replyToId,
+            senderUsername: message.sender?.username ?? userId,
+            preview: message.content.slice(0, 80),
+          });
+        }
       }
 
       res.status(201).json({ success: true, data: payload });
@@ -55,6 +69,8 @@ export class DirectMessageController {
         conversationId: message.conversationId,
         senderId: message.senderId,
         content: message.content,
+        replyToId: message.replyToId ?? null,
+        replyTo: message.replyTo ?? null,
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
         sender: message.sender ?? null,

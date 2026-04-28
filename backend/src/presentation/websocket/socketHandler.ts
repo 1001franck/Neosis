@@ -225,9 +225,9 @@ export class SocketHandler {
    * Gere l'evenement d'envoi de message
    */
   private handleSendMessage(socket: Socket): void {
-    socket.on('message:send', async (data: { content: string; channelId: string; attachmentIds?: string[]; clientTempId?: string }) => {
+    socket.on('message:send', async (data: { content: string; channelId: string; attachmentIds?: string[]; clientTempId?: string; replyToId?: string }) => {
       try {
-        const { userId } = socket.data as SocketData;
+        const { userId, username } = socket.data as SocketData;
 
         // Creer le message via le use case (verifie les permissions en interne)
         const message = await this.createMessageUseCase.execute({
@@ -235,6 +235,7 @@ export class SocketHandler {
           userId,
           channelId: data.channelId,
           ...(data.attachmentIds ? { attachmentIds: data.attachmentIds } : {}),
+          ...(data.replyToId ? { replyToId: data.replyToId } : {}),
         });
 
         // Emettre le message a tous les utilisateurs du channel
@@ -243,6 +244,18 @@ export class SocketHandler {
           ...payload,
           clientTempId: data.clientTempId ?? null,
         });
+
+        // Notifier l'auteur du message cité (s'il est différent de l'expéditeur)
+        if (message.replyTo?.author?.id && message.replyTo.author.id !== userId) {
+          this.io.to(`user:${message.replyTo.author.id}`).emit('reply:notification', {
+            type: 'reply',
+            channelId: data.channelId,
+            messageId: message.id,
+            repliedToId: data.replyToId,
+            senderUsername: username,
+            preview: (message.content ?? '').slice(0, 80),
+          });
+        }
 
         this.logger.info(`Message sent in channel ${data.channelId}`);
       } catch (error) {

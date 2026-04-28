@@ -27,13 +27,21 @@ interface BanInfo {
   reason?: string | null;
 }
 
+interface ReplyToPreview {
+  id: string;
+  authorUsername: string;
+  content: string | null;
+}
+
 interface ChatInputProps {
   recipientName?: string;
   channelId?: string;
-  onSendMessage?: (content: string, attachments?: Attachment[]) => void;
+  onSendMessage?: (content: string, attachments?: Attachment[], replyToId?: string) => void;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
   banInfo?: BanInfo;
+  replyTo?: ReplyToPreview | null;
+  onCancelReply?: () => void;
 }
 
 const MAX_FILES = 5;
@@ -46,6 +54,8 @@ const ChatInputComponent = ({
   onTypingStart,
   onTypingStop,
   banInfo,
+  replyTo,
+  onCancelReply,
 }: ChatInputProps): React.ReactElement => {
   const [messageInput, setMessageInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -123,11 +133,12 @@ const ChatInputComponent = ({
     // Envoyer le message (avec contenu textuel ou juste des pièces jointes)
     const content = messageInput.trim();
     if (content || uploadedAttachments) {
-      onSendMessage(content, uploadedAttachments);
+      onSendMessage(content, uploadedAttachments, replyTo?.id);
     }
 
     setMessageInput('');
     setSelectedFiles([]);
+    onCancelReply?.();
     if (onTypingStop) onTypingStop();
     setTimeout(() => inputRef.current?.focus(), 0);
   };
@@ -187,6 +198,28 @@ const ChatInputComponent = ({
 
   return (
     <div className="px-3 sm:px-4 pb-4 sm:pb-6">
+      {/* Barre de réponse */}
+      {replyTo && (
+        <div className="flex items-center justify-between gap-2 mb-1 px-3 py-1.5 rounded-t-lg bg-muted/60 border border-b-0 border-border text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <svg className="w-4 h-4 text-primary/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            <span className="font-semibold text-primary/80 flex-shrink-0">{replyTo.authorUsername}</span>
+            <span className="text-muted-foreground truncate">{replyTo.content ?? '📎 Pièce jointe'}</span>
+          </div>
+          <button
+            onClick={onCancelReply}
+            className="flex-shrink-0 p-0.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Annuler la réponse"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Preview des fichiers sélectionnés */}
       {selectedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 sm:gap-3 mb-2 p-2 sm:p-3 bg-muted/50 rounded-lg border border-border">

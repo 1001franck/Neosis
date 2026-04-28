@@ -43,10 +43,10 @@ export function useDirectMessages(conversationId?: string) {
   }, [conversationId]);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, replyToId?: string) => {
       if (!conversationId) return;
       try {
-        const sent = await directApi.sendMessage(conversationId, content);
+        const sent = await directApi.sendMessage(conversationId, content, replyToId);
         setInitialMessages((prev) => [...prev, sent]);
         useDirectMessageStore.getState().setConversationTimestamp(conversationId, sent.createdAt);
         useDirectMessageStore.getState().setLastMessage(conversationId, {

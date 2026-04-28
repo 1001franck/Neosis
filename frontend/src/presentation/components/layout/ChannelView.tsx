@@ -61,7 +61,7 @@ interface ChannelViewCallbacks {
   onChannelClick?: (channelId: string) => void;
   onServerClick?: (serverId: string) => void;
   onServerMenuClick?: () => void;
-  onSendMessage?: (content: string, attachmentIds?: string[]) => void;
+  onSendMessage?: (content: string, attachmentIds?: string[], replyToId?: string) => void;
   onMemberClick?: (memberId: string) => void;
   onLeaveServer?: () => void;
   onAddChannel?: (categoryId: string) => void;

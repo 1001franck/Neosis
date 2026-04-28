@@ -15,11 +15,20 @@ export interface DirectConversation {
   } | null;
 }
 
+export interface DirectMessageReplyTo {
+  id: string;
+  content: string;
+  senderId: string;
+  sender?: DirectUser | null;
+}
+
 export interface DirectMessage {
   id: string;
   conversationId: string;
   senderId: string;
   content: string;
+  replyToId?: string | null;
+  replyTo?: DirectMessageReplyTo | null;
   createdAt: string;
   updatedAt: string;
   sender: DirectUser | null;

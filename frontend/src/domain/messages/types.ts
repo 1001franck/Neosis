@@ -16,6 +16,13 @@ export enum MessageStatus {
   DELETED = 'deleted',
 }
 
+export interface MessageReplyTo {
+  id: string;
+  content: string | null;
+  authorId: string;
+  author?: { id: string; username: string; avatar?: string | null } | null;
+}
+
 export interface Message {
   id: string;
   /** Client-only temp id for optimistic messages */
@@ -40,6 +47,8 @@ export interface Message {
   deletedByUserId?: string;
   /** Rôle de celui qui a supprimé (OWNER / ADMIN / MEMBER) */
   deletedByRole?: 'OWNER' | 'ADMIN' | 'MEMBER';
+  /** Message auquel celui-ci répond */
+  replyTo?: MessageReplyTo | null;
 }
 
 export interface Attachment {

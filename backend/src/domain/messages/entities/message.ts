@@ -8,6 +8,16 @@ export interface MessageAuthor {
 }
 
 /**
+ * Snapshot du message auquel on répond
+ */
+export interface MessageReplyTo {
+  id: string;
+  content: string | null;
+  authorId: string;
+  author?: MessageAuthor | null;
+}
+
+/**
  * Réaction agrégée sur un message
  */
 export interface MessageReactionData {
@@ -44,6 +54,9 @@ export class Message {
   /** Message supprimé uniquement pour un user (Delete for me) */
   public deletedForUserId?: string | null;
 
+  /** Message auquel celui-ci répond (peuplé par le repository) */
+  public replyTo?: MessageReplyTo | null;
+
   constructor(
     public readonly id: string,
     public content: string | null,
@@ -53,7 +66,8 @@ export class Message {
     public updatedAt: Date,
     public deletedAt: Date | null = null,
     public deliveredAt: Date | null = null,
-    private readonly hasAttachments: boolean = false
+    private readonly hasAttachments: boolean = false,
+    public readonly replyToId: string | null = null
   ) {
     this.validateContent(content);
   }
@@ -130,6 +144,8 @@ export class Message {
       // authorId = user.id, avec fallback sur memberId si l'auteur n'est pas peuplé
       authorId: this.author?.id ?? this.memberId,
       channelId: this.channelId,
+      replyToId: this.replyToId ?? null,
+      replyTo: this.replyTo ?? null,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       deletedAt: this.deletedAt,

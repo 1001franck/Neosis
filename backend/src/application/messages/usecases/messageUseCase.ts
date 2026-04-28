@@ -16,6 +16,7 @@ export interface CreateMessageDTO {
   userId: string;
   channelId: string;
   attachmentIds?: string[];
+  replyToId?: string;
 }
 
 export class CreateMessageUseCase extends BaseUseCase<CreateMessageDTO, Message> {
@@ -74,7 +75,8 @@ export class CreateMessageUseCase extends BaseUseCase<CreateMessageDTO, Message>
       new Date(),
       null, // deletedAt
       null, // deliveredAt
-      hasAttachments
+      hasAttachments,
+      data.replyToId ?? null
     );
 
     const created = await this.messageRepository.create(message);

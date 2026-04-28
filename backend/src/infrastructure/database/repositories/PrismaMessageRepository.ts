@@ -2,6 +2,28 @@ import { PrismaClient } from '@prisma/client';
 import type { MessageRepository } from '../../../domain/messages/repositories/MessageRepository.js';
 import { Message } from '../../../domain/messages/entities/message.js';
 
+/** Include Prisma réutilisable pour charger l'auteur + replyTo */
+const MESSAGE_INCLUDE = {
+  member: {
+    include: {
+      user: {
+        select: { id: true, username: true, avatarUrl: true },
+      },
+    },
+  },
+  attachments: true,
+  reactions: { select: { emoji: true, userId: true } },
+  replyTo: {
+    include: {
+      member: {
+        include: {
+          user: { select: { id: true, username: true, avatarUrl: true } },
+        },
+      },
+    },
+  },
+} as const;
+
 /**
  * Implémentation Prisma du repository Message
  */
@@ -18,22 +40,9 @@ export class PrismaMessageRepository implements MessageRepository {
         content: message.content,
         memberId: message.memberId,
         channelId: message.channelId,
+        ...(message.replyToId ? { replyToId: message.replyToId } : {}),
       },
-      include: {
-        member: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        attachments: true,
-        reactions: { select: { emoji: true, userId: true } },
-      },
+      include: MESSAGE_INCLUDE,
     });
 
     return this.toDomain(created);
@@ -45,21 +54,7 @@ export class PrismaMessageRepository implements MessageRepository {
   async findById(id: string): Promise<Message | null> {
     const message = await this.prisma.message.findUnique({
       where: { id },
-      include: {
-        member: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        attachments: true,
-        reactions: { select: { emoji: true, userId: true } },
-      },
+      include: MESSAGE_INCLUDE,
     });
 
     return message ? this.toDomain(message) : null;
@@ -83,19 +78,7 @@ export class PrismaMessageRepository implements MessageRepository {
       orderBy: { createdAt: 'desc' },
       take: limit,
       include: {
-        member: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        attachments: true,
-        reactions: { select: { emoji: true, userId: true } },
+        ...MESSAGE_INCLUDE,
         deletions: userId ? { where: { userId }, select: { userId: true } } : false,
       },
     });
@@ -136,19 +119,7 @@ export class PrismaMessageRepository implements MessageRepository {
       orderBy: { createdAt: 'desc' },
       take: limit,
       include: {
-        member: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        attachments: true,
-        reactions: { select: { emoji: true, userId: true } },
+        ...MESSAGE_INCLUDE,
         deletions: userId ? { where: { userId }, select: { userId: true } } : false,
       },
     });
@@ -162,25 +133,8 @@ export class PrismaMessageRepository implements MessageRepository {
   async update(id: string, content: string): Promise<Message> {
     const updated = await this.prisma.message.update({
       where: { id },
-      data: {
-        content,
-        updatedAt: new Date(),
-      },
-      include: {
-        member: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        attachments: true,
-        reactions: { select: { emoji: true, userId: true } },
-      },
+      data: { content, updatedAt: new Date() },
+      include: MESSAGE_INCLUDE,
     });
 
     return this.toDomain(updated);
@@ -230,19 +184,7 @@ export class PrismaMessageRepository implements MessageRepository {
       orderBy: { createdAt: 'desc' },
       take: limit,
       include: {
-        member: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        attachments: true,
-        reactions: { select: { emoji: true, userId: true } },
+        ...MESSAGE_INCLUDE,
         deletions: userId ? { where: { userId }, select: { userId: true } } : false,
       },
     });
@@ -273,21 +215,7 @@ export class PrismaMessageRepository implements MessageRepository {
     // Re-fetch le message avec les attachments liés
     const updated = await this.prisma.message.findUniqueOrThrow({
       where: { id: messageId },
-      include: {
-        member: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        attachments: true,
-        reactions: { select: { emoji: true, userId: true } },
-      },
+      include: MESSAGE_INCLUDE,
     });
 
     return this.toDomain(updated);
@@ -325,7 +253,8 @@ export class PrismaMessageRepository implements MessageRepository {
       prismaMessage.updatedAt,
       prismaMessage.deletedAt,
       prismaMessage.deliveredAt,
-      hasAttachments
+      hasAttachments,
+      prismaMessage.replyToId ?? null
     );
 
     // Attacher les informations auteur (user) au message
@@ -364,6 +293,19 @@ export class PrismaMessageRepository implements MessageRepository {
         count: userIds.length,
         userIds,
       }));
+    }
+
+    // Peupler le message auquel on répond
+    if (prismaMessage.replyTo) {
+      const rt = prismaMessage.replyTo;
+      message.replyTo = {
+        id: rt.id,
+        content: rt.content,
+        authorId: rt.member?.user?.id ?? rt.memberId,
+        author: rt.member?.user
+          ? { id: rt.member.user.id, username: rt.member.user.username, avatar: rt.member.user.avatarUrl }
+          : null,
+      };
     }
 
     return message;

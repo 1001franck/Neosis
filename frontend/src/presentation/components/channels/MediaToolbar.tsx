@@ -65,7 +65,7 @@ const MediaToolbarComponent = ({
         ) : (
           <>
             <span className="text-xs text-muted-foreground">
-              {selectedCount} sÃ©lectionnÃ©(s)
+              {selectedCount} selectionnées(s)
             </span>
             <button
               onClick={onSelectAll}

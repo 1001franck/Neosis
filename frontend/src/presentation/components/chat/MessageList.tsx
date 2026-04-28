@@ -42,6 +42,12 @@ export interface Message {
   deletedByUserId?: string;
   deletedByRole?: 'OWNER' | 'ADMIN' | 'MEMBER';
   isRead?: boolean;
+  replyTo?: {
+    id: string;
+    content: string | null;
+    authorId: string;
+    author?: { id: string; username: string; avatar?: string | null } | null;
+  } | null;
 }
 
 function renderStatusIcon(status?: Message['status']): React.ReactNode {
@@ -104,6 +110,7 @@ interface MessageListProps {
   onRemoveReaction?: (messageId: string, emoji: string) => void;
   onEditMessage?: (messageId: string, content: string) => void;
   onDeleteMessage?: (messageId: string, scope?: 'me' | 'everyone') => void;
+  onReply?: (message: Message) => void;
 }
 
 export function MessageList({
@@ -117,6 +124,7 @@ export function MessageList({
   onRemoveReaction,
   onEditMessage,
   onDeleteMessage,
+  onReply,
 }: MessageListProps): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { locale, t } = useLocale();
@@ -302,6 +310,7 @@ export function MessageList({
                       canModerate={canModerate}
                       positionClassName={message.isCurrentUser ? 'top-1 left-2' : '-top-4 right-2'}
                       onReact={() => onAddReaction?.(message.id, '👍')}
+                      onReply={() => onReply?.(message)}
                       onEdit={() => handleStartEdit(message.id, message.content)}
                       onDelete={() => setDeletingMessage({ id: message.id, isOwn: !!message.isCurrentUser })}
                     />
@@ -333,6 +342,28 @@ export function MessageList({
 
                   {/* Message Content */}
                   <div className={`min-w-0 ${message.isCurrentUser ? 'max-w-[85%] sm:max-w-[72%]' : 'flex-1'}`}>
+                    {/* Bulle de citation */}
+                    {message.replyTo && (
+                      <button
+                        onClick={() => {
+                          const el = document.querySelector(`[data-message-id="${message.replyTo!.id}"]`);
+                          if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('bg-primary/10'); setTimeout(() => el.classList.remove('bg-primary/10'), 1500); }
+                        }}
+                        className={`flex items-start gap-2 mb-1 px-2 py-1 rounded-md text-left w-full border-l-2 border-primary/50 bg-secondary/40 hover:bg-secondary/60 transition-colors ${message.isCurrentUser ? 'ml-auto' : ''}`}
+                      >
+                        <svg className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                        <div className="min-w-0">
+                          <span className="text-[11px] font-semibold text-primary/80 block">
+                            {message.replyTo.author?.username ?? 'Utilisateur'}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground truncate block max-w-[260px]">
+                            {message.replyTo.content ?? '📎 Pièce jointe'}
+                          </span>
+                        </div>
+                      </button>
+                    )}
                     <div className={shouldUseOwnBubble ? 'rounded-xl rounded-br-md bg-primary text-primary-foreground px-3 py-2 shadow-sm' : ''}>
                       {!isGrouped && (
                         <div className={`flex items-baseline gap-2 mb-0.5 ${message.isCurrentUser ? 'justify-end' : ''}`}>
@@ -438,6 +469,7 @@ export function MessageList({
                       canModerate={canModerate}
                       positionClassName={message.isCurrentUser ? 'top-1 right-12' : 'top-1 right-2'}
                       onReact={() => onAddReaction?.(message.id, '👍')}
+                      onReply={() => onReply?.(message)}
                       onEdit={() => handleStartEdit(message.id, message.content)}
                       onDelete={() => setDeletingMessage({ id: message.id, isOwn: !!message.isCurrentUser })}
                     />
@@ -468,6 +500,29 @@ export function MessageList({
                   )}
 
                   {/* Message Card */}
+                  <div className="flex flex-col">
+                  {/* Bulle de citation DM */}
+                  {message.replyTo && (
+                    <button
+                      onClick={() => {
+                        const el = document.querySelector(`[data-message-id="${message.replyTo!.id}"]`);
+                        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('bg-primary/10'); setTimeout(() => el.classList.remove('bg-primary/10'), 1500); }
+                      }}
+                      className={`flex items-start gap-2 mb-1 px-2 py-1 rounded-md text-left border-l-2 border-primary/50 bg-secondary/40 hover:bg-secondary/60 transition-colors`}
+                    >
+                      <svg className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-semibold text-primary/80 block">
+                          {message.replyTo.author?.username ?? 'Utilisateur'}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground truncate block max-w-[200px]">
+                          {message.replyTo.content ?? '📎 Pièce jointe'}
+                        </span>
+                      </div>
+                    </button>
+                  )}
                   <div
                     className={`max-w-[85%] sm:max-w-[70%] rounded-xl px-3 sm:px-4 py-2 shadow-sm ${message.isCurrentUser
                         ? (hasMediaOnlyContent && editingMessageId !== message.id
@@ -526,6 +581,7 @@ export function MessageList({
                         />
                       </div>
                     )}
+                  </div>
                   </div>
 
                   {/* Avatar droite pour messages utilisateur */}

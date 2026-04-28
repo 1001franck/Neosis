@@ -344,6 +344,17 @@ export function setupListeners() {
     }
   });
 
+  // === REPLY NOTIFICATIONS ===
+
+  socket.on('reply:notification', (data: { type: string; channelId?: string; conversationId?: string; senderUsername: string; preview: string }) => {
+    logger.info('Reply notification received', data);
+    const t = useLocale.getState().t;
+    void sendDesktopNotification(
+      `${data.senderUsername} ${t('notifications.mentionedYou')}`,
+      data.preview
+    );
+  });
+
   // === VOICE EVENTS ===
 
   /**
@@ -458,6 +469,7 @@ export function cleanupListeners() {
   socket.off('user:server_banned');
   socket.off('user:role_updated');
   socket.off('direct:message:new');
+  socket.off('reply:notification');
   socket.off('voice:user_joined');
   socket.off('voice:user_left');
   socket.off('voice:user_state_changed');

@@ -4,12 +4,20 @@ export interface DirectMessageSender {
   avatarUrl: string | null;
 }
 
+export interface DirectMessageReplyTo {
+  id: string;
+  content: string;
+  senderId: string;
+  sender?: DirectMessageSender | null;
+}
+
 /**
  * Entité métier DirectMessage
  * Message privé entre deux utilisateurs.
  */
 export class DirectMessage {
   public sender?: DirectMessageSender;
+  public replyTo?: DirectMessageReplyTo | null;
 
   constructor(
     public readonly id: string,
@@ -18,7 +26,8 @@ export class DirectMessage {
     public content: string,
     public readonly createdAt: Date,
     public updatedAt: Date,
-    public deletedAt: Date | null = null
+    public deletedAt: Date | null = null,
+    public readonly replyToId: string | null = null
   ) {
     this.validateContent(content);
   }

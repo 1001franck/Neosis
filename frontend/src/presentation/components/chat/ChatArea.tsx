@@ -12,6 +12,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import type { Message as ListMessage } from './MessageList';
 import { ChatHeader } from './ChatHeader';
 import { MessageList, type Message } from './MessageList';
 import { ChatInput } from './ChatInput';
@@ -29,7 +30,7 @@ interface ChatRecipient {
 }
 
 interface ChatCallbacks {
-  onSendMessage?: (content: string, attachmentIds?: string[]) => void;
+  onSendMessage?: (content: string, attachmentIds?: string[], replyToId?: string) => void;
   onAddReaction?: (messageId: string, emoji: string) => void;
   onRemoveReaction?: (messageId: string, emoji: string) => void;
   onEditMessage?: (messageId: string, content: string) => void;
@@ -103,6 +104,7 @@ export function ChatArea({
 }: ChatAreaProps): React.ReactNode {
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [internalSearchOpen, setInternalSearchOpen] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ListMessage | null>(null);
 
   const handleSearchClick = useCallback(() => {
     if (onSearchOpen) {
@@ -179,6 +181,7 @@ export function ChatArea({
         onRemoveReaction={callbacks?.onRemoveReaction}
         onEditMessage={callbacks?.onEditMessage}
         onDeleteMessage={callbacks?.onDeleteMessage}
+        onReply={(msg) => setReplyingTo(msg)}
       />
 
       {/* Typing Indicator */}
@@ -190,13 +193,19 @@ export function ChatArea({
       <ChatInput
         recipientName={recipient?.name}
         channelId={channelId}
-        onSendMessage={(content, attachments) => {
+        onSendMessage={(content, attachments, replyToId) => {
           const ids = attachments?.map(a => a.id);
-          callbacks?.onSendMessage?.(content, ids);
+          callbacks?.onSendMessage?.(content, ids, replyToId);
         }}
         onTypingStart={callbacks?.onTypingStart}
         onTypingStop={callbacks?.onTypingStop}
         banInfo={banInfo}
+        replyTo={replyingTo ? {
+          id: replyingTo.id,
+          authorUsername: replyingTo.username,
+          content: replyingTo.content,
+        } : null}
+        onCancelReply={() => setReplyingTo(null)}
       />
     </div>
   );

@@ -18,8 +18,8 @@ export const directApi = {
     const response = await apiClient.get<DirectMessage[]>(`/dm/conversations/${conversationId}/messages`);
     return response.data;
   },
-  sendMessage: async (conversationId: string, content: string): Promise<DirectMessage> => {
-    const response = await apiClient.post<DirectMessage>(`/dm/conversations/${conversationId}/messages`, { content });
+  sendMessage: async (conversationId: string, content: string, replyToId?: string): Promise<DirectMessage> => {
+    const response = await apiClient.post<DirectMessage>(`/dm/conversations/${conversationId}/messages`, { content, ...(replyToId ? { replyToId } : {}) });
     return response.data;
   },
 };

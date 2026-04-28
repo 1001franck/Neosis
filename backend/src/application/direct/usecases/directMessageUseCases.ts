@@ -10,7 +10,7 @@ export class SendDirectMessageUseCase {
     private conversationRepository: DirectConversationRepository
   ) {}
 
-  async execute(userId: string, conversationId: string, content: string): Promise<DirectMessage> {
+  async execute(userId: string, conversationId: string, content: string, replyToId?: string): Promise<DirectMessage> {
     const conversation = await this.conversationRepository.findById(conversationId);
     if (!conversation) {
       throw new AppError(ErrorCode.NOT_FOUND, 'Conversation introuvable', 404);
@@ -26,7 +26,9 @@ export class SendDirectMessageUseCase {
       userId,
       content,
       now,
-      now
+      now,
+      null,
+      replyToId ?? null
     );
     return this.messageRepository.create(message);
   }

@@ -105,21 +105,25 @@ model Channel {
 model Message {
   id        String   @id @default(uuid())
   content   String?  @db.Text
-  
+
   memberId  String
   member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  
+
   channelId String
   channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  
+
+  replyToId String?
+  replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   Message[] @relation("MessageReplies")
+
   attachments Attachment[]
   deletions  MessageDeletion[]
   reactions  MessageReaction[]
-  
+
   // Statuts globaux (Niveau 3)
-  deliveredAt DateTime? 
+  deliveredAt DateTime?
   // readAt est géré par user via UserChannelRead
-  
+
   deletedAt DateTime? // Pour le Soft Delete
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -257,9 +261,14 @@ model DirectMessage {
   conversationId String
   senderId       String
   content        String   @db.Text
-  deletedAt      DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+
+  replyToId String?
+  replyTo   DirectMessage?  @relation("DirectMessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   DirectMessage[] @relation("DirectMessageReplies")
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   conversation DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User @relation("DirectMessageSender", fields: [senderId], references: [id], onDelete: Cascade)

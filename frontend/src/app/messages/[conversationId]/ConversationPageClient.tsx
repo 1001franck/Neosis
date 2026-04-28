@@ -44,6 +44,16 @@ function mapDirectMessage(message: DirectMessage, currentUserId?: string, locale
     updatedAt: new Date(message.updatedAt),
     isCurrentUser,
     status: isCurrentUser ? 'sent' : undefined,
+    replyTo: message.replyTo
+      ? {
+          id: message.replyTo.id,
+          content: message.replyTo.content,
+          authorId: message.replyTo.senderId,
+          author: message.replyTo.sender
+            ? { id: message.replyTo.sender.id, username: message.replyTo.sender.username, avatar: message.replyTo.sender.avatarUrl ?? undefined }
+            : null,
+        }
+      : null,
   };
 }
 
@@ -148,9 +158,9 @@ export default function DirectConversationPage(): React.ReactNode {
                 onRemoveFriend: friendship ? () => setShowRemoveFriendModal(true) : undefined,
               }}
               callbacks={{
-                onSendMessage: async (content) => {
+                onSendMessage: async (content, _attachmentIds, replyToId) => {
                   if (!conversationId) return;
-                  await sendMessage(content);
+                  await sendMessage(content, replyToId);
                 },
                 onTypingStart: () => {},
                 onTypingStop: () => {},
