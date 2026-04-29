@@ -26,6 +26,7 @@ import { logger } from '@shared/utils/logger';
 import type { Message as PresentationMessage } from '@presentation/components/chat/MessageList';
 import { MemberRole } from '@domain/members/types';
 import { ChannelType } from '@domain/channels/types';
+import { socket } from '@infrastructure/websocket/socket';
 import { socketEmitters } from '@infrastructure/websocket/emitters';
 import { uploadApi } from '@infrastructure/api/upload.api';
 import { serversApi } from '@infrastructure/api/servers.api';
@@ -71,23 +72,31 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
   }, [loadMessages]);
 
   // === SOCKET ROOM MANAGEMENT ===
-  // Rejoindre la room du serveur à l'entrée, et la quitter à la sortie
+  // Rejoindre la room du serveur à l'entrée, et la quitter à la sortie.
+  // Le listener 'connect' gère le cas où la socket se connecte après le montage
+  // (délai auth) ou se reconnecte après une coupure réseau (les rooms sont perdues).
   useEffect(() => {
-    if (serverId) {
+    if (!serverId) return;
+
+    const joinServerRoom = () => {
       socketEmitters.joinServer(serverId);
       logger.debug('Joined server room', { serverId });
-    }
+    };
+
+    joinServerRoom();
+    socket.on('connect', joinServerRoom);
+
     return () => {
-      if (serverId) {
-        socketEmitters.leaveServer(serverId);
-        logger.debug('Left server room', { serverId });
-      }
+      socket.off('connect', joinServerRoom);
+      socketEmitters.leaveServer(serverId);
+      logger.debug('Left server room', { serverId });
     };
   }, [serverId]);
 
-  // Rejoindre la room du channel actif, et quitter l'ancienne room
+  // Rejoindre la room du channel actif, et quitter l'ancienne room.
+  // Le listener 'connect' gère la reconnexion socket (rooms perdues).
   useEffect(() => {
-    const  prevChannelId = prevChannelIdRef.current;
+    const prevChannelId = prevChannelIdRef.current;
 
     if (prevChannelId && prevChannelId !== activeChannelId) {
       socketEmitters.leaveChannel(prevChannelId);
@@ -95,20 +104,23 @@ export default function ServerPage({ params }: ServerPageProps): React.ReactNode
       if (user?.id) removeChannelUser(prevChannelId, user.id);
     }
 
-    if (activeChannelId) {
+    prevChannelIdRef.current = activeChannelId;
+
+    if (!activeChannelId) return;
+
+    const joinChannelRoom = () => {
       socketEmitters.joinChannel(activeChannelId);
       logger.debug('Joined channel room', { channelId: activeChannelId });
       if (user?.id) addChannelUser(activeChannelId, user.id);
-    }
+    };
 
-    prevChannelIdRef.current = activeChannelId;
-                                                                                                                                                                                                                           
+    joinChannelRoom();
+    socket.on('connect', joinChannelRoom);
+
     return () => {
-      // Nettoyage au cas où le composant serait démonté avant que le channelId ne soit mis à jour
-      if (activeChannelId) {
-        socketEmitters.leaveChannel(activeChannelId);
-        if (user?.id) removeChannelUser(activeChannelId, user.id);
-      }
+      socket.off('connect', joinChannelRoom);
+      socketEmitters.leaveChannel(activeChannelId);
+      if (user?.id) removeChannelUser(activeChannelId, user.id);
     };
   }, [activeChannelId, user?.id, addChannelUser, removeChannelUser]);
 
