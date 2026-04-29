@@ -456,25 +456,10 @@ export function MessageList({
               ) : (
                 // STYLE DM - Bulles WhatsApp alignées gauche/droite
                 <div
-                  className={`group relative flex gap-2 sm:gap-3 mb-2 ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                  className={`group flex gap-2 sm:gap-3 mb-2 ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
                   onMouseEnter={() => onHoverMessage(message.id)}
                   onMouseLeave={() => onHoverMessage(null)}
                 >
-                  {/* Message Actions */}
-                  {hoveredMessageId === message.id && editingMessageId !== message.id && (
-                    <MessageActions
-                      isOwnMessage={message.isCurrentUser}
-                      canReact={!message.isCurrentUser}
-                      canEdit={!!message.createdAt && (Date.now() - new Date(message.createdAt).getTime()) < 25 * 60 * 1000}
-                      canModerate={canModerate}
-                      positionClassName={message.isCurrentUser ? 'top-1 right-12' : 'top-1 right-2'}
-                      onReact={() => onAddReaction?.(message.id, '👍')}
-                      onReply={() => onReply?.(message)}
-                      onEdit={() => handleStartEdit(message.id, message.content)}
-                      onDelete={() => setDeletingMessage({ id: message.id, isOwn: !!message.isCurrentUser })}
-                    />
-                  )}
-
                   {/* Avatar gauche pour les autres */}
                   {!message.isCurrentUser && !isGrouped && (
                     <div className="flex-shrink-0">
@@ -499,8 +484,22 @@ export function MessageList({
                     <div className="flex-shrink-0 w-8" />
                   )}
 
-                  {/* Message Card */}
-                  <div className="flex flex-col">
+                  {/* Message Card — relative pour positionner les actions par rapport au bubble */}
+                  <div className="relative flex flex-col max-w-[85%] sm:max-w-[70%]">
+                  {/* Actions au hover — positionnées par rapport au wrapper du bubble */}
+                  {hoveredMessageId === message.id && editingMessageId !== message.id && (
+                    <MessageActions
+                      isOwnMessage={message.isCurrentUser}
+                      canReact={!message.isCurrentUser}
+                      canEdit={!!message.createdAt && (Date.now() - new Date(message.createdAt).getTime()) < 25 * 60 * 1000}
+                      canModerate={canModerate}
+                      positionClassName={message.isCurrentUser ? '-top-9 right-0 z-10' : '-top-9 left-0 z-10'}
+                      onReact={() => onAddReaction?.(message.id, '👍')}
+                      onReply={() => onReply?.(message)}
+                      onEdit={() => handleStartEdit(message.id, message.content)}
+                      onDelete={() => setDeletingMessage({ id: message.id, isOwn: !!message.isCurrentUser })}
+                    />
+                  )}
                   {/* Bulle de citation DM */}
                   {message.replyTo && (
                     <button
@@ -524,7 +523,7 @@ export function MessageList({
                     </button>
                   )}
                   <div
-                    className={`max-w-[85%] sm:max-w-[70%] rounded-xl px-3 sm:px-4 py-2 shadow-sm ${message.isCurrentUser
+                    className={`min-w-[60px] w-fit rounded-xl px-3 sm:px-4 py-2 shadow-sm ${message.isCurrentUser
                         ? (hasMediaOnlyContent && editingMessageId !== message.id
                           ? 'bg-transparent text-foreground rounded-br-md px-0 py-0 shadow-none'
                           : 'bg-primary text-primary-foreground rounded-br-md')
