@@ -13,6 +13,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Neosis - Plateforme de messagerie communautaire",
   description: "Neosis - Plateforme de messagerie communautaire",
+  icons: {
+    icon: '/neosis.png',
+    apple: '/neosis.png',
+  },
 };
 
 export default function RootLayout({

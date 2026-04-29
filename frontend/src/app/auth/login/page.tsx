@@ -63,7 +63,7 @@ export default function LoginPage() {
     >
       {/* Logo */}
       <div className="flex items-center justify-center gap-2 mb-10">
-        <img src="/neosis.png" alt="Neosis" className="w-7 h-7 object-contain" />
+        <img src="/neosis.png" alt="Neosis" className="w-20 h-20 object-contain" />
         <span style={{ color: '#f1f5f9', fontSize: '17px', fontWeight: 600 }}>Neosis</span>
       </div>
 

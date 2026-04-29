@@ -278,7 +278,7 @@ export default function LandingPage(): React.ReactNode {
         transition={{ duration: 0.5, ease }}
       >
         <div className="flex items-center gap-2.5">
-          <img src="/neosis.png" alt="Neosis" className="w-8 h-8 object-contain" />
+          <img src="/neosis.png" alt="Neosis" className="w-16 h-16 object-contain" />
           <span className={`${news.className} text-[17px] font-semibold text-white/85`}>Neosis</span>
         </div>
         <div className="flex items-center gap-1">
