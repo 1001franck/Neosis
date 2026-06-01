@@ -11,8 +11,8 @@ import { useAuthStore } from '@application/auth/authStore';
 
 export const apiClient = axios.create({
   baseURL: env.API_URL,
-  // 15s pour absorber le cold start de Render (backend en veille)
-  timeout: 15000,
+  // 60s pour absorber le cold start de Render (backend en veille, réveil ~30-45s)
+  timeout: 60000,
   // Le Bearer token est utilisé pour toutes les requêtes (web + Tauri)
   // withCredentials: true causait un preflight CORS crédentiel bloqué dans WebView2 Tauri
   withCredentials: false,

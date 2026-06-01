@@ -4,7 +4,7 @@ import { useAuth } from '@application/index';
 import { logger } from '@shared/utils/logger';
 import { useFormState } from '@shared/hooks/useFormState';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@shared/hooks/useLocale';
 
@@ -28,10 +28,21 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [slowLoading, setSlowLoading] = useState(false);
   const { fields, error, isLoading, setField, setError, setLoading } = useFormState({
     email: '',
     password: '',
   });
+
+  // Affiche un message après 5s de chargement (cold start Render ~30-45s)
+  useEffect(() => {
+    if (!isLoading) {
+      setSlowLoading(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowLoading(true), 5000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,6 +225,16 @@ export default function LoginPage() {
           )}
           {isLoading ? t('auth.login.loading') : t('auth.login.submit')}
         </button>
+
+        {slowLoading && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ color: 'rgba(241,245,249,0.45)', fontSize: '12px', textAlign: 'center', marginTop: '10px' }}
+          >
+            Démarrage du serveur en cours, veuillez patienter...
+          </motion.p>
+        )}
       </form>
 
       {/* Lien inscription */}
